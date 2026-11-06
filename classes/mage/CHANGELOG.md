@@ -1,3 +1,10 @@
+# MagePlan 1.9.0
+
+- The talent tree now marks your next talent in WoW Forever's own talent window (all three trees side by side), not only in the old one.
+- The spec choice (Frost / Fire / Arcane) now also switches the upgrade check: Fire counts Fire spell damage and Arcane counts Arcane spell damage.
+- Fixed the Arcane plan: it took Heating Up before Pyroblast, which the tree doesn't allow.
+- The plan selector is now called "Spec".
+
 # MagePlan 1.8.2
 
 **Changed**

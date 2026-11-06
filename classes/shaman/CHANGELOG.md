@@ -1,3 +1,8 @@
+# ShamanPlan 1.0.0-beta9
+
+- Pick your spec in the settings window (or `/sp plan`): Enhancement, **Elemental** or **Restoration**. The talent plan and the upgrade check follow the spec (spell power for Elemental, healing for Restoration).
+- The talent tree now marks your next talent in WoW Forever's own talent window.
+
 # ShamanPlan 1.0.0-beta8
 
 **Changed**

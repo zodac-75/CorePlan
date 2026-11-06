@@ -76,7 +76,7 @@ local function Update()
     sub = "|cffffd100" .. ns.T("SH_SHIELD") .. "|r"
   elseif (inCombat or hasTarget) and not HasWeaponImbue() then
     sub = "|cffffd100" .. ns.T("SH_IMBUE") .. "|r"
-  elseif inCombat and hasTarget and ns.SpellInfo("Flame Shock") and ns.CooldownLeft("Flame Shock") <= 0
+  elseif inCombat and hasTarget and ns.PlanKey() ~= "resto" and ns.SpellInfo("Flame Shock") and ns.CooldownLeft("Flame Shock") <= 0
     and not MyDebuffOnTarget("Flame Shock") then
     sub = "|cffff9966" .. ns.T("SH_FLAMESHOCK") .. "|r"
   end

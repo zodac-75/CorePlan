@@ -1,3 +1,8 @@
+# DruidPlan 1.0.0-beta8
+
+- Pick your spec in the settings window (or `/dp plan`): Feral, **Balance** or **Restoration**. The talent plan and the upgrade check follow the spec (spell power for Balance, healing for Restoration).
+- The talent tree now marks your next talent in WoW Forever's own talent window.
+
 # DruidPlan 1.0.0-beta7
 
 **Changed**

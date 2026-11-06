@@ -119,6 +119,12 @@ ns.STATS.weights = {
 }
 ns.STATS.patterns = {
   { "Frost spells and effects by up to (%d+)", "frost" },
+  { "Fire spells and effects by up to (%d+)", "fire" },
+  { "Arcane spells and effects by up to (%d+)", "arcane" },
+  { "[Ff]ire [Ss]pell [Pp]ower by (%d+)", "fire" },
+  { "[Aa]rcane [Ss]pell [Pp]ower by (%d+)", "arcane" },
+  { "^%+(%d+) Fire Spell Damage", "fire" },
+  { "^%+(%d+) Arcane Spell Damage", "arcane" },
   { "[Ff]rost [Ss]pell [Pp]ower by (%d+)", "frost" },
   { "^%+(%d+) Frost Spell Damage", "frost" },
   { "magical spells and effects by up to (%d+)", "sp" },
@@ -132,6 +138,11 @@ ns.STATS.patterns = {
   { "^%+(%d+) Spirit", "spi" },
   { "^%+(%d+) Stamina", "sta" },
   { "%((%d+%.?%d*) damage per second%)", "wdps" },
+}
+-- Fire and Arcane count their own school instead of Frost.
+ns.PLAN_WEIGHTS = {
+  fire = { fire = 1.0, sp = 1.0, int = 0.4, spi = 0.2, sta = 0.25, crit = 9, hit = 9, mp5 = 1.2, wdps = 1.5 },
+  arcane = { arcane = 1.0, sp = 1.0, int = 0.6, spi = 0.3, sta = 0.25, crit = 7, hit = 9, mp5 = 1.4, wdps = 1.5 },
 }
 ns.STATS.armor = { [0] = true, [1] = true }
 ns.STATS.weapon = { [7] = true, [10] = true, [15] = true, [19] = true }

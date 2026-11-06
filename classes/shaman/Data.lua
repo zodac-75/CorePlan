@@ -106,10 +106,12 @@ ns.STATS.patterns = {
   { "%((%d+%.?%d*) damage per second%)", "wdps" },
   { "[Aa]ttack [Pp]ower by (%d+)", "ap" },
   { "^%+(%d+) Attack Power", "ap" },
-  { "critical strike with spells by (%d+)%%", "none" },
-  { "chance to hit with spells by (%d+)%%", "none" },
+  { "critical strike with spells by (%d+)%%", "scrit" },
+  { "chance to hit with spells by (%d+)%%", "shit" },
   { "critical strike by (%d+)%%", "crit" },
   { "chance to hit by (%d+)%%", "hit" },
+  { "healing done by spells and effects by up to (%d+)", "heal" },
+  { "^%+(%d+) Healing Spells", "heal" },
   { "magical spells and effects by up to (%d+)", "sp" },
   { "[Ss]pell [Pp]ower by (%d+)", "sp" },
   { "^%+(%d+) Spell Damage", "sp" },
@@ -135,5 +137,36 @@ ns.CLASS_TIPS = {
     text = { "Merchant's Favor vendors are here: Mivin Shadowweave (Tailoring patterns) and Alynsia (Enchanting).", "Här finns Merchant's Favor-försäljarna: Mivin Shadowweave (Tailoring-mönster) och Alynsia (Enchanting)." } },
 }
 
-ns.PLAN_ORDER = { "enhancement" }
+ns.PLAN_ORDER = { "enhancement", "elemental", "resto" }
+ns.PLAN_STEPS = {
+  -- Elemental, caster: 31/20/0. Lightning Overload at 32, Lightning Mastery at 40.
+  elemental = {
+    { "Concussion", 5 },
+    { "Elemental Alacrity", 3 }, { "Reverberation", 5, 2 },
+    { "Elemental Focus", 1 }, { "Elemental Devastation", 3 }, { "Convection", 5, 1 },
+    { "Eye of the Storm", 3 }, { "Convection", 5, 2 },
+    { "Lightning Overload", 3 }, { "Call of Thunder", 1 }, { "Elemental Reach", 2, 1 },
+    { "Elemental Fury", 5 },
+    { "Lightning Mastery", 1 },
+    { "Thundering Strikes", 5 }, { "Ancestral Knowledge", 5 }, { "Improved Lightning Shield", 3, 1 },
+    { "Shamanistic Focus", 1 }, { "Elemental Weapons", 3 }, { "Toughness", 5 },
+  },
+  -- Restoration, healer for dungeons: 0/8/43. Riptide at 40.
+  resto = {
+    { "Improved Healing Wave", 5 },
+    { "Mindfulness", 3 }, { "Totemic Focus", 5, 2 },
+    { "Water Shield", 1 }, { "Ancestral Healing", 3 }, { "Healing Focus", 3, 1 },
+    { "Tidal Mastery", 5 },
+    { "Healing Way", 3 }, { "Nature's Swiftness", 1 }, { "Mana Tide Totem", 1 },
+    { "Purification", 5 },
+    { "Riptide", 1 },
+    { "Tidal Focus", 5 }, { "Restorative Totems", 5 }, { "Healing Focus", 3, 2 },
+    { "Ancestral Knowledge", 5 }, { "Thundering Strikes", 5, 3 },
+  },
+}
+-- Stat weights per spec: attack power for Enhancement, spell power for Elemental, healing for Restoration.
+ns.PLAN_WEIGHTS = {
+  elemental = { sp = 1.0, int = 0.4, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.1, sta = 0.25 },
+  resto = { heal = 1.0, sp = 1.0, int = 0.8, mp5 = 2.0, scrit = 8, spi = 0.2, sta = 0.25 },
+}
 ns.COMBAT_CMD = "combat"

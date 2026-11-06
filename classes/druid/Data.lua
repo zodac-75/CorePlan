@@ -106,10 +106,12 @@ ns.STATS.patterns = {
   { "[Aa]ttack [Pp]ower by (%d+) in Cat", "ap" },
   { "[Aa]ttack [Pp]ower by (%d+)", "ap" },
   { "^%+(%d+) Attack Power", "ap" },
-  { "critical strike with spells by (%d+)%%", "none" },
-  { "chance to hit with spells by (%d+)%%", "none" },
+  { "critical strike with spells by (%d+)%%", "scrit" },
+  { "chance to hit with spells by (%d+)%%", "shit" },
   { "critical strike by (%d+)%%", "crit" },
   { "chance to hit by (%d+)%%", "hit" },
+  { "healing done by spells and effects by up to (%d+)", "heal" },
+  { "^%+(%d+) Healing Spells", "heal" },
   { "magical spells and effects by up to (%d+)", "sp" },
   { "[Ss]pell [Pp]ower by (%d+)", "sp" },
   { "^%+(%d+) Spell Damage", "sp" },
@@ -135,5 +137,35 @@ ns.CLASS_TIPS = {
     text = { "Merchant's Favor vendors are here: Mivin Shadowweave (Tailoring patterns) and Alynsia (Enchanting).", "Här finns Merchant's Favor-försäljarna: Mivin Shadowweave (Tailoring-mönster) och Alynsia (Enchanting)." } },
 }
 
-ns.PLAN_ORDER = { "feral" }
+ns.PLAN_ORDER = { "feral", "balance", "resto" }
+ns.PLAN_STEPS = {
+  -- Balance, Moonkin: 38/0/13. Moonkin Form at 40.
+  balance = {
+    { "Improved Wrath", 5 }, { "Genesis", 5 },
+    { "Moonglow", 3 }, { "Improved Moonfire", 2 },
+    { "Vengeance", 5 },
+    { "Nature's Grace", 1 }, { "Eclipse", 3 }, { "Insect Swarm", 1 },
+    { "Moonfury", 5 },
+    { "Moonkin Form", 1 },
+    { "Improved Starfire", 5 }, { "Nature's Reach", 2 },
+    { "Heart of the Wild", 5 }, { "Reflection", 3 }, { "Naturalist", 5 },
+  },
+  -- Restoration, healer for dungeons: 8/0/43. Wild Growth at 40.
+  resto = {
+    { "Heart of the Wild", 5 },
+    { "Naturalist", 5 },
+    { "Reflection", 3 }, { "Gift of Nature", 5, 2 },
+    { "Improved Rejuvenation", 3 }, { "Swiftmend", 1 }, { "Gift of Nature", 5, 1 },
+    { "Nature's Swiftness", 1 }, { "Living Spirit", 3 }, { "Bloom", 1 },
+    { "Improved Regrowth", 5 },
+    { "Wild Growth", 1 },
+    { "Gift of Nature", 5, 2 }, { "Tranquil Spirit", 5 }, { "Nature's Focus", 5 },
+    { "Genesis", 5 }, { "Moonglow", 3 },
+  },
+}
+-- Stat weights per spec: attack power for Feral, spell power for Balance, healing for Restoration.
+ns.PLAN_WEIGHTS = {
+  balance = { sp = 1.0, int = 0.5, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.3, sta = 0.25 },
+  resto = { heal = 1.0, sp = 1.0, int = 0.8, mp5 = 2.0, spi = 0.6, scrit = 6, sta = 0.25 },
+}
 ns.COMBAT_CMD = "combat"
