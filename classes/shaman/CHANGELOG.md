@@ -1,4 +1,9 @@
-# ShamanPlan 1.0.0-beta7
+# ShamanPlan 1.0.0-beta8
+
+**Changed**
+- No more "you're not playing a ..." message at login on characters of another class. Handy if you have more than one of the Plan addons installed.
+
+## ShamanPlan 1.0.0-beta7
 
 **New**
 - More secrets for players who both run one of my Plan addons. `/kiss` was only the start: try a few other emotes on a friend... `/dance` is a good place to begin. 🪩

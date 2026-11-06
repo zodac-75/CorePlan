@@ -628,8 +628,7 @@ events:SetScript("OnEvent", function(_, event, arg1)
   elseif event == "PLAYER_LOGIN" then
     local _, class = UnitClass("player")
     if class ~= "@CLASS@" then
-      Print(ns.T("NOT_CLASS"))
-      return
+      return -- another class: stay quiet (the other Plan addons may be installed too)
     end
     CreateUI()
     for _, init in ipairs(ns.modules) do

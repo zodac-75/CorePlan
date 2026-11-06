@@ -1,4 +1,9 @@
-# MagePlan 1.8.1
+# MagePlan 1.8.2
+
+**Changed**
+- No more "you're not playing a ..." message at login on characters of another class. Handy if you have more than one of the Plan addons installed.
+
+## MagePlan 1.8.1
 
 **New**
 - More secrets for players who both run one of my Plan addons. `/kiss` was only the start: try a few other emotes on a friend... `/dance` is a good place to begin. 🪩
