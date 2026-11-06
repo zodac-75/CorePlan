@@ -2,7 +2,6 @@
 -- have equipped, scored with the class's leveling stat weights (ns.STATS in Data.lua).
 local _, ns = ...
 
-local WEIGHTS = ns.STATS.weights
 -- First matching pattern wins per tooltip line, so specific ones come first.
 local PATTERNS = ns.STATS.patterns
 
@@ -70,8 +69,8 @@ end
 
 function ns.ItemScore(link)
   if not link then return 0 end
-  local total = 0
-  for k, v in pairs(Stats(link)) do total = total + v * (WEIGHTS[k] or 0) end
+  local total, weights = 0, ns.STATS.weights -- follows the chosen talent plan
+  for k, v in pairs(Stats(link)) do total = total + v * (weights[k] or 0) end
   return total
 end
 

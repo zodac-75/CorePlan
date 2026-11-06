@@ -1,5 +1,6 @@
--- @ADDON@: talent plans. The default plan is ns.talents from the class Data.lua; extra
--- plans come from ns.PLAN_STEPS. Every plan must be checked against the live tree:
+-- @ADDON@: talent plans (specs). The default plan is ns.talents from the class Data.lua
+-- unless ns.PLAN_STEPS has it; the others come from ns.PLAN_STEPS. A plan can also have
+-- its own stat weights (ns.PLAN_WEIGHTS) and texts (KEY@plan in the locale). Every plan must be checked against the live tree:
 -- a talent is only taken once its row has enough points spent in that tree.
 local _, ns = ...
 
@@ -29,8 +30,16 @@ function ns.PlanKey()
   return ns.PLAN_ORDER[1]
 end
 
+-- Stat weights per plan (ns.PLAN_WEIGHTS[key]); plans without their own use ns.STATS.weights.
+local baseWeights = ns.STATS and ns.STATS.weights
+
 function ns.ApplyPlan()
-  ns.talents = ns.PLANS[ns.PlanKey()].talents
+  local key = ns.PlanKey()
+  ns.talents = ns.PLANS[key].talents
+  ns.planTag = "@" .. key
+  if ns.STATS then
+    ns.STATS.weights = (ns.PLAN_WEIGHTS and ns.PLAN_WEIGHTS[key]) or baseWeights
+  end
 end
 
 function ns.CyclePlan()

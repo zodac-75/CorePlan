@@ -11,7 +11,10 @@ end
 
 -- Translated string, formatted with any extra arguments.
 function ns.T(key, ...)
-  local s = ns.LOCALES[ns.Lang()][key] or E[key] or key
+  local L = ns.LOCALES[ns.Lang()]
+  -- A text can have a version for the chosen talent plan: KEY@plan (e.g. UP_UP@holy).
+  local tag = ns.planTag and (key .. ns.planTag)
+  local s = (tag and (L[tag] or E[tag])) or L[key] or E[key] or key
   if select("#", ...) > 0 then return string.format(s, ...) end
   return s
 end
@@ -80,6 +83,8 @@ E.NEXT_TALENT = "Next talent:"
 E.NEXT_FMT = "%s %d/%d (%s, row %d)"
 E.TREE_N = "tree %d"
 E.PLAN_DONE = "Talent plan done!"
+E.MM_PLANSEL = "Spec"
+E.CMD_plan = "switch spec (talent plan, upgrade check and combat helper follow it)"
 E.PLAN_DONE2 = "Respec to Arcane 32/16/3 before raids."
 E.POINTS_TO_SPEND = "(%d points to spend)"
 E.LOGIN_POINTS = "you have %d talent points to spend. %s"
@@ -309,6 +314,8 @@ S.NEXT_TALENT = "Nästa talent:"
 S.NEXT_FMT = "%s %d/%d (%s, rad %d)"
 S.TREE_N = "träd %d"
 S.PLAN_DONE = "Talentplanen klar!"
+S.MM_PLANSEL = "Spec"
+S.CMD_plan = "byt spec (talentplan, uppgraderingskollen och stridshjälpen följer med)"
 S.PLAN_DONE2 = "Respecca till Arcane 32/16/3 inför raid."
 S.POINTS_TO_SPEND = "(%d poäng att lägga)"
 S.LOGIN_POINTS = "du har %d talentpoäng att lägga. %s"

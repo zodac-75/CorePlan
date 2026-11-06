@@ -1,0 +1,11 @@
+{
+  "name": "WarriorPlan",
+  "color": "c79c6e",
+  "slash": "war",
+  "class": "WARRIOR",
+  "curseId": 1787968,
+  "modules": [
+    "Combat.lua"
+  ],
+  "notes": "Warrior leveling companion with Arms, Fury and Protection plans: talent plan, upgrade check, rank check, Overpower/Revenge/Execute alerts, dungeon guide, profession assistant, XP tracker."
+}

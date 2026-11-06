@@ -27,7 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Load order. Class modules (class.json "modules") go where CLASS_MODULES is.
 ORDER = [
     "Locale.lua", "LocaleClass.lua", "Data.lua", "TrainData.lua", "ProfData.lua",
-    "Core.lua", "Plans.lua", "Ranks.lua", "Talents.lua", "Trainer.lua",
+    "Core.lua", "Plans.lua", "Ranks.lua", "Talents.lua", "Trainer.lua", "Helper.lua",
     "CLASS_MODULES",
     "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "QuestReward.lua",
     "Drink.lua", "Minimap.lua", "DungeonData.lua", "Arrow.lua", "Dungeons.lua",
@@ -75,7 +75,9 @@ def toc(m, version, files):
     ]
     if m.get("optionalDeps"):
         lines.append("## OptionalDeps: " + m["optionalDeps"])
-    lines += ["## X-Curse-Project-ID: %d" % m["curseId"], "## X-License: GPL-3.0", ""]
+    if m.get("curseId"):  # no ID yet: the release goes to GitHub only
+        lines.append("## X-Curse-Project-ID: %d" % m["curseId"])
+    lines += ["## X-License: GPL-3.0", ""]
     return "\n".join(lines + files) + "\n"
 
 

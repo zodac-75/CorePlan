@@ -168,7 +168,7 @@ ns.PLAN_STEPS = {
     { "Arcane Wrath", 1 }, { "Arcane Mind", 5 }, { "Presence of Mind", 1 }, { "Arcane Instability", 3 },
     { "Arcane Power", 1 },
     { "Incineration", 5 }, { "Ignite", 5 }, { "Improved Fire Blast", 2 }, { "Burning Soul", 3 },
-    { "Heating Up", 1 },
+    { "Pyroblast", 1 }, -- Heating Up needs Pyroblast, so Pyroblast it is
     { "Precision", 3 },
   },
 }

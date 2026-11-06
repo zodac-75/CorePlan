@@ -216,7 +216,8 @@ ns.THEMES = {
   { key = "dark",    name = "Dark",         bg = WHITE, edge = WHITE, edgeSize = 1, inset = 1,
     bgColor = { 0.05, 0.05, 0.06, 0.94 }, border = { 0.25, 0.25, 0.28, 1 } },
   { key = "frost",   name = "Frost",        bg = WHITE, edge = WHITE, edgeSize = 1, inset = 1,
-    bgColor = { 0.03, 0.07, 0.12, 0.92 }, border = { 0.35, 0.65, 0.95, 0.9 } },
+    -- The class theme: colors from ns.THEME_BG / ns.THEME_BORDER in the class Data.lua.
+    bgColor = ns.THEME_BG or { 0.03, 0.07, 0.12, 0.92 }, border = ns.THEME_BORDER or { 0.35, 0.65, 0.95, 0.9 } },
   { key = "classic", name = "Classic",      bg = "Interface\\Tooltips\\UI-Tooltip-Background",
     edge = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 14, inset = 3, tile = true,
     bgColor = { 0, 0, 0, 0.75 }, border = { 1, 1, 1, 1 } },

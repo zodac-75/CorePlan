@@ -7,6 +7,8 @@ Leveling companions for **WoW Forever**, one addon per class, built from one sha
 | MagePlan | Frost mage | [mageplan](https://www.curseforge.com/wow/addons/mageplan) (1785085) |
 | ShamanPlan | Enhancement shaman | project 1787755 |
 | DruidPlan | Feral druid | project 1787775 |
+| WarriorPlan | Arms, Fury or Protection warrior | project 1787968 |
+| PaladinPlan | Protection, Retribution or Holy paladin | project 1787977 |
 
 ## Layout
 
@@ -55,6 +57,18 @@ Use a version like `1.0.1-beta1` to upload a beta. Needs the repository secret `
 Copy a class folder, change `class.json` (name, color, slash, class token, CurseForge ID),
 write its Data.lua, TrainData.lua, LocaleClass.lua and combat module, generate its
 DungeonData.lua and add the art.
+
+## Talent plans
+
+A class can have several plans (specs) in `ns.PLAN_ORDER` / `ns.PLAN_STEPS`, each with its own
+stat weights (`ns.PLAN_WEIGHTS`) and texts (`KEY@plan` in LocaleClass.lua). Check them against
+the live tree after every change:
+
+```sh
+texlua tools/checktalents.lua warrior
+```
+
+`tools/exporttrees.py` refreshes `tools/trees/` from the client data.
 
 ## Data
 

@@ -1,0 +1,11 @@
+{
+  "name": "PaladinPlan",
+  "color": "f58cba",
+  "slash": "pal",
+  "class": "PALADIN",
+  "curseId": 1787977,
+  "modules": [
+    "Combat.lua"
+  ],
+  "notes": "Paladin leveling companion with Protection, Retribution and Holy plans: talent plan, upgrade check, rank check, seal and blessing alerts, dungeon guide, profession assistant, XP tracker."
+}
