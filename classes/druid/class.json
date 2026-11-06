@@ -1,0 +1,11 @@
+{
+  "name": "DruidPlan",
+  "color": "ff9a3c",
+  "slash": "dp",
+  "class": "DRUID",
+  "curseId": 1787775,
+  "modules": [
+    "Combat.lua"
+  ],
+  "notes": "Feral druid leveling companion: talent plan, upgrade check, rank check, combo point and buff alerts, dungeon guide, profession assistant, XP tracker."
+}

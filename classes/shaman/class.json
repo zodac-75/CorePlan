@@ -1,0 +1,11 @@
+{
+  "name": "ShamanPlan",
+  "color": "3fa9ff",
+  "slash": "sp",
+  "class": "SHAMAN",
+  "curseId": 1787755,
+  "modules": [
+    "Combat.lua"
+  ],
+  "notes": "Enhancement shaman leveling companion: talent plan, upgrade check, rank check, Maelstrom and buff alerts, dungeon guide, profession assistant, XP tracker."
+}

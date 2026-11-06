@@ -1,0 +1,15 @@
+{
+  "name": "MagePlan",
+  "color": "69ccf0",
+  "slash": "mp",
+  "class": "MAGE",
+  "curseId": 1785085,
+  "modules": [
+    "Shatter.lua",
+    "Disenchant.lua",
+    "Polymorph.lua",
+    "Supplies.lua"
+  ],
+  "notes": "Frost mage leveling companion: talent plans, upgrade check, rank check, shatter and polymorph alerts, dungeon guide, profession assistant, XP tracker.",
+  "optionalDeps": "Auctionator"
+}

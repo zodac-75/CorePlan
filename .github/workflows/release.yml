@@ -1,0 +1,41 @@
+# Builds, tests and releases the Plan addons.
+#
+# On every push to main, tools/release.py looks at each classes/<class>/CHANGELOG.md.
+# If the version in its first line ("# MagePlan 1.8.0") has no "<Addon>-<version>"
+# tag yet, that addon is built from core/ + its class folder, tested in the simulator,
+# uploaded to its own CurseForge project and released on GitHub.
+# A version with "beta" or "alpha" in it becomes a beta/alpha file on CurseForge.
+#
+# Needs the repository secret CF_API_KEY (a CurseForge API token).
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write # tags and GitHub releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Lua for the tests
+        run: sudo apt-get update -q && sudo apt-get install -y -q lua5.3
+
+      - name: Get the BigWigs packager
+        run: git clone --depth 1 --branch v2 https://github.com/BigWigsMods/packager "$RUNNER_TEMP/packager"
+
+      - name: Build, test and release new versions
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGER: ${{ runner.temp }}/packager/release.sh
+          LUA: lua5.3
+        run: python3 tools/release.py
