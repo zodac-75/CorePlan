@@ -31,7 +31,7 @@ ORDER = [
     "CLASS_MODULES",
     "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "QuestReward.lua",
     "Drink.lua", "Minimap.lua", "DungeonData.lua", "Arrow.lua", "Dungeons.lua",
-    "Config.lua", "Profiles.lua", "Kiss.lua",
+    "Config.lua", "Profiles.lua", "Emotes.lua",
 ]
 
 

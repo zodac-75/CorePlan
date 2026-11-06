@@ -538,16 +538,26 @@ do
   UnitPower, UnitPowerMax, issecretvalue = oldP, oldM, nil
 end
 
--- Kiss easter egg
+-- Emote easter eggs
 do
   DoEmote("KISS", "target")
   DoEmote("KISS", "target") -- throttled
-  table.insert(chat, "[sim] addon msgs after kiss: " .. table.concat(SIM_ADDONMSG, ", "))
+  DoEmote("DANCE", "target")
+  DoEmote("SIT", "target")   -- not an easter egg
+  table.insert(chat, "[sim] addon msgs after emotes: " .. table.concat(SIM_ADDONMSG, ", "))
   fire("CHAT_MSG_ADDON", "ZodacPlan", "KISS", "WHISPER", "Lover-Realm")
-  local hname
-  for _, w in ipairs(allFrames) do if (w.__name or ""):match("Heart$") then hname = w end end
-  if not (hname and hname.__shown) then table.insert(errors, "hjärtat visades inte") end
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:CHEER", "WHISPER", "Pal-Realm")
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "EB:HUG", "WHISPER", "Pal-Realm")
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:NOPE", "WHISPER", "Pal-Realm")
   table.insert(chat, "[sim] addon msgs after receive: " .. table.concat(SIM_ADDONMSG, ", "))
+  for _, e in ipairs({ "KISS", "DANCE", "CHEER", "HUG", "WAVE", "TOAST", "CHICKEN" }) do
+    local ok, err = pcall(ns.ShowEmoteEgg, e, "Tester")
+    if not ok then table.insert(errors, "emote " .. e .. ": " .. tostring(err)) end
+  end
+  local okc, errc = pcall(SlashCmdList[next(SlashCmdList)], "egg chicken")
+  if not okc then table.insert(errors, "/egg: " .. tostring(errc)) end
+  local want = "ZodacPlan:KISS>Kissy, ZodacPlan:E:DANCE>Kissy, ZodacPlan:KISSBACK>Lover-Realm, ZodacPlan:EB:CHEER>Pal-Realm"
+  if table.concat(SIM_ADDONMSG, ", ") ~= want then table.insert(errors, "emote-meddelanden: " .. table.concat(SIM_ADDONMSG, ", ")) end
 end
 
 -- PROFSELECT: pick professions in the settings

@@ -1,4 +1,9 @@
-# MagePlan 1.8.0
+# MagePlan 1.8.1
+
+**New**
+- More secrets for players who both run one of my Plan addons. `/kiss` was only the start: try a few other emotes on a friend... `/dance` is a good place to begin. 🪩
+
+## MagePlan 1.8.0
 
 **New**
 - **Pick your two main professions** in the settings window (Profession 1 and 2). "Auto" uses the professions you've learned.
