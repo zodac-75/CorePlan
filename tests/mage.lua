@@ -569,6 +569,7 @@ do
   DoEmote("KISS", "target")
   DoEmote("KISS", "target") -- throttled
   DoEmote("DANCE", "target")
+  DoEmote("DRINK", "target") -- /drink gives the mugs
   DoEmote("SIT", "target")   -- not an easter egg
   table.insert(chat, "[sim] addon msgs after emotes: " .. table.concat(SIM_ADDONMSG, ", "))
   fire("CHAT_MSG_ADDON", "ZodacPlan", "KISS", "WHISPER", "Lover-Realm")
@@ -582,7 +583,7 @@ do
   end
   local okc, errc = pcall(SlashCmdList[next(SlashCmdList)], "egg chicken")
   if not okc then table.insert(errors, "/egg: " .. tostring(errc)) end
-  local want = "ZodacPlan:KISS>Kissy, ZodacPlan:E:DANCE>Kissy, ZodacPlan:KISSBACK>Lover-Realm, ZodacPlan:EB:CHEER>Pal-Realm"
+  local want = "ZodacPlan:KISS>Kissy, ZodacPlan:E:DANCE>Kissy, ZodacPlan:E:TOAST>Kissy, ZodacPlan:KISSBACK>Lover-Realm, ZodacPlan:EB:CHEER>Pal-Realm"
   if table.concat(SIM_ADDONMSG, ", ") ~= want then table.insert(errors, "emote-meddelanden: " .. table.concat(SIM_ADDONMSG, ", ")) end
 end
 

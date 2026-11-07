@@ -1,3 +1,7 @@
+# ShamanPlan 1.0.0-beta15
+
+- The mugs easter egg now comes with `/drink`. WoW Forever has no `/toast` emote, so it never fired before.
+
 # ShamanPlan 1.0.0-beta14
 
 - Rank check understands macros: a spell in a macro counts as on your bars, and a macro is only reported when it names an old rank, like "Frostbolt(Rank 1)".

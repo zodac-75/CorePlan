@@ -2,7 +2,7 @@
 -- a Plan addon (MagePlan, ShamanPlan, DruidPlan, ...), both of you get a little show:
 --   /kiss    a big pulsing heart          /dance   a spinning disco ball with lights
 --   /cheer   confetti                     /hug     hearts floating up
---   /wave    a rainbow                    /toast   two mugs clinking
+--   /wave    a rainbow                    /drink   two mugs clinking (or /toast)
 --   /chicken an easter egg that drops in and wobbles
 -- The addons talk over a hidden addon-message channel: "E:<EMOTE>" to the target, who
 -- answers "EB:<EMOTE>". ("KISS"/"KISSBACK" from older versions still work.)
@@ -248,9 +248,14 @@ local function Send(msg, target)
   if send and target then pcall(send, PREFIX, msg, "WHISPER", target) end
 end
 
+-- Emotes that trigger another effect. Forever has no /toast like later expansions,
+-- so the mugs come with /drink (and /cheers where the game has it).
+local ALIAS = { DRINK = "TOAST", CHEERS = "TOAST" }
+
 local function OnEmote(token, unit)
   if type(token) ~= "string" then return end
   token = token:upper()
+  token = ALIAS[token] or token
   if not EFFECTS[token] then return end
   unit = (type(unit) == "string" and unit ~= "" and unit) or "target"
   if not (UnitExists(unit) and UnitIsPlayer(unit)) or UnitIsUnit(unit, "player") then return end
@@ -312,6 +317,7 @@ end)
 -- Hidden preview: /@SLASH@ egg dance (or kiss, cheer, hug, wave, toast, chicken).
 ns.RegisterCommand("egg", false, function(rest)
   local e = (rest or ""):upper():match("(%u+)") or "KISS"
+  e = ALIAS[e] or e
   lastShown[e] = nil
   Show(e, UnitName("player"))
 end)
