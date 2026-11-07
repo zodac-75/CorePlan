@@ -317,12 +317,18 @@ local function FindButton(root, t)
   return ok and btn or nil
 end
 
+local function HideGlow()
+  if glow then glow:Hide(); glow.btn = nil end
+end
+
 local function UpdateGlow()
   if not glow then return end
-  glow:Hide()
-  if hint then hint:Hide() end
   local root = ShownRoot()
-  if not root then return end
+  if not root then
+    HideGlow()
+    if hint then hint:Hide() end
+    return
+  end
 
   local line = NextText()
   if hint and line then
@@ -336,7 +342,7 @@ local function UpdateGlow()
   end
 
   local name, t = ns.NextTalent()
-  if not t or name == "done" then return end
+  if not t or name == "done" then HideGlow(); return end
   if root == PlayerTalentFrame then
     local sel
     if PanelTemplates_GetSelectedTab then
@@ -344,15 +350,17 @@ local function UpdateGlow()
       if ok then sel = s end
     end
     sel = sel or PlayerTalentFrame.selectedTab
-    if sel and sel ~= t.tab then return end
+    if sel and sel ~= t.tab then HideGlow(); return end
   end
 
   local btn = FindButton(root, t)
-  if not btn then return end
+  if not btn or not btn:IsVisible() then HideGlow(); return end
+  if glow.btn == btn and glow:IsShown() then return end -- already there: don't restart the animation
+  glow.btn = btn
   glow:SetParent(btn)
   glow:ClearAllPoints()
-  glow:SetPoint("CENTER", btn, "CENTER", 0, 0)
-  glow:SetSize(btn:GetWidth() * 1.9, btn:GetHeight() * 1.9)
+  glow:SetPoint("TOPLEFT", btn, "TOPLEFT", -5, 5)
+  glow:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 5, -5)
   glow:SetFrameStrata("DIALOG")
   glow:SetFrameLevel(btn:GetFrameLevel() + 5)
   glow:Show()
@@ -362,7 +370,7 @@ local function HookRoot(f)
   if roots[f] then return end
   roots[f] = true
   pcall(f.HookScript, f, "OnShow", function() C_Timer.After(0.1, function() pcall(UpdateGlow) end) end)
-  pcall(f.HookScript, f, "OnHide", function() if glow then glow:Hide() end if hint then hint:Hide() end end)
+  pcall(f.HookScript, f, "OnHide", function() HideGlow() if hint then hint:Hide() end end)
 end
 
 local function ScanRoots()
@@ -372,19 +380,46 @@ end
 
 local function SetupTalentUI()
   if glow then return end
+  -- The marker: a thick green frame around the talent that pulses, and a big "+"
+  -- above it that bobs up and down.
   glow = CreateFrame("Frame", nil, UIParent)
-  local tex = glow:CreateTexture(nil, "OVERLAY")
-  tex:SetAllPoints()
-  tex:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-  tex:SetBlendMode("ADD")
-  tex:SetVertexColor(0.3, 0.8, 1)
-  local ag = glow:CreateAnimationGroup()
-  local a = ag:CreateAnimation("Alpha")
+  local G = { 0.25, 1, 0.35 }
+  local border = CreateFrame("Frame", nil, glow)
+  border:SetAllPoints()
+  local function Edge(p1, p2, w, h)
+    local e = border:CreateTexture(nil, "OVERLAY")
+    e:SetColorTexture(G[1], G[2], G[3], 1)
+    e:SetPoint(p1); e:SetPoint(p2)
+    if w then e:SetWidth(w) end
+    if h then e:SetHeight(h) end
+  end
+  Edge("TOPLEFT", "TOPRIGHT", nil, 3)
+  Edge("BOTTOMLEFT", "BOTTOMRIGHT", nil, 3)
+  Edge("TOPLEFT", "BOTTOMLEFT", 3, nil)
+  Edge("TOPRIGHT", "BOTTOMRIGHT", 3, nil)
+  local shine = border:CreateTexture(nil, "ARTWORK")
+  shine:SetAllPoints()
+  shine:SetColorTexture(G[1], G[2], G[3], 0.18)
+  local pulse = border:CreateAnimationGroup()
+  local a = pulse:CreateAnimation("Alpha")
   a:SetFromAlpha(1)
-  a:SetToAlpha(0.3)
-  a:SetDuration(0.6)
-  ag:SetLooping("BOUNCE")
-  ag:Play()
+  a:SetToAlpha(0.45)
+  a:SetDuration(0.7)
+  pulse:SetLooping("BOUNCE")
+  pulse:Play()
+
+  local plus = glow:CreateFontString(nil, "OVERLAY")
+  plus:SetFont(STANDARD_TEXT_FONT, 34, "THICKOUTLINE")
+  plus:SetTextColor(G[1], G[2], G[3])
+  plus:SetText("+")
+  plus:SetPoint("BOTTOM", glow, "TOP", 0, -2)
+  local bob = plus:CreateAnimationGroup() -- only the plus moves
+  local m = bob:CreateAnimation("Translation")
+  m:SetOffset(0, 7)
+  m:SetDuration(0.5)
+  m:SetSmoothing("IN_OUT")
+  bob:SetLooping("BOUNCE")
+  glow:SetScript("OnShow", function() bob:Play(); pulse:Play() end)
   glow:Hide()
 
   hint = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

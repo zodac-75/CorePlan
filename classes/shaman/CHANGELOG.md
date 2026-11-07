@@ -1,3 +1,7 @@
+# ShamanPlan 1.0.0-beta21
+
+- **Clearer talent marker:** the next talent in your plan now gets a thick green frame that pulses, with a big green "+" bobbing above it. The old faint blue glow is gone, and so is the flicker.
+
 # ShamanPlan 1.0.0-beta20
 
 - Talent window: the glow now shows up when the window was already open, and stays on the right talent while you click around. The "next talent" line sits at the bottom of the window.
