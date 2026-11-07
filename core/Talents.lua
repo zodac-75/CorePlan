@@ -14,9 +14,10 @@ local function TalentMap()
     local okN, n = pcall(GetNumTalents, tab)
     if okN and n then
       for i = 1, n do
-        local ok, name, icon, tier, _, rank, maxRank = pcall(GetTalentInfo, tab, i)
+        local ok, name, icon, tier, column, rank, maxRank = pcall(GetTalentInfo, tab, i)
         if ok and name then
-          map[name] = { tab = tab, index = i, tier = tier, rank = rank or 0, max = maxRank, icon = icon }
+          map[name] = { tab = tab, index = i, tier = tier, column = column, rank = rank or 0, max = maxRank,
+            icon = icon ~= "" and icon ~= 0 and icon or nil }
         end
       end
     end
@@ -112,16 +113,52 @@ local function SameIcon(a, b)
   return tostring(a):lower():gsub("\\", "/") == tostring(b):lower():gsub("\\", "/")
 end
 
-local function ButtonHasIcon(btn, icon)
-  if btn.icon and btn.icon.GetTexture and SameIcon(btn.icon:GetTexture(), icon) then return true end
+-- The talent's icon both as the game gave it and as a file ID: a path and a number
+-- mean the same picture, and a window may use either.
+local probe
+local function IconForms(icon)
+  local forms = { icon }
+  if icon and type(icon) == "string" then
+    probe = probe or UIParent:CreateTexture(nil, "BACKGROUND")
+    local ok = pcall(probe.SetTexture, probe, icon)
+    if ok and probe.GetTextureFileID then
+      local okF, id = pcall(probe.GetTextureFileID, probe)
+      if okF and id then table.insert(forms, id) end
+    end
+  end
+  return forms
+end
+
+local function TexMatches(tex, forms)
+  for _, f in ipairs(forms) do if SameIcon(tex, f) then return true end end
+  return false
+end
+
+-- A button some talent windows tag with the talent's place in the tree.
+local function FieldsMatch(btn, t)
+  local tier = rawget(btn, "tier") or rawget(btn, "row")
+  local col = rawget(btn, "column") or rawget(btn, "col")
+  if tier and col and t.tier and t.column and tier == t.tier and col == t.column then
+    local tab = rawget(btn, "tab") or rawget(btn, "talentTab") or rawget(btn, "tabIndex") or rawget(btn, "tree")
+    return tab == nil or tab == t.tab
+  end
+  local idx = rawget(btn, "talentIndex")
+  local tab = rawget(btn, "talentTab") or rawget(btn, "tabIndex")
+  return idx ~= nil and idx == t.index and (tab == nil or tab == t.tab)
+end
+
+local function ButtonHasIcon(btn, forms)
+  if btn.icon and type(btn.icon) == "table" and btn.icon.GetTexture and TexMatches(btn.icon:GetTexture(), forms) then
+    return true
+  end
   local regions = { btn:GetRegions() }
   for _, r in ipairs(regions) do
     if r.GetTexture and r:IsObjectType("Texture") then
       local ok, tex = pcall(r.GetTexture, r)
-      if ok and SameIcon(tex, icon) then return true end
+      if ok and TexMatches(tex, forms) then return true end
       if r.GetTextureFileID then
         local okF, id = pcall(r.GetTextureFileID, r)
-        if okF and SameIcon(id, icon) then return true end
+        if okF and TexMatches(id, forms) then return true end
       end
     end
   end
@@ -132,15 +169,19 @@ end
 local function FindButton(root, t)
   local old = (root == PlayerTalentFrame) and _G["PlayerTalentFrameTalent" .. t.index]
   if old and old:IsShown() then return old end
-  if not t.icon then return nil end
+  local forms = IconForms(t.icon)
   local function walk(f, depth)
     if depth > 10 then return nil end
     for _, c in ipairs({ f:GetChildren() }) do
       local okS, shown = pcall(c.IsShown, c)
       if okS and shown then
         -- One odd frame must not stop the search.
-        local okI, isIt = pcall(ButtonHasIcon, c, t.icon)
-        if okI and isIt then return c end
+        local okF, byFields = pcall(FieldsMatch, c, t)
+        if okF and byFields then return c end
+        if t.icon then
+          local okI, isIt = pcall(ButtonHasIcon, c, forms)
+          if okI and isIt then return c end
+        end
         local hit = walk(c, depth + 1)
         if hit then return hit end
       end
@@ -241,12 +282,49 @@ local function DebugTalentUI()
   ns.Print("talent windows: " .. (#names > 0 and table.concat(names, ", ") or "none"))
   local name, t = ns.NextTalent()
   ns.Print("next talent: " .. tostring(name) .. (t and (" tab " .. t.tab .. " #" .. t.index .. " icon " .. tostring(t.icon)) or ""))
+  if t then ns.Print("  tier " .. tostring(t.tier) .. " column " .. tostring(t.column)) end
   local root = ShownRoot()
   if root and t then
     local btn = FindButton(root, t)
     ns.Print("button: " .. (btn and tostring(btn:GetName() or "found (no name)") or "not found"))
   else
     ns.Print("open the talent window and run this again.")
+  end
+  -- What's under the mouse: hover a talent in the window while you type the command.
+  local focus
+  if GetMouseFoci then
+    local ok, list = pcall(GetMouseFoci)
+    focus = ok and type(list) == "table" and list[1]
+  elseif GetMouseFocus then
+    local ok, f = pcall(GetMouseFocus)
+    focus = ok and f
+  end
+  if focus and focus ~= WorldFrame then
+    local chain, f = {}, focus
+    for _ = 1, 6 do
+      if not f then break end
+      local ok, n = pcall(f.GetName, f)
+      table.insert(chain, tostring(ok and n or "?"))
+      local okP, p = pcall(f.GetParent, f)
+      f = okP and p or nil
+    end
+    ns.Print("under mouse: " .. table.concat(chain, " < "))
+    local fields = {}
+    for k, v in pairs(focus) do
+      if type(k) == "string" and (type(v) == "number" or type(v) == "string" or type(v) == "boolean") then
+        table.insert(fields, k .. "=" .. tostring(v))
+      end
+    end
+    table.sort(fields)
+    ns.Print("  fields: " .. (#fields > 0 and table.concat(fields, ", ", 1, math.min(#fields, 25)) or "none"))
+    local texs = {}
+    for _, r in ipairs({ focus:GetRegions() }) do
+      if r.IsObjectType and r:IsObjectType("Texture") then
+        local ok, tex = pcall(r.GetTexture, r)
+        if ok and tex then table.insert(texs, tostring(tex)) end
+      end
+    end
+    ns.Print("  textures: " .. (#texs > 0 and table.concat(texs, ", ", 1, math.min(#texs, 6)) or "none"))
   end
 end
 ns.RegisterCommand("talentui", false, DebugTalentUI)
