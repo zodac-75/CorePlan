@@ -37,6 +37,14 @@ function methods:HookScript(k, fn)
   self.__scripts[k] = function(...) if old then old(...) end fn(...) end
 end
 function methods:RegisterEvent(e) self.__events[e] = true end
+function methods:SetTexture(t)
+  -- WoW shows nothing for a texture that isn't a path or file ID.
+  if t ~= nil and type(t) ~= "string" and type(t) ~= "number" then
+    table.insert(errors, "SetTexture fick " .. type(t) .. " i stället för en sökväg")
+  end
+  rawset(self, "__tex", t)
+end
+function methods:GetTexture() return rawget(self, "__tex") end
 function methods:UnregisterEvent(e) self.__events[e] = nil end
 function methods:SetText(t) self.__text = t or "" end
 function methods:GetText() return self.__text end

@@ -1,3 +1,7 @@
+# MagePlan 1.9.4
+
+- Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).
+
 # MagePlan 1.9.3
 
 - Buff reminders no longer say a buff is missing when the game hides your buff list from addons (it can do that in combat). They stay quiet when they can't tell.

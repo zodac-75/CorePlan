@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta5
+
+- Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).
+
 # WarriorPlan 1.0.0-beta4
 
 - No more drink reminder: warriors use rage. The drink settings are gone from the menus too.

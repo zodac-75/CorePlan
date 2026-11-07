@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0-beta5
+
+- Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).
+
 # PaladinPlan 1.0.0-beta4
 
 - New: the combat helper reminds you when no aura is on, and suggests Devotion Aura (Retribution Aura for Retribution).

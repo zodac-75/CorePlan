@@ -1,3 +1,7 @@
+# DruidPlan 1.0.0-beta12
+
+- Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).
+
 # DruidPlan 1.0.0-beta11
 
 - Buff reminders no longer say a buff is missing when the game hides your buff list from addons (it can do that in combat). They stay quiet when they can't tell.

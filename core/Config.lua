@@ -3,7 +3,7 @@
 -- AddOns settings. Features on the left, plan and look on the right, tools below.
 local _, ns = ...
 
-local LOGO = ns.MEDIA .. "Logo"
+local LOGO_FILE = ns.MEDIA .. "Logo"
 -- Logo layout: ns.LOGO in the class Data.lua (round logos fill the whole texture).
 local LOGO = ns.LOGO or { h = 1, size = 200, y = 62, panel = 260 }
 local LOGO_H = LOGO.h
@@ -263,7 +263,7 @@ local function CreateConfig()
 
   -- The logo sits on the top edge and sticks out above the window.
   local logo = win:CreateTexture(nil, "OVERLAY")
-  logo:SetTexture(LOGO)
+  logo:SetTexture(LOGO_FILE)
   logo:SetTexCoord(0, 1, 0, LOGO_H)
   logo:SetSize(LOGO.size, LOGO.size * LOGO_H)
   logo:SetPoint("TOP", 0, LOGO.y)
@@ -514,7 +514,7 @@ local function RegisterBlizzardPanel()
   panel.name = "@ADDON@"
 
   local logo = panel:CreateTexture(nil, "ARTWORK")
-  logo:SetTexture(LOGO)
+  logo:SetTexture(LOGO_FILE)
   logo:SetTexCoord(0, 1, 0, LOGO_H)
   logo:SetSize(LOGO.panel, LOGO.panel * LOGO_H)
   logo:SetPoint("TOP", 0, -16)

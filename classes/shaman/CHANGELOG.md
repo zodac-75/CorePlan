@@ -1,3 +1,7 @@
+# ShamanPlan 1.0.0-beta13
+
+- Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).
+
 # ShamanPlan 1.0.0-beta12
 
 - Fixed "Lightning Shield is missing" showing while Lightning Shield was on. Water Shield and Earth Shield also count.
