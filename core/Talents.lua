@@ -380,8 +380,8 @@ end
 
 local function SetupTalentUI()
   if glow then return end
-  -- The marker: a thick green frame around the talent that pulses, and a big "+"
-  -- above it that bobs up and down.
+  -- The marker: a thick green frame around the talent that pulses, and a big green
+  -- arrow above it that bobs up and down.
   glow = CreateFrame("Frame", nil, UIParent)
   local G = { 0.25, 1, 0.35 }
   local border = CreateFrame("Frame", nil, glow)
@@ -408,11 +408,13 @@ local function SetupTalentUI()
   pulse:SetLooping("BOUNCE")
   pulse:Play()
 
-  local plus = glow:CreateFontString(nil, "OVERLAY")
-  plus:SetFont(STANDARD_TEXT_FONT, 34, "THICKOUTLINE")
-  plus:SetTextColor(G[1], G[2], G[3])
-  plus:SetText("+")
-  plus:SetPoint("BOTTOM", glow, "TOP", 0, -2)
+  -- The waypoint arrow from Media, turned to point down at the talent.
+  local plus = glow:CreateTexture(nil, "OVERLAY")
+  plus:SetTexture(ns.MEDIA .. "Arrow")
+  plus:SetSize(34, 34)
+  plus:SetRotation(math.pi)
+  plus:SetVertexColor(G[1], G[2], G[3])
+  plus:SetPoint("BOTTOM", glow, "TOP", 0, 0)
   local bob = plus:CreateAnimationGroup() -- only the plus moves
   local m = bob:CreateAnimation("Translation")
   m:SetOffset(0, 7)

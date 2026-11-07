@@ -1,6 +1,6 @@
 # PaladinPlan 1.0.0-beta14
 
-- **Clearer talent marker:** the next talent in your plan now gets a thick green frame that pulses, with a big green "+" bobbing above it. The old faint blue glow is gone, and so is the flicker.
+- **Clearer talent marker:** the next talent in your plan now gets a thick green frame that pulses, with a big green arrow bobbing above it. The old faint blue glow is gone, and so is the flicker.
 
 # PaladinPlan 1.0.0-beta13
 
