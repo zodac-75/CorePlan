@@ -48,23 +48,23 @@ local function Update()
     local cp = ComboPoints()
     if PlayerHas("Clearcasting") then
       state = "go"
-      main = "|cff@COLOR@CLEARCASTING!|r " .. ns.T("SH_GO")
+      main = ns.AlertMain("|cff@COLOR@", "CLEARCASTING!", ns.T("SH_GO"), { "Omen of Clarity", "Shred", "Claw" })
     elseif cp and cp >= 5 then
       state = "go"
-      main = "|cff@COLOR@" .. ns.T("SH_CP5") .. "|r " .. (MyDebuffOnTarget("Rip") and ns.T("SH_BITE") or ns.T("SH_RIP"))
+      main = ns.AlertMain("|cff@COLOR@", ns.T("SH_CP5"), MyDebuffOnTarget("Rip") and ns.T("SH_BITE") or ns.T("SH_RIP"), MyDebuffOnTarget("Rip") and "Ferocious Bite" or "Rip")
     elseif cp and cp >= 3 then
-      main = "|cffffcc88" .. ns.T("SH_STACKS", cp) .. "|r"
+      main = ns.Alert("|cffffcc88", ns.T("SH_STACKS", cp), { "Rip", "Ferocious Bite" })
     end
   end
 
   -- Reminders, most important first.
   if (inCombat or hasTarget) and ns.SpellInfo("Mark of the Wild")
     and ns.AuraMissing("player", "HELPFUL", "Mark of the Wild", "Gift of the Wild") then
-    sub = "|cffffd100" .. ns.T("SH_SHIELD") .. "|r"
+    sub = ns.Alert("|cffffd100", ns.T("SH_SHIELD"), "Mark of the Wild")
   elseif (inCombat or hasTarget) and ns.SpellInfo("Thorns") and ns.AuraMissing("player", "HELPFUL", "Thorns") then
-    sub = "|cffffd100" .. ns.T("SH_IMBUE") .. "|r"
+    sub = ns.Alert("|cffffd100", ns.T("SH_IMBUE"), "Thorns")
   elseif cat and inCombat and hasTarget and ns.SpellInfo("Rake") and ns.AuraMissing("target", "HARMFUL|PLAYER", "Rake") then
-    sub = "|cffff9966" .. ns.T("SH_FLAMESHOCK") .. "|r"
+    sub = ns.Alert("|cffff9966", ns.T("SH_FLAMESHOCK"), "Rake")
   end
 
   ns.HelperAlert(main, sub, state)

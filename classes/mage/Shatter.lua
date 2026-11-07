@@ -30,7 +30,7 @@ local function Update()
       local cd = ns.CooldownLeft("Ice Lance")
       if cd <= 0 then
         state = "go"
-        main = "|cff66ccffSHATTER!|r " .. ns.T("SH_GO") .. " |cffaaaaaa" .. (fof and ns.T("SH_FOF") or ns.T("SH_FROZEN")) .. "|r"
+        main = ns.AlertMain("|cff66ccff", "SHATTER!", ns.T("SH_GO") .. " |cffaaaaaa" .. (fof and ns.T("SH_FOF") or ns.T("SH_FROZEN")) .. "|r", { "Ice Lance", "Frostbolt" })
       else
         state = "cd"
         main = "|cffaaaaaa" .. ns.T("SH_CD", cd) .. "|r"
@@ -40,7 +40,7 @@ local function Update()
 
   if ns.SpellInfo("Ice Barrier") and (UnitAffectingCombat("player") or hasTarget)
     and ns.AuraMissing("player", "HELPFUL", "Ice Barrier") and ns.CooldownLeft("Ice Barrier") <= 0 then
-    sub = "|cffffd100" .. ns.T("SH_BARRIER") .. "|r"
+    sub = ns.Alert("|cffffd100", ns.T("SH_BARRIER"), "Ice Barrier")
   end
 
   ns.HelperAlert(main, sub, state)

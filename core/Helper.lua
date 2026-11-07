@@ -77,6 +77,42 @@ function ns.PlayAlertSound()
   if id and PlaySound then pcall(PlaySound, id, "Master") end
 end
 
+-- How alerts look: the spell's icon and the text, icons only, or text only.
+ns.ALERT_STYLES = { "both", "icons", "text" }
+
+local function IconTag(spell, size)
+  local tex = spell and ns.SpellIcon and ns.SpellIcon(spell)
+  if not tex then return nil end
+  return "|T" .. tex .. ":" .. size .. ":" .. size .. ":0:0:64:64:5:59:5:59|t"
+end
+
+-- A reminder line: "|T icon|t Text", the icon alone or the text alone (ns.db.alertStyle).
+-- spell may be a list; the first one you know gives the icon.
+function ns.Alert(color, text, spell)
+  local style = ns.db.alertStyle or "both"
+  if type(spell) == "table" then
+    local pick
+    for _, s in ipairs(spell) do if ns.SpellIcon(s) then pick = s; break end end
+    spell = pick
+  end
+  local tag = style ~= "text" and IconTag(spell, style == "icons" and 30 or 18)
+  if style == "icons" and tag then return tag end
+  return (tag and (tag .. " ") or "") .. color .. text .. "|r"
+end
+
+-- A call-out line: big word, then a short explanation; icons only shows a big icon.
+function ns.AlertMain(color, shout, rest, spell)
+  local style = ns.db.alertStyle or "both"
+  if type(spell) == "table" then
+    local pick
+    for _, s in ipairs(spell) do if ns.SpellIcon(s) then pick = s; break end end
+    spell = pick
+  end
+  local tag = style ~= "text" and IconTag(spell, style == "icons" and 40 or 26)
+  if style == "icons" and tag then return tag end
+  return (tag and (tag .. " ") or "") .. color .. shout .. "|r" .. (rest and rest ~= "" and (" " .. rest) or "")
+end
+
 local lastAlertState, lastAlertSub, lastSoundAt = nil, nil, 0
 
 -- Called by each combat helper on every update with what it shows.

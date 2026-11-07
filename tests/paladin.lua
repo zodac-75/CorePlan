@@ -139,7 +139,7 @@ end
 function GetCursorPosition() return 600, 450 end
 function DoEmote() end
 function GetItemIcon(id) return 134400 + (id or 0) end
-function GetSpellTexture(n) if type(n) == "string" and n:find("^Holy Light") or n == "Frostbolt" or n == "Fire Blast" then return 135920 end end
+function GetSpellTexture(n) if type(n) == "string" and (n:find("^Holy Light") or n == "Frostbolt" or n == "Fire Blast" or n == "Devotion Aura" or n == "Righteous Fury" or n == "Battle Shout" or n == "Lightning Shield") then return 135920 end end
 function UnitIsPlayer(u) return u == "target" or u == "player" end
 function UnitIsUnit(a, b) return a == b end
 UnitName = UnitName or function(u) if u == "target" then return "Kissy", nil end return "Me", nil end
@@ -711,6 +711,9 @@ do
   ns.db.shatterOff = false
   ns.db.alertSound = "all"; SIM_SOUNDS = 0
   ns.db.paladinAura = nil; SIM_BUFFS = {}; dump("prot: no fury")
+  ns.db.alertStyle = "icons"; dump("prot: icons only")
+  ns.db.alertStyle = "text"; dump("prot: text only")
+  ns.db.alertStyle = nil
   SIM_BUFFS = { "Righteous Fury" }; dump("prot: no aura")
   ns.db.paladinAura = "Retribution Aura"; SIM_BUFFS = { "Righteous Fury", "Devotion Aura" }; dump("prot: picked Retribution Aura")
   ns.db.paladinAura = nil

@@ -92,6 +92,9 @@ local SELECTORS = {
       i = math.max(1, math.min(#ns.HELPER_SIZES, i + dir))
       ns.SetHelperScale(ns.HELPER_SIZES[i])
     end },
+  { key = "CFG_ALERTSTYLE",
+    value = function() return ns.T("ASTYLE_" .. (ns.db.alertStyle or "both")) end,
+    step = function(dir) ns.db.alertStyle = Step(ns.ALERT_STYLES, ns.db.alertStyle or "both", dir) end },
   { key = "CFG_SOUND",
     value = function() return ns.T("SOUND_" .. (ns.db.alertSound or "off")) end,
     step = function(dir)

@@ -64,21 +64,21 @@ local function Update()
     local n = Stacks(MAELSTROM)
     if n and n >= 5 then
       state = "go"
-      main = "|cff@COLOR@MAELSTROM 5!|r " .. ns.T("SH_GO")
+      main = ns.AlertMain("|cff@COLOR@", "MAELSTROM 5!", ns.T("SH_GO"), "Lightning Bolt")
     elseif n and n >= 3 and hasTarget then
-      main = "|cff88bbff" .. ns.T("SH_STACKS", n) .. "|r"
+      main = ns.Alert("|cff88bbff", ns.T("SH_STACKS", n), "Lightning Bolt")
     end
   end
 
   -- Reminders, most important first.
   if (inCombat or hasTarget) and ns.SpellInfo("Lightning Shield")
     and ns.AuraMissing("player", "HELPFUL", "Lightning Shield", "Water Shield", "Earth Shield") then
-    sub = "|cffffd100" .. ns.T("SH_SHIELD") .. "|r"
+    sub = ns.Alert("|cffffd100", ns.T("SH_SHIELD"), { "Lightning Shield", "Water Shield" })
   elseif (inCombat or hasTarget) and not HasWeaponImbue() then
-    sub = "|cffffd100" .. ns.T("SH_IMBUE") .. "|r"
+    sub = ns.Alert("|cffffd100", ns.T("SH_IMBUE"), { "Windfury Weapon", "Flametongue Weapon", "Rockbiter Weapon" })
   elseif inCombat and hasTarget and ns.PlanKey() ~= "resto" and ns.SpellInfo("Flame Shock") and ns.CooldownLeft("Flame Shock") <= 0
     and ns.AuraMissing("target", "HARMFUL|PLAYER", "Flame Shock") then
-    sub = "|cffff9966" .. ns.T("SH_FLAMESHOCK") .. "|r"
+    sub = ns.Alert("|cffff9966", ns.T("SH_FLAMESHOCK"), "Flame Shock")
   end
 
   ns.HelperAlert(main, sub, state)

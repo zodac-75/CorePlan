@@ -13,7 +13,7 @@ local KEYS = {
   -- windows
   "pos", "posW", "posS", "hidden",
   "craftPos", "craftPosW", "craftPosS",
-  "shatterPos", "shatterScale", "alertSound", "alertSoundKit",
+  "shatterPos", "shatterScale", "alertSound", "alertSoundKit", "alertStyle",
   "arrowPos", "dungeonPos", "configPos",
   "minimapAngle", "minimapHidden",
   -- look

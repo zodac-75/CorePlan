@@ -1,3 +1,8 @@
+# WarriorPlan 1.0.0-beta15
+
+- **Alerts with icons:** every combat helper alert now shows the icon of the spell it is about, for example the Devotion Aura icon next to "No aura", or the Overpower icon next to "OVERPOWER!".
+- New **Alert style** setting (settings window → Plan and look): *Icon + text*, *Icons only* (big icons side by side, no text) or *Text only*. It's saved in your profile.
+
 # WarriorPlan 1.0.0-beta14
 
 - Talent marker: a big green arrow now points down at the next talent.
