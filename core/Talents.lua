@@ -313,7 +313,9 @@ local function FindButton(root, t)
       end
     end
   end
-  local ok, btn = pcall(walk, root, 0)
+  -- Search only the talent tree, never the Spellbook tabs next to it (their school
+  -- icons can be the same picture as a talent's).
+  local ok, btn = pcall(walk, tf, 0)
   return ok and btn or nil
 end
 
@@ -328,6 +330,17 @@ local function UpdateGlow()
     HideGlow()
     if hint then hint:Hide() end
     return
+  end
+
+  -- The spells window also holds the Spellbook: only mark talents while the Talents tab shows.
+  local tf = rawget(root, "TalentsFrame")
+  if tf and tf.IsVisible then
+    local okV, vis = pcall(tf.IsVisible, tf)
+    if okV and not vis then
+      HideGlow()
+      if hint then hint:Hide() end
+      return
+    end
   end
 
   local line = NextText()
