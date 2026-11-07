@@ -7,5 +7,5 @@
   "modules": [
     "Combat.lua"
   ],
-  "notes": "Enhancement shaman leveling companion: talent plan, upgrade check, rank check, Maelstrom and buff alerts, dungeon guide, profession assistant, XP tracker."
+  "notes": "Shaman leveling companion with Enhancement, Elemental and Restoration plans: talent plan, upgrade check, rank check, Maelstrom and buff alerts, dungeon guide, profession assistant, XP tracker."
 }

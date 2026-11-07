@@ -10,6 +10,6 @@
     "Polymorph.lua",
     "Supplies.lua"
   ],
-  "notes": "Frost mage leveling companion: talent plans, upgrade check, rank check, shatter and polymorph alerts, dungeon guide, profession assistant, XP tracker.",
+  "notes": "Mage leveling companion with Frost, Fire and Arcane plans: talent plan, upgrade check, rank check, shatter and polymorph alerts, dungeon guide, profession assistant, XP tracker.",
   "optionalDeps": "Auctionator"
 }

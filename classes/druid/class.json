@@ -7,5 +7,5 @@
   "modules": [
     "Combat.lua"
   ],
-  "notes": "Feral druid leveling companion: talent plan, upgrade check, rank check, combo point and buff alerts, dungeon guide, profession assistant, XP tracker."
+  "notes": "Druid leveling companion with Feral, Balance and Restoration plans: talent plan, upgrade check, rank check, combo point and buff alerts, dungeon guide, profession assistant, XP tracker."
 }
