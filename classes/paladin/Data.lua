@@ -154,6 +154,7 @@ ns.STATS.patterns = {
   { "^%+(%d+) Spirit", "spi" },
 }
 ns.STATS.armor = { [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [6] = true }
+ns.STATS.armorFrom = { [4] = 40 } -- plate from level 40
 ns.STATS.weapon = { [0] = true, [1] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
 
 -- Merchant's Favor goals shown in the plan window.

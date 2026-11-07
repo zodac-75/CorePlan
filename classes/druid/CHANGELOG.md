@@ -1,3 +1,7 @@
+# DruidPlan 1.0.0-beta9
+
+- Talent window: one odd frame can no longer stop the search for the talent to mark.
+
 # DruidPlan 1.0.0-beta8
 
 - Pick your spec in the settings window (or `/dp plan`): Feral, **Balance** or **Restoration**. The talent plan and the upgrade check follow the spec (spell power for Balance, healing for Restoration).

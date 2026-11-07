@@ -224,6 +224,8 @@ local items = {
   [6001] = { "Old Robe", 1, 12, "INVTYPE_CHEST", 50, 4, 1, 0, 1, 10 },
   [6002] = { "Leather Vest", 2, 22, "INVTYPE_CHEST", 400, 4, 1, 2, 2, 20 },
   [6003] = { "Future Gloves", 2, 30, "INVTYPE_HAND", 400, 4, 1, 2, 1, 30 },
+  [6004] = { "Plate Chest", 2, 30, "INVTYPE_CHEST", 400, 4, 1, 2, 4, 25 },
+  [6005] = { "Kite Shield", 2, 25, "INVTYPE_SHIELD", 400, 4, 1, 2, 6, 20 },
 }
 function GetItemInfoMock(item)
   local id = type(item) == "number" and item or tonumber(tostring(item):match("item:(%d+)"))
@@ -243,6 +245,8 @@ TOOLTIP_TEXT = {
   [6000] = { "Silky Robe", "+5 Intellect", "+2 Spirit", "Equip: Increases damage done by Frost spells and effects by up to 9.", "(2) Set: Increases damage and healing done by magical spells and effects by up to 20." },
   [6001] = { "Old Robe", "+3 Intellect" },
   [6003] = { "Future Gloves", "Equip: Increases spell power by 12." },
+  [6004] = { "Plate Chest", "300 Armor", "+10 Strength", "+8 Stamina" },
+  [6005] = { "Kite Shield", "500 Armor", "10 Block", "+5 Stamina" },
 }
 local function ttLines(link) local id = tonumber(tostring(link):match("item:(%d+)")); return TOOLTIP_TEXT[id] or { "x" } end
 function methods:SetHyperlink(link)
@@ -627,11 +631,11 @@ local function tipFor(id, nm)
   for _, l in ipairs(rawget(GameTooltip, "__lines") or {}) do print("    " .. (l:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))) end
 end
 print("--- Tooltip-test (uppgradering) ---") -- DEBUGUP
-for _, id in ipairs({6000, 6003, 6002}) do
+for _, id in ipairs({6000, 6003, 6002, 6004, 6005}) do
   local ok, d, lvl = pcall(ns.CompareToEquipped, "|Hitem:" .. id .. "|h[x]|h")
   print("  compare", id, ok, d, lvl, "score", pcall(ns.ItemScore, "|Hitem:" .. id .. "|h[x]|h"))
 end
-tipFor(6003, "Future Gloves"); tipFor(6002, "Leather Vest"); tipFor(6001, "Old Robe")
+tipFor(6003, "Future Gloves"); tipFor(6002, "Leather Vest"); tipFor(6001, "Old Robe"); tipFor(6004, "Plate Chest"); tipFor(6005, "Kite Shield")
 GameTooltip.__lines = nil
 GameTooltip.__itemName, GameTooltip.__itemLink = "Silky Robe", "|Hitem:6000|h[Silky Robe]|h"
 if TooltipPostCall then pcall(TooltipPostCall, GameTooltip) elseif GameTooltip.__scripts.OnTooltipSetItem then pcall(GameTooltip.__scripts.OnTooltipSetItem, GameTooltip) end

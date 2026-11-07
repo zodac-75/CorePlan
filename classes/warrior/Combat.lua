@@ -11,7 +11,8 @@ local function Update()
 
   if hasTarget then
     local hp = ns.TargetHealthPct()
-    if hp and hp < 20 and ns.SpellUsable("Execute") then
+    -- The game only lights it up below 20%; health can be hidden in combat.
+    if (hp == nil or hp < 20) and ns.SpellUsable("Execute") then
       state, main = "go", "|cff@COLOR@EXECUTE!|r " .. ns.T("SH_EXECUTE")
     elseif plan == "prot" and ns.SpellUsable("Revenge") then
       state, main = "go", "|cff@COLOR@REVENGE!|r " .. ns.T("SH_REVENGE")

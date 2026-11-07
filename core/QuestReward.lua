@@ -50,8 +50,11 @@ local function Evaluate(isRetry)
   for i = 1, n do
     local link = GetQuestItemLink("choice", i)
     if link then
-      local diff = ns.CompareToEquipped and ns.CompareToEquipped(link)
-      if diff and diff > bestUp then bestUp, bestUpI = diff, i end
+      local diff, needLevel = ns.CompareToEquipped(link)
+      -- Skip rewards you can't wear yet (e.g. plate before you learn it).
+      if diff and diff > bestUp and (needLevel or 0) <= (UnitLevel("player") or 1) then
+        bestUp, bestUpI = diff, i
+      end
       local ok, name, _, _, _, _, _, _, _, _, _, sell = pcall(ns.ItemInfo, link)
       if not (ok and name) then missing = true end
       local count = GetQuestItemInfo and select(3, GetQuestItemInfo("choice", i)) or 1

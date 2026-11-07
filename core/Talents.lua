@@ -1,10 +1,10 @@
--- @ADDON@: visar nästa talent enligt planen och markerar det i talentfönstret.
+-- @ADDON@: shows the next talent in the plan and marks it in the talent window.
 local _, ns = ...
 
 local TREES = ns.TALENT_TREES
 local glow, hint
 
--- Alla talents: namn -> {tab, index, tier, rank, max}
+-- All talents: name -> {tab, index, tier, rank, max, icon}
 local function TalentMap()
   local map = {}
   if not (GetNumTalentTabs and GetNumTalents and GetTalentInfo) then return map end
@@ -24,7 +24,6 @@ local function TalentMap()
   return map
 end
 
--- Första steget i planen som inte är gjort än.
 -- Returns name, talent info, wanted rank; "done" when the plan is complete.
 function ns.NextTalent()
   local map = TalentMap()
@@ -128,7 +127,9 @@ local function FindButton(root, t)
     for _, c in ipairs({ f:GetChildren() }) do
       local okS, shown = pcall(c.IsShown, c)
       if okS and shown then
-        if ButtonHasIcon(c, t.icon) then return c end
+        -- One odd frame must not stop the search.
+        local okI, isIt = pcall(ButtonHasIcon, c, t.icon)
+        if okI and isIt then return c end
         local hit = walk(c, depth + 1)
         if hit then return hit end
       end
@@ -243,7 +244,7 @@ function ns.RefreshTalentGlow() pcall(UpdateGlow) end
 
 local function OnPointsChanged()
   ns.RefreshMain()
-  UpdateGlow()
+  pcall(UpdateGlow)
 end
 
 ns.RegisterModule(function()

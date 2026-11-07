@@ -22,7 +22,8 @@ local function Update()
 
   if hasTarget then
     local hp = ns.TargetHealthPct()
-    if hp and hp < 20 and ns.SpellUsable("Hammer of Wrath") then
+    -- The game only lights it up below 20%; health can be hidden in combat.
+    if (hp == nil or hp < 20) and ns.SpellUsable("Hammer of Wrath") then
       state, main = "go", "|cff@COLOR@HAMMER OF WRATH!|r " .. ns.T("SH_GO")
     elseif TargetIsUndeadOrDemon() and ns.SpellUsable("Exorcism") then
       state, main = "go", "|cff@COLOR@EXORCISM!|r " .. ns.T("SH_EXORCISM")

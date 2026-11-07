@@ -1,7 +1,7 @@
 -- @ADDON@: talent plans (specs). The default plan is ns.talents from the class Data.lua
 -- unless ns.PLAN_STEPS has it; the others come from ns.PLAN_STEPS. A plan can also have
--- its own stat weights (ns.PLAN_WEIGHTS) and texts (KEY@plan in the locale). Every plan must be checked against the live tree:
--- a talent is only taken once its row has enough points spent in that tree.
+-- its own stat weights (ns.PLAN_WEIGHTS) and texts (KEY@plan in the locale).
+-- Check every plan against the live tree with tools/checktalents.lua.
 local _, ns = ...
 
 -- Builds a level -> "Talent n/max" table from steps of { name, maxRank, count }.

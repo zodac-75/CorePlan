@@ -1,3 +1,11 @@
+# PaladinPlan 1.0.0-beta2
+
+- Plate armor shows "usable at level 40" in the upgrade check until you can wear it, and the quest reward picker skips it.
+- Shields now get the upgrade check too (they were never compared before).
+- Fury and other dual wielders: a one-hand weapon is compared with the weaker of your two weapons.
+- Talent window: one odd frame can no longer stop the search for the talent to mark.
+- Hammer of Wrath is called out even when the game hides your target's health.
+
 # PaladinPlan 1.0.0-beta1
 
 First beta of PaladinPlan, the paladin leveling companion for WoW Forever.

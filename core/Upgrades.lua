@@ -11,12 +11,42 @@ local SLOTS = {
   INVTYPE_WAIST = { 6 }, INVTYPE_LEGS = { 7 }, INVTYPE_FEET = { 8 },
   INVTYPE_FINGER = { 11, 12 }, INVTYPE_TRINKET = { 13, 14 },
   INVTYPE_WEAPON = { 16 }, INVTYPE_WEAPONMAINHAND = { 16 }, INVTYPE_2HWEAPON = { 16 },
-  INVTYPE_HOLDABLE = { 17 }, INVTYPE_WEAPONOFFHAND = { 17 },
-  INVTYPE_RANGED = { 18 }, INVTYPE_RANGEDRIGHT = { 18 },
+  INVTYPE_HOLDABLE = { 17 }, INVTYPE_WEAPONOFFHAND = { 17 }, INVTYPE_SHIELD = { 17 },
+  INVTYPE_RANGED = { 18 }, INVTYPE_RANGEDRIGHT = { 18 }, INVTYPE_THROWN = { 18 },
 }
 
 local USABLE_ARMOR = ns.STATS.armor
 local USABLE_WEAPON = ns.STATS.weapon
+
+-- Armor types learned later (ns.STATS.armorFrom = { [subclass] = level }), e.g. plate at 40.
+-- If the skill list shows the armor skill you know it; otherwise we go by your level
+-- (a collapsed header in the skill list hides its lines, so "not listed" proves nothing).
+local ARMOR_SKILL = { [3] = "Mail", [4] = "Plate Mail" }
+
+local function KnowsSkill(name)
+  if type(GetNumSkillLines) ~= "function" or type(GetSkillLineInfo) ~= "function" then return false end
+  local ok, n = pcall(GetNumSkillLines)
+  if not ok or type(n) ~= "number" then return false end
+  for i = 1, n do
+    local okLine, skillName, isHeader = pcall(GetSkillLineInfo, i)
+    if okLine and not isHeader and skillName == name then return true end
+  end
+  return false
+end
+
+-- Level you can wear this armor type from, or nil when you already can.
+local function WearLevel(classID, subclassID)
+  local from = classID == 4 and ns.STATS.armorFrom and ns.STATS.armorFrom[subclassID]
+  if not from or (UnitLevel("player") or 1) >= from then return nil end
+  if ARMOR_SKILL[subclassID] and KnowsSkill(ARMOR_SKILL[subclassID]) then return nil end
+  return from
+end
+
+local function IsWeapon(link)
+  if not link then return false end
+  local ok, _, _, _, _, _, _, _, _, _, _, _, classID = pcall(ns.ItemInfo, link)
+  return ok and classID == 2
+end
 
 local scanTip
 local cache = {}
@@ -96,12 +126,21 @@ function ns.CompareToEquipped(link)
   if classID == 2 and not USABLE_WEAPON[subclassID] then return nil end
   if classID ~= 2 and classID ~= 4 then return nil end
 
+  local wear = WearLevel(classID, subclassID)
+  if wear and (minLevel or 0) < wear then minLevel = wear end
+
   local newScore = ns.ItemScore(link)
   local oldScore
   if equipLoc == "INVTYPE_2HWEAPON" then
     oldScore = ns.ItemScore(Equipped(16)) + ns.ItemScore(Equipped(17))
-  elseif (equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND") and IsTwoHander(Equipped(16)) then
+  elseif (equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" or equipLoc == "INVTYPE_SHIELD")
+    and IsTwoHander(Equipped(16)) then
     return nil -- would need to swap out the two-hander as well
+  elseif equipLoc == "INVTYPE_WEAPON" and IsWeapon(Equipped(17)) then
+    -- Dual wielding: a one-hander can replace the weaker of the two weapons.
+    local a, b = Equipped(16), Equipped(17)
+    if link == a or link == b then return nil end
+    oldScore = math.min(ns.ItemScore(a), ns.ItemScore(b))
   elseif #slots == 2 then
     local a, b = Equipped(slots[1]), Equipped(slots[2])
     if link == a or link == b then return nil end

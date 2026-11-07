@@ -1,3 +1,10 @@
+# ShamanPlan 1.0.0-beta10
+
+- Mail armor shows "usable at level 40" in the upgrade check until you can wear it, and the quest reward picker skips it.
+- Shields now get the upgrade check too (they were never compared before).
+- Fury and other dual wielders: a one-hand weapon is compared with the weaker of your two weapons.
+- Talent window: one odd frame can no longer stop the search for the talent to mark.
+
 # ShamanPlan 1.0.0-beta9
 
 - Pick your spec in the settings window (or `/sp plan`): Enhancement, **Elemental** or **Restoration**. The talent plan and the upgrade check follow the spec (spell power for Elemental, healing for Restoration).

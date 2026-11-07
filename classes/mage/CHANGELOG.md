@@ -1,3 +1,7 @@
+# MagePlan 1.9.1
+
+- Talent window: one odd frame can no longer stop the search for the talent to mark.
+
 # MagePlan 1.9.0
 
 - The talent tree now marks your next talent in WoW Forever's own talent window (all three trees side by side), not only in the old one.
