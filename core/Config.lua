@@ -55,6 +55,13 @@ for i = #(ns.EXTRA_FEATURES or {}), 1, -1 do
   end
 end
 
+-- Classes without mana get no drink settings.
+if ns.NO_MANA then
+  for i = #FEATURES, 1, -1 do
+    if FEATURES[i].key == "MM_DRINK" then table.remove(FEATURES, i) end
+  end
+end
+
 local SELECTORS = {
   { key = "CFG_PROF1",
     value = function() return ns.ProfLabel(1) end,
@@ -84,6 +91,11 @@ local SELECTORS = {
       Run("drinkat", tostring(n))
     end },
 }
+if ns.NO_MANA then
+  for i = #SELECTORS, 1, -1 do
+    if SELECTORS[i].key == "CFG_DRINKAT" then table.remove(SELECTORS, i) end
+  end
+end
 
 -- The talent plan selector only shows when the class has more than one plan.
 if #ns.PLAN_ORDER > 1 then

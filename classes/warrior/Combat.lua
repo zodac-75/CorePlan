@@ -24,12 +24,12 @@ local function Update()
   end
 
   -- Reminders, most important first.
-  if (inCombat or hasTarget) and ns.SpellInfo("Battle Shout") and not ns.PlayerHas("Battle Shout") then
+  if (inCombat or hasTarget) and ns.SpellInfo("Battle Shout") and ns.AuraMissing("player", "HELPFUL", "Battle Shout") then
     sub = "|cffffd100" .. ns.T("SH_SHOUT") .. "|r"
-  elseif inCombat and hasTarget and plan == "arms" and ns.SpellInfo("Rend") and not ns.MyDebuffOnTarget("Rend") then
+  elseif inCombat and hasTarget and plan == "arms" and ns.SpellInfo("Rend") and ns.AuraMissing("target", "HARMFUL|PLAYER", "Rend") then
     sub = "|cffff9966" .. ns.T("SH_REND") .. "|r"
   elseif inCombat and hasTarget and plan == "prot" and ns.SpellInfo("Demoralizing Shout")
-    and not ns.ForEachAura("target", "HARMFUL", function(n) return n == "Demoralizing Shout" end) then
+    and ns.AuraMissing("target", "HARMFUL", "Demoralizing Shout", "Demoralizing Roar") then
     sub = "|cffff9966" .. ns.T("SH_DEMO") .. "|r"
   end
   return main, sub, state

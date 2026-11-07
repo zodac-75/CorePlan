@@ -9,7 +9,16 @@ local function Readable(v)
   return type(v) == "number" and not (issecretvalue and issecretvalue(v))
 end
 
+-- False for classes without mana (warriors), so nothing nags them to drink.
+function ns.HasMana()
+  if ns.NO_MANA then return false end
+  local ok, max = pcall(UnitPowerMax, "player", 0)
+  if ok and Readable(max) then return max > 0 end
+  return true
+end
+
 function ns.ManaPct()
+  if not ns.HasMana() then return nil end
   local ok, pct = pcall(function()
     local cur, max = UnitPower("player", 0), UnitPowerMax("player", 0)
     if Readable(cur) and Readable(max) and max > 0 then return cur / max * 100 end
@@ -64,13 +73,13 @@ ns.RegisterModule(function()
   end)
 end)
 
-ns.RegisterCommand("drink", true, function()
+ns.RegisterCommand("drink", not ns.NO_MANA, function()
   ns.db.drinkOff = not ns.db.drinkOff
   ns.Print(ns.db.drinkOff and ns.T("DRINK_OFF") or ns.T("DRINK_ON"))
   pcall(Check)
 end)
 
-ns.RegisterCommand("drinkat", true, function(rest)
+ns.RegisterCommand("drinkat", not ns.NO_MANA, function(rest)
   local n = tonumber((rest or ""):match("(%d+)"))
   if n and n > 0 and n < 100 then
     ns.db.drinkPct = n

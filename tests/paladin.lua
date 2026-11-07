@@ -141,7 +141,7 @@ local spells = {
   ["Holy Strike"] = { 20271, 2 }, ["Seal of Righteousness"] = { 20154, 2 }, ["Blessing of Might"] = { 19740, 2 },
   ["Judgement"] = { 20272, 1 }, ["Righteous Fury"] = { 25780, 1 }, ["Hammer of Justice"] = { 853, 1 },
   ["Exorcism"] = { 879, 1 }, ["Hammer of Wrath"] = { 24275, 1 }, ["Holy Light"] = { 639, 3 },
-  ["Consecration"] = { 26573, 1 }, ["Holy Shield"] = { 20925, 1 },
+  ["Consecration"] = { 26573, 1 }, ["Holy Shield"] = { 20925, 1 }, ["Devotion Aura"] = { 465, 1 }, ["Retribution Aura"] = { 7294, 1 },
 }
 local byId = {}
 for n, d in pairs(spells) do byId[d[1]] = n end
@@ -677,9 +677,10 @@ do
   UnitAffectingCombat = function() return true end
   ns.db.shatterOff = false
   SIM_BUFFS = {}; dump("prot: no fury")
-  SIM_BUFFS = { "Righteous Fury" }; dump("prot: no seal")
-  SIM_BUFFS = { "Righteous Fury", "Seal of Righteousness" }; dump("prot: no blessing")
-  SIM_BUFFS = { "Righteous Fury", "Seal of Righteousness", "Blessing of Might" }; SIM_USABLE = { ["Holy Shield"] = true }; dump("prot: holy shield")
+  SIM_BUFFS = { "Righteous Fury" }; dump("prot: no aura")
+  SIM_BUFFS = { "Righteous Fury", "Devotion Aura" }; dump("prot: no seal")
+  SIM_BUFFS = { "Righteous Fury", "Devotion Aura", "Seal of Righteousness" }; dump("prot: no blessing")
+  SIM_BUFFS = { "Righteous Fury", "Devotion Aura", "Seal of Righteousness", "Blessing of Might" }; SIM_USABLE = { ["Holy Shield"] = true }; dump("prot: holy shield")
   SIM_HP = 10; SIM_USABLE = { ["Hammer of Wrath"] = true }; dump("hammer of wrath")
   SIM_HP = 80; SIM_TYPE = "Undead"; SIM_USABLE = { Exorcism = true }; dump("exorcism")
   SIM_TYPE = "Beast"; SIM_USABLE = {}; ns.db.plan = "holy"; ns.ApplyPlan(); SIM_BUFFS = {}; dump("holy: no blessing")

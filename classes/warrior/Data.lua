@@ -150,6 +150,8 @@ ns.FAVOR_GOALS = {}
 ns.CLASS_TIPS = {}
 
 -- Settings window: the combat helper's command and the class theme colors.
+-- Warriors use rage: no drink reminder.
+ns.NO_MANA = true
 ns.COMBAT_CMD = "combat"
 ns.THEME_BG = { 0.10, 0.04, 0.03, 0.92 }
 ns.THEME_BORDER = { 0.80, 0.30, 0.20, 0.9 }

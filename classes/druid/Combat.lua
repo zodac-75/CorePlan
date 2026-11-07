@@ -58,12 +58,12 @@ local function Update()
   end
 
   -- Reminders, most important first.
-  if (inCombat or hasTarget) and ns.SpellInfo("Mark of the Wild") and not PlayerHas("Mark of the Wild")
-    and not PlayerHas("Gift of the Wild") then
+  if (inCombat or hasTarget) and ns.SpellInfo("Mark of the Wild")
+    and ns.AuraMissing("player", "HELPFUL", "Mark of the Wild", "Gift of the Wild") then
     sub = "|cffffd100" .. ns.T("SH_SHIELD") .. "|r"
-  elseif (inCombat or hasTarget) and ns.SpellInfo("Thorns") and not PlayerHas("Thorns") then
+  elseif (inCombat or hasTarget) and ns.SpellInfo("Thorns") and ns.AuraMissing("player", "HELPFUL", "Thorns") then
     sub = "|cffffd100" .. ns.T("SH_IMBUE") .. "|r"
-  elseif cat and inCombat and hasTarget and ns.SpellInfo("Rake") and not MyDebuffOnTarget("Rake") then
+  elseif cat and inCombat and hasTarget and ns.SpellInfo("Rake") and ns.AuraMissing("target", "HARMFUL|PLAYER", "Rake") then
     sub = "|cffff9966" .. ns.T("SH_FLAMESHOCK") .. "|r"
   end
 

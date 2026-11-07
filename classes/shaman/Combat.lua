@@ -71,13 +71,13 @@ local function Update()
   end
 
   -- Reminders, most important first.
-  if (inCombat or hasTarget) and ns.SpellInfo("Lightning Shield") and not PlayerHas("Lightning Shield")
-    and not PlayerHas("Water Shield") then
+  if (inCombat or hasTarget) and ns.SpellInfo("Lightning Shield")
+    and ns.AuraMissing("player", "HELPFUL", "Lightning Shield", "Water Shield", "Earth Shield") then
     sub = "|cffffd100" .. ns.T("SH_SHIELD") .. "|r"
   elseif (inCombat or hasTarget) and not HasWeaponImbue() then
     sub = "|cffffd100" .. ns.T("SH_IMBUE") .. "|r"
   elseif inCombat and hasTarget and ns.PlanKey() ~= "resto" and ns.SpellInfo("Flame Shock") and ns.CooldownLeft("Flame Shock") <= 0
-    and not MyDebuffOnTarget("Flame Shock") then
+    and ns.AuraMissing("target", "HARMFUL|PLAYER", "Flame Shock") then
     sub = "|cffff9966" .. ns.T("SH_FLAMESHOCK") .. "|r"
   end
 

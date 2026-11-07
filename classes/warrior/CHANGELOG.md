@@ -1,3 +1,8 @@
+# WarriorPlan 1.0.0-beta4
+
+- No more drink reminder: warriors use rage. The drink settings are gone from the menus too.
+- Buff reminders no longer say a buff is missing when the game hides your buff list from addons (it can do that in combat). They stay quiet when they can't tell.
+
 # WarriorPlan 1.0.0-beta3
 
 - **Quick menu:** left-click the minimap icon for a small menu right next to it: switch spec, open the plan window, dungeon guide, crafting assistant or trainer list, and turn features on and off with one click. Right-click still opens all settings.

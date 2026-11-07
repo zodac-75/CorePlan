@@ -39,7 +39,7 @@ local function Update()
   end
 
   if ns.SpellInfo("Ice Barrier") and (UnitAffectingCombat("player") or hasTarget)
-    and not PlayerHas("Ice Barrier") and ns.CooldownLeft("Ice Barrier") <= 0 then
+    and ns.AuraMissing("player", "HELPFUL", "Ice Barrier") and ns.CooldownLeft("Ice Barrier") <= 0 then
     sub = "|cffffd100" .. ns.T("SH_BARRIER") .. "|r"
   end
 

@@ -163,7 +163,7 @@ if MODE == "modern" then
   }
   C_UnitAuras = {
     GetAuraDataByIndex = function(u, i, f)
-      local list = (u == "player" and f == "HELPFUL") and { "Rockbiter Weapon", "Maelstrom Weapon" } or {}
+      local list = (u == "player" and f == "HELPFUL") and { "Rockbiter Weapon", "Maelstrom Weapon", SIM_SHIELD } or {}
       if list[i] then return { name = list[i], spellId = 1, applications = (list[i] == "Maelstrom Weapon") and SIM_MAELSTROM or 0 } end
     end,
   }
@@ -174,7 +174,7 @@ else
   function GetSpellInfo(s) local n, id = spellLookup(s); if n then return n, nil, 0, 0, 0, 0, id end end
   function GetSpellCooldown(s)  return 0, 0 end
   function UnitAura(u, i, f)
-    local list = (u == "player" and f == "HELPFUL") and { "Maelstrom Weapon" } or {}
+    local list = (u == "player" and f == "HELPFUL") and { "Maelstrom Weapon", SIM_SHIELD } or {}
     if list[i] then return list[i], 0, SIM_MAELSTROM, nil, 10, now + 5, "player", false, false, 1 end
   end
 end
@@ -672,6 +672,10 @@ do
   issecretvalue = function(v) return v == SIM_SECRET end
   SIM_SECRET = {}; SIM_MAELSTROM = SIM_SECRET; dump("secret stacks")
   issecretvalue = nil; SIM_MAELSTROM = 0
+  SIM_SHIELD = "Lightning Shield"; dump("shield on")
+  issecretvalue = function(v) return v == SIM_SECRET end
+  SIM_SHIELD = SIM_SECRET; dump("shield name hidden")
+  issecretvalue = nil; SIM_SHIELD = nil
   UnitAffectingCombat = function() return false end
 end
 print("--- Yrkestest (PROFTEST) ---")

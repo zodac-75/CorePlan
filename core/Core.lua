@@ -83,24 +83,66 @@ end
 
 -- Går igenom auras; fn(name, spellId) returnerar true för att stoppa.
 -- Returnerar true om fn någon gång returnerade true.
+-- Calls fn(name, spellId) for each aura until it returns true. Returns found, unsure:
+-- unsure is true when some aura couldn't be read (the game can hide aura names from
+-- addons in combat), so "not found" doesn't prove it's missing.
 function ns.ForEachAura(unit, filter, fn)
+  local unsure = false
   for i = 1, 40 do
     local name, spellId
     if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
       local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, filter)
-      if not ok or not a then return false end
+      if not ok then return false, true end
+      if not a then return false, unsure end
       name, spellId = a.name, a.spellId
     elseif UnitAura then
       local ok, n, _, _, _, _, _, _, _, _, id = pcall(UnitAura, unit, i, filter)
-      if not ok or not n then return false end
+      if not ok then return false, true end
+      if not n then return false, unsure end
       name, spellId = n, id
     else
-      return false
+      return false, true
     end
-    local ok2, stop = pcall(fn, name, spellId)
-    if ok2 and stop then return true end
+    if issecretvalue and issecretvalue(name) then
+      unsure = true
+    else
+      local ok2, stop = pcall(fn, name, spellId)
+      if not ok2 then unsure = true elseif stop then return true end
+    end
   end
+  return false, unsure
+end
+
+-- Has the unit this aura? true, false, or nil when we can't tell.
+function ns.AuraByName(unit, filter, name)
+  if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
+    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, name, filter)
+    if ok and a then return true end
+  end
+  local found, unsure = ns.ForEachAura(unit, filter, function(n) return n == name end)
+  if found then return true end
+  if unsure then return nil end
   return false
+end
+
+-- True only when none of the auras is there for sure. Reminders use this, so they
+-- stay quiet instead of nagging when the game hides the aura list.
+function ns.AuraMissing(unit, filter, ...)
+  for i = 1, select("#", ...) do
+    if ns.AuraByName(unit, filter, (select(i, ...))) ~= false then return false end
+  end
+  return true
+end
+
+-- Same, for auras whose name starts with one of the prefixes ("Seal of ").
+function ns.AuraMissingLike(unit, filter, ...)
+  local prefixes = { ... }
+  local found, unsure = ns.ForEachAura(unit, filter, function(n)
+    for _, p in ipairs(prefixes) do
+      if n:find(p, 1, true) == 1 then return true end
+    end
+  end)
+  return not found and not unsure
 end
 
 -- Yrkesskill: returnerar rank, maxRank (eller nil om yrket saknas).

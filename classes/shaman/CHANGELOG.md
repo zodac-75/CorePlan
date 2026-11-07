@@ -1,3 +1,8 @@
+# ShamanPlan 1.0.0-beta12
+
+- Fixed "Lightning Shield is missing" showing while Lightning Shield was on. Water Shield and Earth Shield also count.
+- Buff reminders no longer say a buff is missing when the game hides your buff list from addons (it can do that in combat). They stay quiet when they can't tell.
+
 # ShamanPlan 1.0.0-beta11
 
 - **Quick menu:** left-click the minimap icon for a small menu right next to it: switch spec, open the plan window, dungeon guide, crafting assistant or trainer list, and turn features on and off with one click. Right-click still opens all settings.

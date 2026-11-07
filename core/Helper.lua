@@ -12,11 +12,11 @@ function ns.Readable(v)
 end
 
 function ns.PlayerHas(buff)
-  return ns.ForEachAura("player", "HELPFUL", function(n) return n == buff end)
+  return ns.AuraByName("player", "HELPFUL", buff) == true
 end
 
 function ns.MyDebuffOnTarget(debuff)
-  return ns.ForEachAura("target", "HARMFUL|PLAYER", function(n) return n == debuff end)
+  return ns.AuraByName("target", "HARMFUL|PLAYER", debuff) == true
 end
 
 function ns.HasHostileTarget()
