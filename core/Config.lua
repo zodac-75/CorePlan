@@ -109,6 +109,12 @@ if #ns.PLAN_ORDER > 1 then
     end })
 end
 
+-- Class settings (ns.EXTRA_SELECTORS in the class Data.lua) go right after the spec.
+-- Each is { key = locale key, value = function() -> text, step = function(dir) }.
+for i = #(ns.EXTRA_SELECTORS or {}), 1, -1 do
+  table.insert(SELECTORS, #ns.PLAN_ORDER > 1 and 2 or 1, ns.EXTRA_SELECTORS[i])
+end
+
 local PROFILE_SELECTORS = {
   { key = "CFG_PROFILE",
     value = function() return ns.ActiveProfile() end,
@@ -383,6 +389,10 @@ local function RefreshQuick()
   if quick.spec then
     quick.spec.text:SetText(ns.T("MM_PLANSEL"):gsub(":$", "") .. ": " .. Val(ns.T("PLAN_" .. ns.PlanKey())))
   end
+  for _, r in ipairs(quick.extras) do
+    local ok, v = pcall(r.item.value)
+    r.text:SetText(ns.T(r.item.key):gsub(":$", "") .. ": " .. Val(ok and v or "?"))
+  end
   for _, h in ipairs(quick.headers) do h:SetText(ns.T(h.key)) end
   for _, r in ipairs(quick.tools) do r.text:SetText(ns.T(r.item.key)) end
   for _, r in ipairs(quick.toggles) do
@@ -423,8 +433,23 @@ local function BuildQuick()
       RefreshQuick()
     end)
     quick.spec = r
-    y = y - QROW_H - 4
+    y = y - QROW_H
   end
+  quick.extras = {}
+  for _, item in ipairs(ns.EXTRA_SELECTORS or {}) do
+    local r = QuickRow(quick, y)
+    r.item = item
+    r.check:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    r:SetScript("OnClick", function(_, mouse)
+      local ok, err = pcall(item.step, mouse == "RightButton" and -1 or 1)
+      if not ok then ns.Print(ns.T("ERROR", tostring(err))) end
+      Refresh()
+      RefreshQuick()
+    end)
+    table.insert(quick.extras, r)
+    y = y - QROW_H
+  end
+  if quick.spec or #quick.extras > 0 then y = y - 4 end
 
   table.insert(quick.headers, QuickHeader(quick, y, "QM_OPEN"))
   y = y - 16

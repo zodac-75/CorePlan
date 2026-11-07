@@ -37,7 +37,11 @@ local function Update()
   -- Reminders, most important first.
   if (inCombat or hasTarget) and plan == "prot" and ns.SpellInfo("Righteous Fury") and ns.AuraMissing("player", "HELPFUL", "Righteous Fury") then
     sub = "|cffffd100" .. ns.T("SH_FURY") .. "|r"
-  elseif (inCombat or hasTarget) and ns.SpellInfo("Devotion Aura") and NoAura() then
+  elseif (inCombat or hasTarget) and ns.WantedAura() and ns.SpellInfo(ns.WantedAura())
+    and ns.AuraMissing("player", "HELPFUL", ns.WantedAura()) then
+    -- The aura you picked in the settings isn't on (another one may be).
+    sub = "|cffffd100" .. ns.T("SH_AURA_PICK", ns.WantedAura()) .. "|r"
+  elseif (inCombat or hasTarget) and not ns.WantedAura() and ns.SpellInfo("Devotion Aura") and NoAura() then
     local best = (plan == "ret" and ns.SpellInfo("Retribution Aura")) and "Retribution Aura" or "Devotion Aura"
     sub = "|cffffd100" .. ns.T("SH_AURA", best) .. "|r"
   elseif hasTarget and plan ~= "holy" and ns.AuraMissingLike("player", "HELPFUL", "Seal of ") then

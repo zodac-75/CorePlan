@@ -163,6 +163,34 @@ ns.FAVOR_GOALS = {}
 -- Zone tips for this class (profession tips are in the core).
 ns.CLASS_TIPS = {}
 
+-- Which aura the combat helper wants on: "auto" (by spec) or one you pick.
+ns.AURAS = { "Devotion Aura", "Retribution Aura", "Concentration Aura",
+  "Shadow Resistance Aura", "Frost Resistance Aura", "Fire Resistance Aura" }
+
+function ns.WantedAura()
+  local a = ns.db and ns.db.paladinAura
+  if a and a ~= "auto" then return a end
+  return nil
+end
+
+ns.EXTRA_SELECTORS = {
+  { key = "CFG_AURA",
+    value = function()
+      return ns.WantedAura() or ns.T("AURA_AUTO")
+    end,
+    step = function(dir)
+      -- "auto" plus the auras you know.
+      local list = { "auto" }
+      for _, a in ipairs(ns.AURAS) do
+        if ns.SpellInfo(a) then table.insert(list, a) end
+      end
+      local cur, i = ns.db.paladinAura or "auto", 1
+      for n, a in ipairs(list) do if a == cur then i = n end end
+      i = ((i - 1 + dir) % #list) + 1
+      ns.db.paladinAura = list[i]
+    end },
+}
+
 -- Settings window: the combat helper's command and the class theme colors.
 ns.COMBAT_CMD = "combat"
 ns.THEME_BG = { 0.08, 0.06, 0.03, 0.92 }

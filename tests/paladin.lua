@@ -684,8 +684,10 @@ do
   end
   UnitAffectingCombat = function() return true end
   ns.db.shatterOff = false
-  SIM_BUFFS = {}; dump("prot: no fury")
+  ns.db.paladinAura = nil; SIM_BUFFS = {}; dump("prot: no fury")
   SIM_BUFFS = { "Righteous Fury" }; dump("prot: no aura")
+  ns.db.paladinAura = "Retribution Aura"; SIM_BUFFS = { "Righteous Fury", "Devotion Aura" }; dump("prot: picked Retribution Aura")
+  ns.db.paladinAura = nil
   SIM_BUFFS = { "Righteous Fury", "Devotion Aura" }; dump("prot: no seal")
   SIM_BUFFS = { "Righteous Fury", "Devotion Aura", "Seal of Righteousness" }; dump("prot: no blessing")
   SIM_BUFFS = { "Righteous Fury", "Devotion Aura", "Seal of Righteousness", "Blessing of Might" }; SIM_USABLE = { ["Holy Shield"] = true }; dump("prot: holy shield")

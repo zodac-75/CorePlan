@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0-beta6
+
+- Pick your aura in the settings window or the quick menu: Auto (by spec) or any aura you know. The combat helper then reminds you to turn that aura on, also when another aura is active.
+
 # PaladinPlan 1.0.0-beta5
 
 - Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).
