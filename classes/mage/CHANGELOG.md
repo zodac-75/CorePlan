@@ -1,3 +1,7 @@
+# MagePlan 1.9.5
+
+- Rank check understands macros: a spell in a macro counts as on your bars, and a macro is only reported when it names an old rank, like "Frostbolt(Rank 1)".
+
 # MagePlan 1.9.4
 
 - Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).

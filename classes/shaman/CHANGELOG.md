@@ -1,3 +1,7 @@
+# ShamanPlan 1.0.0-beta14
+
+- Rank check understands macros: a spell in a macro counts as on your bars, and a macro is only reported when it names an old rank, like "Frostbolt(Rank 1)".
+
 # ShamanPlan 1.0.0-beta13
 
 - Fixed the logo missing at the top of the settings window (and in the game's AddOns settings).

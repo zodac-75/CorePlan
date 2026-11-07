@@ -189,7 +189,18 @@ function GetSpellSubtext(id) local r = spellRank[id]; return r and ("Rank " .. r
 
 -- Action bars: knapp 1 = Frostbolt rank 1, knapp 2 = Frost Nova, knapp 3 = Blizzard
 local actions = { [1] = 116, [2] = 865, [3] = 10, [4] = 1460 }
-function GetActionInfo(slot) local id = actions[slot]; if id then return "spell", id end end
+-- Macros on buttons 5-7: one with an old rank, one without rank, one with conditions.
+local macroSlots = { [5] = 1, [6] = 2, [7] = 3 }
+local macros = {
+  [1] = { "Bolt1", "#showtooltip\n/cast Arcane Explosion(Rank 1)" },
+  [2] = { "Blast", "/cast Fire Blast" },
+  [3] = { "Sheep", "/cast [@focus,exists,harm] Polymorph; [harm] !Polymorph" },
+}
+function GetActionInfo(slot)
+  local id = actions[slot]; if id then return "spell", id end
+  if macroSlots[slot] then return "macro", macroSlots[slot] end
+end
+function GetMacroInfo(i) local m = macros[i]; if m then return m[1], 134400, m[2] end end
 
 -- Talents
 local talents = {

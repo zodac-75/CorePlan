@@ -13,16 +13,84 @@ local function RankNumber(id)
   return nil
 end
 
+-- Spells a macro casts: { {name = "Frostbolt", rank = 1 or nil}, ... }.
+-- Reads /cast, /use, /castsequence, /castrandom and #showtooltip lines; drops
+-- [conditions], "reset=" and "!". A spell without "(Rank N)" casts your highest rank.
+local MACRO_CMDS = { cast = true, use = true, castsequence = true, castrandom = true, showtooltip = true }
+
+local function MacroSpells(body)
+  local out = {}
+  if type(body) ~= "string" then return out end
+  for line in body:gmatch("[^\r\n]+") do
+    local cmd, args = line:match("^%s*[/#](%a+)%s*(.*)$")
+    if cmd and MACRO_CMDS[cmd:lower()] then
+      args = args:gsub("%b[]", ""):gsub("reset=%S+", "")
+      for part in args:gmatch("[^;,]+") do
+        part = part:gsub("^%s*!?", ""):gsub("%s+$", "")
+        if part ~= "" then
+          local rank = tonumber(part:match("%(%s*[Rr]ank%s*(%d+)%s*%)"))
+          local name = part:gsub("%s*%(.-%)%s*$", "")
+          table.insert(out, { name = name:lower(), rank = rank })
+        end
+      end
+    end
+  end
+  return out
+end
+
+local function MacroBody(index)
+  if GetMacroInfo then
+    local ok, _, _, body = pcall(GetMacroInfo, index)
+    if ok and type(body) == "string" then return body end
+  end
+  return nil
+end
+
+local function MacroName(index, slot)
+  if GetMacroInfo then
+    local ok, name = pcall(GetMacroInfo, index)
+    if ok and type(name) == "string" then return name end
+  end
+  if GetActionText then
+    local ok, t = pcall(GetActionText, slot)
+    if ok and type(t) == "string" then return t end
+  end
+  return "?"
+end
+
 local function SpellsOnBars()
   local onBar = {}
   if not GetActionInfo then return onBar end
+  local wanted = {} -- lower-case name -> spell name, for the spells we check
+  for _, spell in ipairs(CHECK) do
+    local name = ns.SpellInfo(spell)
+    if name then wanted[name:lower()] = name end
+  end
+  local function Add(name, entry)
+    onBar[name] = onBar[name] or {}
+    table.insert(onBar[name], entry)
+  end
   for slot = 1, 120 do
     local ok, kind, id = pcall(GetActionInfo, slot)
     if ok and kind == "spell" and id then
       local name = ns.SpellInfo(id)
-      if name then
-        onBar[name] = onBar[name] or {}
-        table.insert(onBar[name], { slot = slot, id = id })
+      if name then Add(name, { slot = slot, id = id }) end
+    elseif ok and kind == "macro" and id then
+      -- Macros count as having the spell on a button. Only a macro that names an
+      -- old rank, "Frostbolt(Rank 1)", is reported as outdated.
+      local found = false
+      for _, m in ipairs(MacroSpells(MacroBody(id))) do
+        local name = wanted[m.name]
+        if name then
+          found = true
+          Add(name, { slot = slot, macroRank = m.rank, macro = MacroName(id, slot) })
+        end
+      end
+      if not found and GetMacroSpell then
+        -- No readable text: ask the game which spell the macro shows.
+        local okS, spellId = pcall(GetMacroSpell, id)
+        local name = okS and spellId and ns.SpellInfo(spellId)
+        if name then Add(name, { slot = slot, macro = MacroName(id, slot) }) end
       end
     end
   end
@@ -53,10 +121,17 @@ local function Scan(force)
       else
         local bestRank = RankNumber(bestId)
         for _, s in ipairs(slots) do
-          local r = RankNumber(s.id)
-          -- Varna bara när båda ranks går att läsa och knappen ligger lägre.
-          if s.id ~= bestId and r and bestRank and r < bestRank then
-            table.insert(newOutdated, ns.T("RANKS_OLD_LINE", name, r, s.slot, bestRank))
+          if s.macro then
+            -- A macro is only outdated when it names a lower rank.
+            if s.macroRank and bestRank and s.macroRank < bestRank then
+              table.insert(newOutdated, ns.T("RANKS_OLD_MACRO", name, s.macroRank, s.macro, bestRank))
+            end
+          else
+            local r = RankNumber(s.id)
+            -- Only warn when both ranks can be read and the button has a lower one.
+            if s.id ~= bestId and r and bestRank and r < bestRank then
+              table.insert(newOutdated, ns.T("RANKS_OLD_LINE", name, r, s.slot, bestRank))
+            end
           end
         end
       end
@@ -84,6 +159,7 @@ ns.RegisterModule(function()
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("SPELLS_CHANGED")
   ev:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
+  ev:RegisterEvent("UPDATE_MACROS")
   ev:RegisterEvent("PLAYER_REGEN_ENABLED")
   ev:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_REGEN_ENABLED" and not ns.rankScanPending then return end

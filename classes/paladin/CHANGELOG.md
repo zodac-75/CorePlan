@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0-beta7
+
+- Rank check understands macros: a spell in a macro counts as on your bars, and a macro is only reported when it names an old rank, like "Frostbolt(Rank 1)".
+
 # PaladinPlan 1.0.0-beta6
 
 - Pick your aura in the settings window or the quick menu: Auto (by spec) or any aura you know. The combat helper then reminds you to turn that aura on, also when another aura is active.
