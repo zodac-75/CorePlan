@@ -1,3 +1,7 @@
+# MagePlan 1.15.2
+
+- **Fix:** the rank check could say "your bars look good" with an old rank on a button (e.g. Fireball Rank 2 with Rank 3 learned), because Forever often hides the rank text. It now also compares the level each rank is learned at, and the mana cost, so old ranks are found anyway. `/mp ranks debug` shows what it sees for every button.
+
 # MagePlan 1.15.1
 
 - **Fix:** the talent arrow could point at a Spellbook tab (e.g. the Frost tab) when you opened the Spellbook, because its icon looks like a talent's. It now only marks talents while the Talents tab is showing.

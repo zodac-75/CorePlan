@@ -789,6 +789,24 @@ do
   if tostring(msg):find("Frost Armor") then table.insert(errors, "rebuff reminder shown while off") end
   C_UnitAuras = oldC
 end
+print("--- Rank-koll utan rank-text (Forever) ---")
+do
+  local oldSub = GetSpellSubtext
+  GetSpellSubtext = function() return "" end
+  local levels = { [116] = 4, [7322] = 26 }
+  GetSpellLevelLearned = function(id) return levels[id] or 0 end
+  local printed = {}
+  local oldPrint = ns.Print
+  ns.Print = function(m) table.insert(printed, m) end
+  ns.RunCommand("ranks", "")
+  ns.Print = oldPrint
+  local all = table.concat(printed, " | ")
+  print("  " .. all)
+  if not all:find("Frostbolt") or not all:find("older rank") and not all:find("äldre rank") then
+    table.insert(errors, "old rank not found without rank text: " .. all)
+  end
+  GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

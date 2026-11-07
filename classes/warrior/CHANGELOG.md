@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta22
+
+- **Fix:** the rank check could say "your bars look good" with an old rank on a button (e.g. an older rank of a spell), because Forever often hides the rank text. It now also compares the level each rank is learned at, and the mana cost, so old ranks are found anyway. `/war ranks debug` shows what it sees for every button.
+
 # WarriorPlan 1.0.0-beta21
 
 - **Fix:** the talent arrow could point at a Spellbook tab (e.g. the Frost tab) when you opened the Spellbook, because its icon looks like a talent's. It now only marks talents while the Talents tab is showing.

@@ -5,12 +5,56 @@ local _, ns = ...
 local CHECK = ns.RANK_CHECK -- from the class Data.lua
 
 local outdated, missing = {}, {}
+local debugScan = false
 
-local function RankNumber(id)
-  if not GetSpellSubtext then return nil end
-  local ok, s = pcall(GetSpellSubtext, id)
-  if ok and type(s) == "string" then return tonumber(s:match("(%d+)")) end
+local function Num(v)
+  if type(v) ~= "number" or (issecretvalue and issecretvalue(v)) then return nil end
+  return v
+end
+
+local function Call(fn, ...)
+  if not fn then return nil end
+  local ok, v = pcall(fn, ...)
+  if ok then return v end
   return nil
+end
+
+-- "Rank 3" from the game, or nil when it hides it (Forever often returns "").
+local function RankNumber(id)
+  for _, fn in ipairs({ C_Spell and C_Spell.GetSpellSubtext, GetSpellSubtext }) do
+    local s = Call(fn, id)
+    if type(s) == "string" and not (issecretvalue and issecretvalue(s)) then
+      local n = tonumber(s:match("(%d+)"))
+      if n then return n end
+    end
+  end
+  return nil
+end
+
+-- The level a rank is learned at: higher rank, higher level.
+local function LevelOf(id)
+  return Num(Call(C_Spell and C_Spell.GetSpellLevelLearned, id)) or Num(Call(GetSpellLevelLearned, id))
+end
+
+-- Mana/rage cost of a rank: higher rank usually costs more.
+local function CostOf(id)
+  local costs = Call(C_Spell and C_Spell.GetSpellPowerCost, id) or Call(GetSpellPowerCost, id)
+  if type(costs) == "table" and costs[1] then return Num(costs[1].cost) end
+  return nil
+end
+
+-- Is the button's spell an older rank than the one you know? Uses the rank text when
+-- the game gives it, else the level it's learned at, else the cost.
+-- Returns old (bool), button rank, best rank, how ("rank", "level", "cost").
+local function OlderRank(id, bestId)
+  if id == bestId then return false end
+  local r, best = RankNumber(id), RankNumber(bestId)
+  if r and best then return r < best, r, best, "rank" end
+  local l, bl = LevelOf(id), LevelOf(bestId)
+  if l and bl and l > 0 and bl > 0 and l ~= bl then return l < bl, r, best, "level" end
+  local c, bc = CostOf(id), CostOf(bestId)
+  if c and bc and c ~= bc then return c < bc, r, best, "cost" end
+  return false, r, best, nil
 end
 
 -- Spells a macro casts: { {name = "Frostbolt", rank = 1 or nil}, ... }.
@@ -127,10 +171,19 @@ local function Scan(force)
               table.insert(newOutdated, ns.T("RANKS_OLD_MACRO", name, s.macroRank, s.macro, bestRank))
             end
           else
-            local r = RankNumber(s.id)
-            -- Only warn when both ranks can be read and the button has a lower one.
-            if s.id ~= bestId and r and bestRank and r < bestRank then
-              table.insert(newOutdated, ns.T("RANKS_OLD_LINE", name, r, s.slot, bestRank))
+            local old, r, best = OlderRank(s.id, bestId)
+            if old then
+              if r and best then
+                table.insert(newOutdated, ns.T("RANKS_OLD_LINE", name, r, s.slot, best))
+              else
+                table.insert(newOutdated, ns.T("RANKS_OLD_NORANK", name, s.slot))
+              end
+            end
+            if debugScan then
+              ns.Print(string.format("  %s: button %d id %s, best id %s, rank %s/%s, level %s/%s, cost %s/%s -> %s",
+                name, s.slot, tostring(s.id), tostring(bestId), tostring(RankNumber(s.id)), tostring(RankNumber(bestId)),
+                tostring(LevelOf(s.id)), tostring(LevelOf(bestId)), tostring(CostOf(s.id)), tostring(CostOf(bestId)),
+                old and "OLD" or "ok"))
             end
           end
         end
@@ -176,7 +229,10 @@ ns.RegisterModule(function()
   end)
 end)
 
-ns.RegisterCommand("ranks", true, function()
+ns.RegisterCommand("ranks", true, function(arg)
   missing = {}
+  -- "/@SLASH@ ranks debug" prints what the check sees for every button.
+  debugScan = arg == "debug"
   Scan(true)
+  debugScan = false
 end)
