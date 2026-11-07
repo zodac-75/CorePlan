@@ -327,6 +327,168 @@ local function CreateConfig()
   win:Hide()
 end
 
+---------------------------------------------------------------------------
+-- Quick menu: left-click on the minimap icon. Spec, the windows and on/off switches
+-- in a small list next to the icon; the big settings window is on right-click.
+---------------------------------------------------------------------------
+local quick
+local QROW_H, QWIDTH = 18, 236
+
+local QUICK_TOOLS = {
+  { key = "MM_PLAN", func = function() ns.ToggleMain() end },
+  { key = "MM_DUNGEONS", func = function() ns.ToggleDungeons() end },
+  { key = "MM_CRAFT", func = function() Run("craft") end },
+  { key = "QM_TRAIN", func = function() Run("train") end },
+}
+
+local function QuickRow(parent, y)
+  local b = CreateFrame("Button", nil, parent)
+  b:SetSize(QWIDTH - 16, QROW_H)
+  b:SetPoint("TOPLEFT", 8, y)
+  b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  local hl = b:CreateTexture(nil, "HIGHLIGHT")
+  hl:SetAllPoints()
+  hl:SetColorTexture(1, 1, 1, 0.12)
+  b.check = b:CreateTexture(nil, "ARTWORK")
+  b.check:SetSize(16, 16)
+  b.check:SetPoint("LEFT", 2, 0)
+  b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  b.text:SetPoint("LEFT", 22, 0)
+  b.text:SetPoint("RIGHT", -4, 0)
+  b.text:SetJustifyH("LEFT")
+  return b
+end
+
+local function QuickHeader(parent, y, key)
+  local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  fs:SetPoint("TOPLEFT", 10, y - 3)
+  fs.key = key
+  return fs
+end
+
+local function RefreshQuick()
+  if not quick then return end
+  if quick.spec then
+    quick.spec.text:SetText(ns.T("MM_PLANSEL"):gsub(":$", "") .. ": " .. Val(ns.T("PLAN_" .. ns.PlanKey())))
+  end
+  for _, h in ipairs(quick.headers) do h:SetText(ns.T(h.key)) end
+  for _, r in ipairs(quick.tools) do r.text:SetText(ns.T(r.item.key)) end
+  for _, r in ipairs(quick.toggles) do
+    local ok, on = pcall(r.item.on)
+    r.check:SetTexture(ok and on and "Interface\\Buttons\\UI-CheckBox-Check" or "Interface\\Buttons\\UI-CheckBox-Up")
+    r.text:SetText(ns.T(r.item.key))
+  end
+  quick.more.text:SetText(ns.T("QM_SETTINGS"))
+end
+
+local function BuildQuick()
+  quick = CreateFrame("Frame", "@ADDON@QuickMenu", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  quick:SetFrameStrata("DIALOG")
+  quick:SetClampedToScreen(true)
+  quick:EnableMouse(true)
+  quick.headers, quick.tools, quick.toggles = {}, {}, {}
+  ns.ApplyTheme(quick)
+  table.insert(ns.themedFrames, quick)
+  table.insert(UISpecialFrames, "@ADDON@QuickMenu") -- Esc closes it
+
+  local title = quick:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  title:SetPoint("TOPLEFT", 10, -9)
+  title:SetText("|cff@COLOR@@ADDON@|r")
+  local y = -28
+
+  if #ns.PLAN_ORDER > 1 then
+    -- Spec: left-click for the next one, right-click for the previous one.
+    local r = QuickRow(quick, y)
+    r.check:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    r:SetScript("OnClick", function(_, mouse)
+      local dir = mouse == "RightButton" and -1 or 1
+      ns.db.plan = Step(ns.PLAN_ORDER, ns.PlanKey(), dir)
+      ns.ApplyPlan()
+      ns.RefreshMain()
+      if ns.RefreshTalentGlow then ns.RefreshTalentGlow() end
+      ns.Print(ns.T("PLAN_SET", ns.T("PLAN_" .. ns.PlanKey())))
+      Refresh()
+      RefreshQuick()
+    end)
+    quick.spec = r
+    y = y - QROW_H - 4
+  end
+
+  table.insert(quick.headers, QuickHeader(quick, y, "QM_OPEN"))
+  y = y - 16
+  for _, item in ipairs(QUICK_TOOLS) do
+    local r = QuickRow(quick, y)
+    r.item = item
+    r.check:SetTexture("Interface\\ChatFrame\\ChatFrameExpandArrow")
+    r:SetScript("OnClick", function()
+      quick:Hide()
+      local ok, err = pcall(item.func)
+      if not ok then ns.Print(ns.T("ERROR", tostring(err))) end
+    end)
+    table.insert(quick.tools, r)
+    y = y - QROW_H
+  end
+
+  y = y - 4
+  table.insert(quick.headers, QuickHeader(quick, y, "QM_TOGGLE"))
+  y = y - 16
+  for _, item in ipairs(FEATURES) do
+    local r = QuickRow(quick, y)
+    r.item = item
+    r:SetScript("OnClick", function()
+      Run(item.cmd)
+      Refresh()
+      RefreshQuick()
+    end)
+    table.insert(quick.toggles, r)
+    y = y - QROW_H
+  end
+
+  y = y - 6
+  local more = QuickRow(quick, y)
+  more.check:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
+  more:SetScript("OnClick", function()
+    quick:Hide()
+    if win and not win:IsShown() then win:Show() end
+  end)
+  quick.more = more
+  y = y - QROW_H
+
+  quick:SetSize(QWIDTH, -y + 10)
+  quick:Hide()
+
+  -- A click anywhere else closes the menu.
+  quick:RegisterEvent("GLOBAL_MOUSE_DOWN")
+  quick:SetScript("OnEvent", function(self)
+    if self:IsShown() and not self:IsMouseOver() and not (self.anchor and self.anchor:IsMouseOver()) then
+      self:Hide()
+    end
+  end)
+end
+
+function ns.ToggleQuickMenu(anchor)
+  if not quick then
+    local ok, err = pcall(BuildQuick)
+    if not ok then ns.Print(ns.T("ERROR", tostring(err))); return end
+  end
+  if quick:IsShown() then quick:Hide(); return end
+  quick.anchor = anchor
+  quick:ClearAllPoints()
+  if anchor then
+    -- Open towards the middle of the screen.
+    local x, y = anchor:GetCenter()
+    local w, h = UIParent:GetWidth(), UIParent:GetHeight()
+    local right, top = x and x > w / 2, y and y > h / 2
+    local point = (top and "TOP" or "BOTTOM") .. (right and "RIGHT" or "LEFT")
+    local rel = (top and "BOTTOM" or "TOP") .. (right and "LEFT" or "RIGHT")
+    quick:SetPoint(point, anchor, rel, 0, 0)
+  else
+    quick:SetPoint("CENTER")
+  end
+  RefreshQuick()
+  quick:Show()
+end
+
 function ns.ToggleConfig()
   if not win then return end
   if win:IsShown() then win:Hide() else win:Show() end

@@ -1,3 +1,7 @@
+# MagePlan 1.9.2
+
+- **Quick menu:** left-click the minimap icon for a small menu right next to it: switch spec, open the plan window, dungeon guide, crafting assistant or trainer list, and turn features on and off with one click. Right-click still opens all settings.
+
 # MagePlan 1.9.1
 
 - Talent window: one odd frame can no longer stop the search for the talent to mark.

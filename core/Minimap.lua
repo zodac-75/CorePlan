@@ -51,7 +51,7 @@ local function CreateButton()
     if mouse == "RightButton" then
       ns.ToggleConfig()
     else
-      ns.ToggleMain()
+      ns.ToggleQuickMenu(btn)
     end
   end)
   btn:SetScript("OnDragStart", function(self)

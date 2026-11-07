@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0-beta3
+
+- **Quick menu:** left-click the minimap icon for a small menu right next to it: switch spec, open the plan window, dungeon guide, crafting assistant or trainer list, and turn features on and off with one click. Right-click still opens all settings.
+
 # PaladinPlan 1.0.0-beta2
 
 - Plate armor shows "usable at level 40" in the upgrade check until you can wear it, and the quest reward picker skips it.

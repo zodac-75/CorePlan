@@ -72,7 +72,7 @@ function methods:SetFontObject(o) if o == nil then error("SetFontObject(nil)") e
 function methods:SetWidth(w) self.__w = w; if self.__scripts.OnSizeChanged then self.__scripts.OnSizeChanged(self, w, self.__h) end end
 
 function CreateFrame(kind, name, parent, template)
-  return newWidget(kind, name)
+  local w = newWidget(kind, name); rawset(w, "__parent", parent); return w
 end
 
 UIParent = newWidget("Frame", "UIParent")
@@ -421,6 +421,13 @@ local btn = rawget(_G, "PaladinPlanMinimapButton")
 if btn then
   pcall(btn.__scripts.OnEnter, btn)
   local ok, err = pcall(btn.__scripts.OnClick, btn, "LeftButton"); if not ok then table.insert(errors, "minimap left: " .. err) end
+  local qm = rawget(_G, "PaladinPlanQuickMenu")
+  if not qm or not qm.__shown then table.insert(errors, "vänsterklick öppnade inte snabbmenyn") end
+  if qm then
+    local rows = 0
+    for _, w in ipairs(allFrames) do if w.__parent == qm and w.__kind == "Button" then rows = rows + 1 end end
+    print("--- Snabbmeny: " .. rows .. " rader ---")
+  end
   ok, err = pcall(btn.__scripts.OnClick, btn, "RightButton"); if not ok then table.insert(errors, "minimap right: " .. err) end
   pcall(btn.__scripts.OnDragStart, btn)
   if btn.__scripts.OnUpdate then ok, err = pcall(btn.__scripts.OnUpdate, btn, 0.1); if not ok then table.insert(errors, "minimap drag: " .. err) end end
