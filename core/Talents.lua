@@ -424,12 +424,21 @@ local function DebugTalentUI()
   ns.Print("next talent: " .. tostring(name) .. (t and (" tab " .. t.tab .. " #" .. t.index .. " icon " .. tostring(t.icon)) or ""))
   if t then ns.Print("  tier " .. tostring(t.tier) .. " column " .. tostring(t.column)) end
   local root = ShownRoot()
+  ns.Print("open window: " .. tostring(root and (root:GetName() or "no name") or "none") ..
+    "  PlayerSpellsFrame: " .. tostring(PlayerSpellsFrame ~= nil) ..
+    (PlayerSpellsFrame and ("/" .. tostring(PlayerSpellsFrame:IsShown())) or ""))
   if root and t then
+    local tf = rawget(root, "TalentsFrame")
+    ns.Print("  TalentsFrame: " .. tostring(tf ~= nil) .. "  by node: " ..
+      tostring(tf and tf.GetTalentButtonByNodeID ~= nil) .. "  nodeID: " .. tostring(t.nodeID))
     local btn = FindButton(root, t)
     ns.Print("button: " .. (btn and tostring(btn:GetName() or "found (no name)") or "not found"))
   else
     ns.Print("open the talent window and run this again.")
   end
+  local ok, err = pcall(UpdateGlow)
+  ns.Print("glow: " .. (ok and "ok" or ("error " .. tostring(err))) .. "  shown: " ..
+    tostring(glow and glow:IsShown()) .. "  hint: " .. tostring(hint and hint:IsShown()))
   -- What's under the mouse: hover a talent in the window while you type the command.
   local focus
   if GetMouseFoci then
