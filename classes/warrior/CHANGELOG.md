@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta17
+
+- **DialogueUI support:** when you hover a quest reward in DialogueUI, its tooltip now shows "+ Best upgrade" and "$ Sells for the most" too.
+
 # WarriorPlan 1.0.0-beta16
 
 - **Quest rewards, two marks:** a green **+** on the reward that is your biggest upgrade, and a gold **$** on the one that sells for the most at a vendor. One item can get both. Chat says which is which.

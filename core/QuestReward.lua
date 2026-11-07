@@ -89,12 +89,14 @@ local function Evaluate(isRetry)
 
   if bestUpI then
     best.up, best.upText = bestUpI, ns.T("QR_UPGRADE_SHORT", math.floor(bestUp + 0.5))
+    best.upID = tonumber((GetQuestItemLink("choice", bestUpI) or ""):match("item:(%d+)"))
     local btn = RewardButton(bestUpI)
     if btn then pcall(Badge, btn, "up", "+", GREEN, best.upText, "left") end
     ns.Print(ns.T("QR_UPGRADE", GetQuestItemLink("choice", bestUpI) or "?", math.floor(bestUp + 0.5)))
   end
   if bestValI then
     best.cash, best.cashText = bestValI, ns.Money(bestVal)
+    best.cashID = tonumber((GetQuestItemLink("choice", bestValI) or ""):match("item:(%d+)"))
     local btn = RewardButton(bestValI)
     if btn then pcall(Badge, btn, "cash", "$", GOLD, nil, "right") end
     ns.Print((bestUpI and ns.T("QR_CASH", GetQuestItemLink("choice", bestValI) or "?", best.cashText))
@@ -118,7 +120,33 @@ local function OnQuestTooltip(tt, kind, index)
   if added then tt:Show() end
 end
 
+-- DialogueUI has its own tooltip; it lets other addons add lines through its API.
+local duiHooked = false
+local function HookDialogueUI()
+  if duiHooked or not (DialogueUIAPI and DialogueUIAPI.AddItemTooltipProcessorExternal) then return end
+  duiHooked = true
+  DialogueUIAPI.AddItemTooltipProcessorExternal(function(tooltip, itemID)
+    if ns.db.questOff or not itemID then return false end
+    local added = false
+    if best.upID and itemID == best.upID then
+      tooltip:AddLine("+ " .. ns.T("QR_TIP_UP", best.upText), 0.3, 1, 0.3)
+      added = true
+    end
+    if best.cashID and itemID == best.cashID then
+      tooltip:AddLine("$ " .. ns.T("QR_TIP_CASH", best.cashText), 1, 0.82, 0.1)
+      added = true
+    end
+    return added
+  end)
+end
+
 ns.RegisterModule(function()
+  pcall(HookDialogueUI)
+  local addonEv = CreateFrame("Frame")
+  addonEv:RegisterEvent("ADDON_LOADED")
+  addonEv:SetScript("OnEvent", function(_, _, name)
+    if name == "DialogueUI" then pcall(HookDialogueUI) end
+  end)
   if GameTooltip and GameTooltip.SetQuestItem then
     hooksecurefunc(GameTooltip, "SetQuestItem", function(tt, kind, index) pcall(OnQuestTooltip, tt, kind, index) end)
   end
