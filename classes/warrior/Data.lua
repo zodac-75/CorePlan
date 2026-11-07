@@ -143,6 +143,13 @@ ns.STATS.armorFrom = { [4] = 40 } -- plate from level 40
 ns.STATS.weapon = { [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [5] = true,
   [6] = true, [7] = true, [8] = true, [10] = true, [13] = true, [15] = true, [16] = true, [18] = true }
 
+-- Buff watcher: icons for buffs that are missing or running out (click to cast).
+ns.BUFF_WATCH = {
+  { spells = { "Battle Shout" }, buffs = { "Battle Shout" }, warn = 20,
+    -- Shouting needs rage: only when you have an enemy targeted (set before the pull).
+    only = function() return ns.HasHostileTarget() end },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {}
 

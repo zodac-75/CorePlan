@@ -40,6 +40,7 @@ local FEATURES = {
   { key = "MM_MOVE", on = function() return ns.db.shatterUnlocked end, cmd = "move" },
   { key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
   { key = "MM_QUEST", on = function() return not ns.db.questOff end, cmd = "quest" },
+  { key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
   { key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
   { key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
   { key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },

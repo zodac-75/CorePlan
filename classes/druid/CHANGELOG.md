@@ -1,3 +1,7 @@
+# DruidPlan 1.0.0-beta25
+
+- **Buff watcher:** a row of icons that appears when one of your buffs is missing (red frame) or about to run out (yellow frame, with time left). **Click an icon to cast the buff.** Drag it where you want it while windows are unlocked, and use Ctrl + mouse wheel to resize it. Turn it on or off under Features or with the quick menu. Watches Mark of the Wild, Thorns and Omen of Clarity.
+
 # DruidPlan 1.0.0-beta24
 
 - **DialogueUI support:** when you hover a quest reward in DialogueUI, its tooltip now shows "+ Best upgrade" and "$ Sells for the most" too.

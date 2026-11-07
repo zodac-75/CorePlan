@@ -126,6 +126,13 @@ ns.STATS.patterns = {
 ns.STATS.armor = { [0] = true, [1] = true, [2] = true }
 ns.STATS.weapon = { [4] = true, [5] = true, [6] = true, [10] = true, [13] = true, [15] = true }
 
+-- Buff watcher: icons for buffs that are missing or running out (click to cast).
+ns.BUFF_WATCH = {
+  { spells = { "Mark of the Wild" }, buffs = { "Mark of the Wild", "Gift of the Wild" } },
+  { spells = { "Thorns" }, buffs = { "Thorns" } },
+  { spells = { "Omen of Clarity" }, buffs = { "Omen of Clarity" } },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {}
 

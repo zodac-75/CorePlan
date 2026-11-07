@@ -127,6 +127,18 @@ ns.STATS.armor = { [0] = true, [1] = true, [2] = true, [3] = true, [6] = true }
 ns.STATS.armorFrom = { [3] = 40 } -- plate from level 40
 ns.STATS.weapon = { [0] = true, [1] = true, [4] = true, [5] = true, [10] = true, [13] = true, [15] = true }
 
+-- Buff watcher: icons for buffs that are missing or running out (click to cast).
+ns.BUFF_WATCH = {
+  { spells = function(plan)
+      if plan == "resto" then return { "Water Shield", "Lightning Shield" } end
+      return { "Lightning Shield", "Water Shield" }
+    end, buffs = { "Lightning Shield", "Water Shield", "Earth Shield" } },
+  { imbue = true, warn = 120, spells = function(plan)
+      if plan == "enhancement" then return { "Windfury Weapon", "Flametongue Weapon", "Rockbiter Weapon" } end
+      return { "Flametongue Weapon", "Rockbiter Weapon" }
+    end },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {}
 

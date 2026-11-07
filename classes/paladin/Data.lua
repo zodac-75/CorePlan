@@ -157,6 +157,28 @@ ns.STATS.armor = { [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [
 ns.STATS.armorFrom = { [4] = 40 } -- plate from level 40
 ns.STATS.weapon = { [0] = true, [1] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
 
+-- Buff watcher: icons for buffs that are missing or running out (click to cast).
+ns.BUFF_WATCH = {
+  { spells = function(plan)
+      local want = ns.WantedAura and ns.WantedAura()
+      if want then return { want } end
+      return plan == "ret" and { "Retribution Aura", "Devotion Aura" } or { "Devotion Aura" }
+    end,
+    -- The aura you picked, or any aura when it's on Auto.
+    match = function(name)
+      local want = ns.WantedAura and ns.WantedAura()
+      if want then return name == want end
+      return name:sub(-5) == " Aura"
+    end },
+  { spells = function(plan)
+      if plan == "holy" then return { "Blessing of Wisdom", "Blessing of Might" } end
+      return { "Blessing of Might", "Blessing of Wisdom" }
+    end,
+    match = function(name) return name:find("Blessing of ", 1, true) ~= nil end },
+  { spells = { "Righteous Fury" }, buffs = { "Righteous Fury" },
+    only = function() return ns.PlanKey() == "prot" end },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {}
 

@@ -147,6 +147,12 @@ ns.PLAN_WEIGHTS = {
 ns.STATS.armor = { [0] = true, [1] = true }
 ns.STATS.weapon = { [7] = true, [10] = true, [15] = true, [19] = true }
 
+-- Buff watcher: icons for buffs that are missing or running out (click to cast).
+ns.BUFF_WATCH = {
+  { spells = { "Arcane Intellect" }, buffs = { "Arcane Intellect", "Arcane Brilliance" } },
+  { spells = { "Mage Armor", "Ice Armor", "Frost Armor" }, buffs = { "Mage Armor", "Ice Armor", "Frost Armor" } },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {
   { cost = 45,  name = "Glimmering Staff" },

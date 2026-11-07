@@ -757,6 +757,17 @@ for _, w in ipairs(allFrames) do
   if w.__events["TRADE_SKILL_SHOW"] and w.__scripts.OnEvent then w.__scripts.OnEvent(w, "TRADE_SKILL_SHOW") end
 end
 print("  efter yrkesfönster: Tailoring", ns.GetProfSkill("Alchemy"))
+print("--- Buff-vakt ---")
+do
+  ns.db.buffsOff = false
+  if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
+  local shown = {}
+  for i = 1, 6 do
+    local b = rawget(_G, "ShamanPlanBuff" .. i)
+    if b and b.__shown then table.insert(shown, tostring(rawget(b, "spell"))) end
+  end
+  print("visas: " .. table.concat(shown, ", "))
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

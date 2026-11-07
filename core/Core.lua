@@ -700,6 +700,7 @@ end
 ns.RegisterCommand("lock", true, function()
   db.locked = not db.locked
   Print(db.locked and ns.T("LOCKED") or ns.T("UNLOCKED"))
+  if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
 end)
 
 ns.RegisterCommand("reset", true, function()
