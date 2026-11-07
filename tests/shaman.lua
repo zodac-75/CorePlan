@@ -79,6 +79,7 @@ end
 UIParent = newWidget("Frame", "UIParent")
 Minimap = newWidget("Frame", "Minimap"); Minimap.__w = 140
 GameTooltip = newWidget("GameTooltip", "GameTooltip")
+rawset(GameTooltip, "SetQuestItem", function() end)
 ItemRefTooltip = newWidget("GameTooltip", "ItemRefTooltip")
 DEFAULT_CHAT_FRAME = { AddMessage = function(_, m) table.insert(chat, m) end }
 UISpecialFrames = {}
@@ -123,10 +124,14 @@ function InCombatLockdown() return false end
 function UnitCharacterPoints() return 2 end
 SIM_SOUNDS = 0
 function PlaySound() SIM_SOUNDS = SIM_SOUNDS + 1 end
-function hooksecurefunc(name, fn)
+function hooksecurefunc(name, fn, fn2)
   if type(name) == "string" then
     local old = _G[name]
     _G[name] = function(...) local r = { old and old(...) } fn(...) return table.unpack(r) end
+  elseif type(name) == "table" and type(fn) == "string" then
+    local t, m, hook = name, fn, fn2
+    local old = t[m]
+    rawset(t, m, function(...) local r = { old and old(...) } hook(...) return table.unpack(r) end)
   end
 end
 function GetCursorPosition() return 600, 450 end
@@ -601,7 +606,24 @@ now = now + 2; runTimers(now)
 ns.db.questOff, ns.db.drinkOff = false, false
 fire("QUEST_COMPLETE"); now = now + 1; runTimers(now)
 local btn2 = QuestInfoRewardsFrame.RewardButtons[2]
-table.insert(chat, "[sim] quest mark on reward 2: " .. tostring(rawget(btn2, "ShamanPlanMark") and rawget(btn2, "ShamanPlanMark").__shown))
+do
+  local b = {}
+  for i, rb in ipairs(QuestInfoRewardsFrame.RewardButtons) do
+    local badges = rawget(rb, "ShamanPlanBadges") or {}
+    for k, m in pairs(badges) do if m.__shown then table.insert(b, i .. k) end end
+  end
+  table.sort(b)
+  table.insert(chat, "[sim] quest badges: " .. table.concat(b, ", "))
+  if #b == 0 then table.insert(errors, "inga quest-märken") end
+  for i = 1, 3 do
+    GameTooltip.__lines = nil
+    GameTooltip:SetQuestItem("choice", i)
+    for _, l in ipairs(rawget(GameTooltip, "__lines") or {}) do
+      table.insert(chat, "[sim] quest tooltip " .. i .. ": " .. (l:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
+    end
+  end
+  GameTooltip.__lines = nil
+end
 UnitAffectingCombat = function() return false end
 fire("PLAYER_REGEN_ENABLED"); now = now + 1; runTimers(now)
 local df = rawget(_G, "ShamanPlanDrinkFrame")

@@ -1,5 +1,6 @@
--- @ADDON@: quest reward picker. Marks the best reward when a quest lets you choose:
--- the biggest upgrade, or the best item to sell when none of them is an upgrade.
+-- @ADDON@: quest reward picker. When a quest lets you choose, it marks the biggest
+-- upgrade with a green "+" and the reward that sells for the most with a gold "$",
+-- on Blizzard's quest window and in the item tooltip (for quest dialog addons).
 local _, ns = ...
 
 local marks = {}
@@ -16,23 +17,35 @@ local function ClearMarks()
   marks = {}
 end
 
-local function Mark(btn, text)
-  local m = btn.@ADDON@Mark
+-- Badges on a reward button: a green "+" for the best upgrade, a gold "$" for the
+-- reward that sells for the most. One item can get both.
+local function Badge(btn, key, symbol, color, text, corner)
+  btn.@ADDON@Badges = btn.@ADDON@Badges or {}
+  local m = btn.@ADDON@Badges[key]
   if not m then
     m = CreateFrame("Frame", nil, btn)
     m:SetAllPoints(btn)
-    local glow = m:CreateTexture(nil, "OVERLAY")
-    glow:SetTexture("Interface\\Buttons\\CheckButtonHilight")
-    glow:SetBlendMode("ADD")
-    glow:SetVertexColor(0.3, 1, 0.3)
-    glow:SetAllPoints(m)
-    local check = m:CreateTexture(nil, "OVERLAY")
-    check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-    check:SetSize(22, 22)
-    check:SetPoint("TOPLEFT", m, "TOPLEFT", -6, 6)
+    m.glow = m:CreateTexture(nil, "OVERLAY")
+    m.glow:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+    m.glow:SetBlendMode("ADD")
+    m.glow:SetAllPoints(m)
+    m.symbol = m:CreateFontString(nil, "OVERLAY")
+    m.symbol:SetFont(STANDARD_TEXT_FONT, 22, "THICKOUTLINE")
     m.label = m:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    btn.@ADDON@Badges[key] = m
+  end
+  m.glow:SetVertexColor(color[1], color[2], color[3])
+  m.glow:SetShown(key == "up")
+  m.symbol:SetText(symbol)
+  m.symbol:SetTextColor(color[1], color[2], color[3])
+  m.symbol:ClearAllPoints()
+  m.label:ClearAllPoints()
+  if corner == "left" then
+    m.symbol:SetPoint("TOPLEFT", m, "TOPLEFT", -6, 8)
     m.label:SetPoint("BOTTOMRIGHT", m, "BOTTOMRIGHT", -4, 3)
-    btn.@ADDON@Mark = m
+  else
+    m.symbol:SetPoint("TOPRIGHT", m, "TOPRIGHT", 4, 8)
+    m.label:SetPoint("TOPRIGHT", m, "TOPRIGHT", -18, -4)
   end
   m.label:SetText(text or "")
   m:SetFrameLevel(btn:GetFrameLevel() + 3)
@@ -40,8 +53,12 @@ local function Mark(btn, text)
   table.insert(marks, m)
 end
 
+local GREEN, GOLD = { 0.3, 1, 0.3 }, { 1, 0.82, 0.1 }
+local best = {} -- what the tooltips say: best.up / best.cash = choice index
+
 local function Evaluate(isRetry)
   ClearMarks()
+  best = {}
   if ns.db.questOff or not GetNumQuestChoices or not GetQuestItemLink then return end
   local n = GetNumQuestChoices() or 0
   if n < 2 then return end
@@ -70,23 +87,41 @@ local function Evaluate(isRetry)
     return
   end
 
-  local pick, label, msg
   if bestUpI then
-    pick = bestUpI
-    label = ns.T("QR_UPGRADE_SHORT", math.floor(bestUp + 0.5))
-    msg = ns.T("QR_UPGRADE", GetQuestItemLink("choice", pick) or "?", math.floor(bestUp + 0.5))
-  elseif bestValI then
-    pick = bestValI
-    label = ns.Money(bestVal)
-    msg = ns.T("QR_VENDOR", GetQuestItemLink("choice", pick) or "?", ns.Money(bestVal))
+    best.up, best.upText = bestUpI, ns.T("QR_UPGRADE_SHORT", math.floor(bestUp + 0.5))
+    local btn = RewardButton(bestUpI)
+    if btn then pcall(Badge, btn, "up", "+", GREEN, best.upText, "left") end
+    ns.Print(ns.T("QR_UPGRADE", GetQuestItemLink("choice", bestUpI) or "?", math.floor(bestUp + 0.5)))
   end
-  if not pick then return end
-  local btn = RewardButton(pick)
-  if btn then pcall(Mark, btn, label) end
-  ns.Print(msg)
+  if bestValI then
+    best.cash, best.cashText = bestValI, ns.Money(bestVal)
+    local btn = RewardButton(bestValI)
+    if btn then pcall(Badge, btn, "cash", "$", GOLD, nil, "right") end
+    ns.Print((bestUpI and ns.T("QR_CASH", GetQuestItemLink("choice", bestValI) or "?", best.cashText))
+      or ns.T("QR_VENDOR", GetQuestItemLink("choice", bestValI) or "?", best.cashText))
+  end
+end
+
+-- Quest dialog addons (DialogueUI, Immersion, ...) draw their own reward buttons, but
+-- they show the normal item tooltip: there we add the same "+" and "$" lines.
+local function OnQuestTooltip(tt, kind, index)
+  if ns.db.questOff or kind ~= "choice" or not index then return end
+  local added = false
+  if best.up == index then
+    tt:AddLine("|cff4dff4d+ " .. ns.T("QR_TIP_UP", best.upText) .. "|r")
+    added = true
+  end
+  if best.cash == index then
+    tt:AddLine("|cffffd11a$ " .. ns.T("QR_TIP_CASH", best.cashText) .. "|r")
+    added = true
+  end
+  if added then tt:Show() end
 end
 
 ns.RegisterModule(function()
+  if GameTooltip and GameTooltip.SetQuestItem then
+    hooksecurefunc(GameTooltip, "SetQuestItem", function(tt, kind, index) pcall(OnQuestTooltip, tt, kind, index) end)
+  end
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("QUEST_COMPLETE")
   ev:RegisterEvent("QUEST_DETAIL")
@@ -94,6 +129,7 @@ ns.RegisterModule(function()
   ev:SetScript("OnEvent", function(_, event)
     if event == "QUEST_FINISHED" then
       ClearMarks()
+      best = {}
     else
       C_Timer.After(0.1, function()
         local ok, err = pcall(Evaluate, false)
