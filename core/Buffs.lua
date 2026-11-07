@@ -1,7 +1,7 @@
 -- @ADDON@: buff watcher. A movable row of icons for your own buffs (ns.BUFF_WATCH in
 -- the class Data.lua) that shows up when a buff is missing or about to run out.
--- Click an icon to cast the buff. Drag the row when windows are unlocked
--- (/@SLASH@ lock), Ctrl + mouse wheel to resize.
+-- Click an icon to cast the buff. Unlock windows (/@SLASH@ lock) to see every watched
+-- buff, drag the row by any icon and resize it with Ctrl + mouse wheel.
 --
 -- An entry: { spells = { "Arcane Intellect" } or function(plan) -> list,
 --             buffs = { names that count }, match = function(name) -> bool,
@@ -122,6 +122,14 @@ local function MakeButton(i)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+  -- While unlocked, dragging an icon moves the whole row.
+  b:RegisterForDrag("LeftButton")
+  b:SetScript("OnDragStart", function()
+    if not ns.db.locked and not (InCombatLockdown and InCombatLockdown()) then holder:StartMoving() end
+  end)
+  b:SetScript("OnDragStop", function() holder:GetScript("OnDragStop")(holder) end)
+  b:EnableMouseWheel(true)
+  b:SetScript("OnMouseWheel", function(_, delta) holder:GetScript("OnMouseWheel")(holder, delta) end)
   b:Hide()
   buttons[i] = b
   return b
@@ -148,17 +156,34 @@ local function Update()
   end
   pendingLayout = false
 
+  -- Unlocked: show every watched buff (faded when it's up) so there is something to drag.
+  if unlocked then
+    local have = {}
+    for _, n in ipairs(list) do have[n.spell] = true end
+    for _, e in ipairs(ns.BUFF_WATCH or {}) do
+      local spell = Spells(e)
+      if spell and not have[spell] then
+        have[spell] = true
+        table.insert(list, { entry = e, spell = spell, left = -1 })
+      end
+    end
+  end
+
   for i, n in ipairs(list) do
     local b = buttons[i] or MakeButton(i)
     b.spell = n.spell
     b:SetAttribute("spell", n.spell)
+    -- No casting while you're moving it.
+    b:SetAttribute("type", (not unlocked) and "spell" or nil)
     b.icon:SetTexture(ns.SpellIcon(n.spell))
     -- Red frame: missing. Yellow frame: running out.
-    if n.left == 0 then b.border:SetColorTexture(1, 0.25, 0.25, 0.9) else b.border:SetColorTexture(1, 0.8, 0.25, 0.9) end
+    if n.left == 0 then b.border:SetColorTexture(1, 0.25, 0.25, 0.9)
+    elseif n.left < 0 then b.border:SetColorTexture(0.5, 0.5, 0.5, 0.6)
+    else b.border:SetColorTexture(1, 0.8, 0.25, 0.9) end
     b.time:SetText(n.left > 0 and Short(n.left) or "")
     b:ClearAllPoints()
     b:SetPoint("LEFT", holder, "LEFT", (i - 1) * (SIZE + GAP), 0)
-    b:SetAlpha(1)
+    b:SetAlpha(n.left < 0 and 0.45 or 1)
     b:Show()
   end
   for i = #list + 1, #buttons do buttons[i]:Hide() end
