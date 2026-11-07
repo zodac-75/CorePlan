@@ -1,3 +1,9 @@
+# PaladinPlan 1.0.0-beta15
+
+- **Aura reminder any time:** "No aura - turn on Devotion Aura" (or the aura you picked) now shows whenever no aura is on, not only in combat. It stays quiet while you are mounted, on a flight path or dead.
+- The combat helper shows up to three reminders at once, so one no longer hides another (Righteous Fury, aura, seal, blessing).
+- Talent marker: a big green arrow now points down at the next talent.
+
 # PaladinPlan 1.0.0-beta14
 
 - **Clearer talent marker:** the next talent in your plan now gets a thick green frame that pulses, with a big green arrow bobbing above it. The old faint blue glow is gone, and so is the flicker.

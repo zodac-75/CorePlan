@@ -1,3 +1,7 @@
+# MagePlan 1.12.4
+
+- Talent marker: a big green arrow now points down at the next talent.
+
 # MagePlan 1.12.3
 
 - **Clearer talent marker:** the next talent in your plan now gets a thick green frame that pulses, with a big green arrow bobbing above it. The old faint blue glow is gone, and so is the flicker.

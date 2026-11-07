@@ -34,24 +34,38 @@ local function Update()
     end
   end
 
-  -- Reminders, most important first.
-  if (inCombat or hasTarget) and plan == "prot" and ns.SpellInfo("Righteous Fury") and ns.AuraMissing("player", "HELPFUL", "Righteous Fury") then
-    sub = "|cffffd100" .. ns.T("SH_FURY") .. "|r"
-  elseif (inCombat or hasTarget) and ns.WantedAura() and ns.SpellInfo(ns.WantedAura())
-    and ns.AuraMissing("player", "HELPFUL", ns.WantedAura()) then
-    -- The aura you picked in the settings isn't on (another one may be).
-    sub = "|cffffd100" .. ns.T("SH_AURA_PICK", ns.WantedAura()) .. "|r"
-  elseif (inCombat or hasTarget) and not ns.WantedAura() and ns.SpellInfo("Devotion Aura") and NoAura() then
-    local best = (plan == "ret" and ns.SpellInfo("Retribution Aura")) and "Retribution Aura" or "Devotion Aura"
-    sub = "|cffffd100" .. ns.T("SH_AURA", best) .. "|r"
-  elseif hasTarget and plan ~= "holy" and ns.AuraMissingLike("player", "HELPFUL", "Seal of ") then
-    sub = "|cffffd100" .. ns.T("SH_SEAL") .. "|r"
-  elseif (inCombat or hasTarget) and ns.SpellInfo("Blessing of Might")
-    and ns.AuraMissingLike("player", "HELPFUL", "Blessing of ", "Greater Blessing of ") then
-    sub = "|cffffd100" .. ns.T("SH_BLESSING") .. "|r"
-  elseif inCombat and hasTarget and plan == "prot" and ns.SpellUsable("Holy Shield") and ns.AuraMissing("player", "HELPFUL", "Holy Shield") then
-    sub = "|cffff9966" .. ns.T("SH_HOLYSHIELD") .. "|r"
+  -- Reminders, most important first, each on its own line (at most three).
+  local list = {}
+  local function add(color, text) if #list < 3 then table.insert(list, color .. text .. "|r") end end
+  local busy = (IsMounted and IsMounted()) or (UnitOnTaxi and UnitOnTaxi("player"))
+    or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
+
+  if (inCombat or hasTarget) and plan == "prot" and ns.SpellInfo("Righteous Fury")
+    and ns.AuraMissing("player", "HELPFUL", "Righteous Fury") then
+    add("|cffffd100", ns.T("SH_FURY"))
   end
+  -- Auras stay on until you change them, so this one shows any time, not only in fights.
+  if not busy then
+    local want = ns.WantedAura()
+    if want and ns.SpellInfo(want) then
+      if ns.AuraMissing("player", "HELPFUL", want) then add("|cffffd100", ns.T("SH_AURA_PICK", want)) end
+    elseif ns.SpellInfo("Devotion Aura") and NoAura() then
+      local best = (plan == "ret" and ns.SpellInfo("Retribution Aura")) and "Retribution Aura" or "Devotion Aura"
+      add("|cffffd100", ns.T("SH_AURA", best))
+    end
+  end
+  if hasTarget and plan ~= "holy" and ns.AuraMissingLike("player", "HELPFUL", "Seal of ") then
+    add("|cffffd100", ns.T("SH_SEAL"))
+  end
+  if (inCombat or hasTarget) and ns.SpellInfo("Blessing of Might")
+    and ns.AuraMissingLike("player", "HELPFUL", "Blessing of ", "Greater Blessing of ") then
+    add("|cffffd100", ns.T("SH_BLESSING"))
+  end
+  if inCombat and hasTarget and plan == "prot" and ns.SpellUsable("Holy Shield")
+    and ns.AuraMissing("player", "HELPFUL", "Holy Shield") then
+    add("|cffff9966", ns.T("SH_HOLYSHIELD"))
+  end
+  if #list > 0 then sub = table.concat(list, "\n") end
   return main, sub, state
 end
 

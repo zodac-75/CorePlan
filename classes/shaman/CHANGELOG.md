@@ -1,3 +1,7 @@
+# ShamanPlan 1.0.0-beta22
+
+- Talent marker: a big green arrow now points down at the next talent.
+
 # ShamanPlan 1.0.0-beta21
 
 - **Clearer talent marker:** the next talent in your plan now gets a thick green frame that pulses, with a big green arrow bobbing above it. The old faint blue glow is gone, and so is the flicker.
