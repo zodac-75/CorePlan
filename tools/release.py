@@ -55,6 +55,19 @@ def test(cls, addon_dir):
     print("%s: tests passed" % cls)
 
 
+def latest_notes(cls, name, version):
+    """The top section of classes/<cls>/CHANGELOG.md, as Markdown for CurseForge."""
+    with open(os.path.join(ROOT, "classes", cls, "CHANGELOG.md"), encoding="utf-8") as f:
+        lines = f.read().splitlines()
+    body = []
+    for line in lines[1:]:
+        if line.startswith("# "):
+            break
+        body.append(line)
+    text = "\n".join(body).strip()
+    return "## %s %s\n\n%s\n" % (name, version, text)
+
+
 def release(cls):
     meta = build.meta(cls)
     name, version = meta["name"], build.version_of(cls)
@@ -69,7 +82,10 @@ def release(cls):
     test(cls, addon_dir)
 
     # The packager works on a git checkout tagged with the version.
-    shutil.copy(os.path.join(ROOT, "classes", cls, "CHANGELOG.md"), os.path.join(addon_dir, "CHANGELOG.md"))
+    # The file's changelog on CurseForge and GitHub: only this version's notes, not the
+    # whole history (the full CHANGELOG.md stays in the repo).
+    with open(os.path.join(addon_dir, "CHANGELOG.md"), "w", encoding="utf-8") as f:
+        f.write(latest_notes(cls, name, version))
     with open(os.path.join(addon_dir, ".pkgmeta"), "w") as f:
         f.write("package-as: %s\n\nmanual-changelog:\n  filename: CHANGELOG.md\n  markup-type: markdown\n\n"
                 "ignore:\n  - CHANGELOG.md\n" % name)
