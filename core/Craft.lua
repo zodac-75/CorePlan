@@ -105,100 +105,119 @@ function ns.EnchantNeedsMat(itemID)
   return false
 end
 
-local function MatLine(m, crafts)
-  local id, per, fallback = m[1], m[2], m[3]
-  local need = math.ceil(per * crafts)
-  local have = ns.ItemCount(id)
-  local color = have >= need and "|cff60ff60" or "|cffff6060"
-  local line = string.format("    %s%s %d/%d|r", color, ns.ItemName(id, fallback), have, need)
-  local bolt = ns.BOLTS and ns.BOLTS[id]
-  if bolt and have < need then
-    local rawNeed = (need - have) * bolt.ratio
-    local rawHave = ns.ItemCount(bolt.raw)
-    local c = rawHave >= rawNeed and "|cff60ff60" or "|cffaaaaaa"
-    line = line .. " " .. c .. ns.T("CR_EQUALS", rawNeed, bolt.name, rawHave) .. "|r"
-  end
-  return line
-end
+local PROF_ICON = {
+  Alchemy = "Interface\\Icons\\Trade_Alchemy", Blacksmithing = "Interface\\Icons\\Trade_BlackSmithing",
+  Enchanting = "Interface\\Icons\\Trade_Engraving", Engineering = "Interface\\Icons\\Trade_Engineering",
+  Herbalism = "Interface\\Icons\\Spell_Nature_NatureTouchGrow", Leatherworking = "Interface\\Icons\\INV_Misc_ArmorKit_17",
+  Mining = "Interface\\Icons\\Trade_Mining", Skinning = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01",
+  Tailoring = "Interface\\Icons\\Trade_Tailoring",
+}
 
-local function Header(prof, lines)
+-- The window is a list of rows (see Rows.lua): { text, icon, items, bar, indent }.
+local function Header(prof, out)
   local skill, maxRank = ns.GetProfSkill(prof)
-  table.insert(lines, "|cffffffff" .. prof .. "|r")
+  local row = { icon = PROF_ICON[prof], text = "|cffffffff" .. prof .. "|r" }
+  table.insert(out, row)
   if not skill then
-    table.insert(lines, "  |cff888888" .. ns.T("CR_NOT_LEARNED") .. "|r")
+    row.text = row.text .. "  |cff888888" .. ns.T("CR_NOT_LEARNED") .. "|r"
     return nil
   end
   if skill >= 300 then
-    table.insert(lines, "  |cff60ff60" .. ns.T("CR_DONE") .. "|r")
+    row.text = row.text .. "  |cff60ff60" .. ns.T("CR_DONE") .. "|r"
     return nil
   end
-  local header = "  " .. (maxRank and maxRank > 0 and ns.T("CR_SKILL", skill, maxRank) or ns.T("CR_SKILL_ONLY", skill))
-  if maxRank and maxRank < 300 and skill >= maxRank - 25 then
+  row.text = row.text .. "  |cffaaaaaa" ..
+    (maxRank and maxRank > 0 and ns.T("CR_SKILL", skill, maxRank) or ns.T("CR_SKILL_ONLY", skill)) .. "|r"
+  local cap = (maxRank and maxRank > 0) and maxRank or 300
+  local warn = maxRank and maxRank < 300 and skill >= maxRank - 25
+  if warn then
     local lvl = ns.RANK_LEVEL[maxRank]
-    header = header .. "  |cffff9900" .. (lvl and ns.T("CR_TRAIN_LVL", lvl) or ns.T("CR_TRAIN")) .. "|r"
+    row.text = row.text .. "  |cffff9900" .. (lvl and ns.T("CR_TRAIN_LVL", lvl) or ns.T("CR_TRAIN")) .. "|r"
   end
-  table.insert(lines, header)
+  -- Orange when you're close to the cap and need to train, blue otherwise.
+  row.bar = { value = skill, max = cap, color = warn and { 1, 0.6, 0.1 } or { 0.35, 0.75, 1 } }
   return skill
 end
 
-local function RouteSection(prof, lines)
-  local skill = Header(prof, lines)
+local function RouteSection(prof, out)
+  local skill = Header(prof, out)
   if not skill then return end
   local s, nxt = StepFor(ns.ROUTES[prof], skill)
   if not s then return end
   local crafts = Remaining(s, skill)
   local what = s.batch and ns.T("CR_BATCH", crafts) or ns.T("CR_LEFT", crafts)
-  table.insert(lines, string.format("  |cffffd100%d-%d:|r %s, %s", s.from, s.to, s.craft, what))
-  for _, m in ipairs(s.mats) do table.insert(lines, MatLine(m, crafts)) end
-  if s.note then table.insert(lines, "    |cffaaaaaa" .. ns.Tx(s.note) .. "|r") end
+  local items, extra = {}, {}
+  for _, m in ipairs(s.mats) do
+    local id, per, fallback = m[1], m[2], m[3]
+    local need = math.ceil(per * crafts)
+    local have = ns.ItemCount(id)
+    table.insert(items, { id = id, have = have, need = need, extra = ns.ItemName(id, fallback) })
+    local bolt = ns.BOLTS and ns.BOLTS[id]
+    if bolt and have < need then
+      local rawNeed = (need - have) * bolt.ratio
+      local rawHave = ns.ItemCount(bolt.raw)
+      local c = rawHave >= rawNeed and "|cff60ff60" or "|cffaaaaaa"
+      table.insert(extra, c .. ns.ItemName(id, fallback) .. " " .. ns.T("CR_EQUALS", rawNeed, bolt.name, rawHave) .. "|r")
+    end
+  end
+  table.insert(out, { indent = 22, items = items,
+    text = string.format("|cffffd100%d-%d:|r %s, %s", s.from, s.to, s.craft, what) })
+  for _, e in ipairs(extra) do table.insert(out, { indent = 22, text = e }) end
+  if s.note then table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.Tx(s.note) .. "|r" }) end
   if nxt then
-    table.insert(lines, "  |cff888888" .. ns.T("CR_THEN", nxt.from, nxt.to, nxt.craft) .. "|r")
+    table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("CR_THEN", nxt.from, nxt.to, nxt.craft) .. "|r" })
   end
 end
 
 ---------------------------------------------------------------------------
 -- Gathering
 ---------------------------------------------------------------------------
-local function NodeSection(prof, lines, nodes, zones)
-  local skill = Header(prof, lines)
+local function NodeSection(prof, out, nodes, zones)
+  local skill = Header(prof, out)
   if not skill then return end
   local can, nextNode = {}, nil
   for _, n in ipairs(nodes) do
-    if skill >= n[3] then table.insert(can, n[2])
+    if skill >= n[3] then table.insert(can, n)
     elseif not nextNode then nextNode = n end
   end
-  local top = {}
-  for i = math.max(1, #can - 2), #can do table.insert(top, can[i]) end
-  table.insert(lines, "  |cffaaaaaa" .. ns.T("HB_CAN", table.concat(top, ", ")) .. "|r")
+  local items, names = {}, {}
+  for i = math.max(1, #can - 2), #can do
+    table.insert(items, { id = can[i][1], extra = can[i][2] })
+    table.insert(names, can[i][2])
+  end
+  table.insert(out, { indent = 22, items = items, text = "|cffaaaaaa" .. ns.T("HB_CAN", table.concat(names, ", ")) .. "|r" })
   if nextNode then
-    table.insert(lines, "  |cff888888" .. ns.T("HB_NEXT", nextNode[2], nextNode[3]) .. "|r")
+    table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("HB_NEXT", nextNode[2], nextNode[3]) .. "|r" })
   end
   for _, z in ipairs(zones) do
     if skill < z.to then
-      table.insert(lines, "  |cffffd100" .. ns.T("GA_ZONES") .. "|r " .. z.zones)
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. z.zones })
       break
     end
   end
 end
 
-local function SkinSection(lines)
-  local skill = Header("Skinning", lines)
+local function SkinSection(out)
+  local skill = Header("Skinning", out)
   if not skill then return end
-  table.insert(lines, "  |cffaaaaaa" .. ns.T("SK_LEVEL", ns.SkinLevel(skill)) .. "|r")
+  table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.T("SK_LEVEL", ns.SkinLevel(skill)) .. "|r" })
   local best
-  for _, l in ipairs(ns.LEATHER) do if skill >= l[3] then best = l[2] end end
-  if best then table.insert(lines, "  |cff888888" .. ns.T("SK_LEATHER", best) .. "|r") end
+  for _, l in ipairs(ns.LEATHER) do if skill >= l[3] then best = l end end
+  if best then
+    table.insert(out, { indent = 22, items = { { id = best[1], extra = best[2] } },
+      text = "|cff888888" .. ns.T("SK_LEATHER", best[2]) .. "|r" })
+  end
 end
 
-local function Section(prof, lines)
-  if prof == "Herbalism" then NodeSection(prof, lines, ns.HERBS, ns.HERB_ZONES)
-  elseif prof == "Mining" then NodeSection(prof, lines, ns.ORES, ns.MINING_ZONES)
-  elseif prof == "Skinning" then SkinSection(lines)
-  elseif ns.ROUTES[prof] then RouteSection(prof, lines) end
+local function Section(prof, out)
+  if prof == "Herbalism" then NodeSection(prof, out, ns.HERBS, ns.HERB_ZONES)
+  elseif prof == "Mining" then NodeSection(prof, out, ns.ORES, ns.MINING_ZONES)
+  elseif prof == "Skinning" then SkinSection(out)
+  elseif ns.ROUTES[prof] then RouteSection(prof, out) end
 end
 
--- Materials in bags and bank that matter for your professions.
-local function MatsSummary(lines)
+-- Materials in bags and bank that matter for your professions, as icons with counts.
+local function MatsSummary(out)
   local groups = {}
   if ns.HasProf("Tailoring") then table.insert(groups, { ns.T("CR_CLOTH"), ns.CLOTH, 1, 2 }) end
   if ns.HasProf("Herbalism") or ns.HasProf("Alchemy") then table.insert(groups, { ns.T("CR_HERBS"), ns.HERBS, 1, 2 }) end
@@ -206,30 +225,61 @@ local function MatsSummary(lines)
     table.insert(groups, { ns.T("CR_ORES"), ns.ORES, 1, 2 })
   end
   if ns.HasProf("Skinning") or ns.HasProf("Leatherworking") then table.insert(groups, { ns.T("CR_LEATHER"), ns.LEATHER, 1, 2 }) end
+  if #groups > 0 then table.insert(out, { gap = 4 }) end
   for _, g in ipairs(groups) do
-    local found = {}
+    local items, names = {}, {}
     for _, e in ipairs(g[2]) do
       local n = ns.ItemCount(e[g[3]])
-      if n > 0 then table.insert(found, e[g[4]] .. " " .. n) end
+      if n > 0 then
+        table.insert(items, { id = e[g[3]], count = n, extra = e[g[4]] })
+        table.insert(names, e[g[4]] .. " " .. n)
+      end
     end
-    table.insert(lines, "|cffffffff" .. g[1] .. "|r " .. (#found > 0 and table.concat(found, ", ") or ns.T("CR_NONE")))
+    table.insert(out, { items = items, text = "|cffffffff" .. g[1] .. "|r" ..
+      (#items == 0 and (" " .. ns.T("CR_NONE")) or "") , plain = table.concat(names, ", ") })
   end
-  if #groups > 0 then table.insert(lines, "|cff888888" .. ns.T("CR_BANK") .. "|r") end
+  if #groups > 0 then table.insert(out, { text = "|cff888888" .. ns.T("CR_BANK") .. "|r" }) end
 end
 
 local function Build()
-  local lines = { "|cff@COLOR@" .. ns.T("CR_TITLE") .. "|r" }
-  for _, prof in ipairs(ns.SelectedProfs()) do Section(prof, lines) end
-  MatsSummary(lines)
+  local out = { { head = "|cff@COLOR@" .. ns.T("CR_TITLE") .. "|r" } }
+  for i, prof in ipairs(ns.SelectedProfs()) do
+    if i > 1 then table.insert(out, { gap = 6 }) end
+    Section(prof, out)
+  end
+  MatsSummary(out)
+  return out
+end
+
+-- Plain text of the rows, for the tests.
+local function PlainText(out)
+  local lines = {}
+  for _, e in ipairs(out) do
+    if e.head then table.insert(lines, e.head)
+    elseif e.text then
+      local t = string.rep(" ", math.floor((e.indent or 0) / 10)) .. e.text
+      local its = {}
+      for _, it in ipairs(e.items or {}) do
+        if it.need then table.insert(its, (it.extra or it.id) .. " " .. (it.have or 0) .. "/" .. it.need) end
+      end
+      if #its > 0 then t = t .. " [" .. table.concat(its, ", ") .. "]" end
+      if e.plain and e.plain ~= "" then t = t .. " " .. e.plain end
+      table.insert(lines, t)
+    end
+  end
   return table.concat(lines, "\n")
 end
 
 function ns.RefreshCraft()
-  if win and win:IsShown() then win:SetContent(Build()) end
+  if not (win and win:IsShown()) then return end
+  local out = Build()
+  win.text:SetText(PlainText(out)) -- hidden; used by the tests
+  win.render(out)
 end
 
 ns.RegisterModule(function()
   win = ns.MakeWindow("@ADDON@CraftFrame", 380, "craftPos", { "RIGHT", "RIGHT", -400, 120 })
+  ns.UseRows(win, function() ns.RefreshCraft() end)
   win.closeButton:SetScript("OnClick", function()
     win:Hide()
     ns.db.craftShown = false

@@ -138,6 +138,8 @@ function hooksecurefunc(name, fn)
 end
 function GetCursorPosition() return 600, 450 end
 function DoEmote() end
+function GetItemIcon(id) return 134400 + (id or 0) end
+function GetSpellTexture(n) if type(n) == "string" and n:find("^Holy Light") or n == "Frostbolt" or n == "Fire Blast" then return 135920 end end
 function UnitIsPlayer(u) return u == "target" or u == "player" end
 function UnitIsUnit(a, b) return a == b end
 UnitName = UnitName or function(u) if u == "target" then return "Kissy", nil end return "Me", nil end

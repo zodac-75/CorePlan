@@ -1,3 +1,8 @@
+# MagePlan 1.12.0
+
+- **Crafting assistant redone:** each profession has its icon and a skill bar. The bar turns orange when it's time to train the next rank. Materials show as item icons with have/need on them (green when you have enough), with the item tooltip on hover. Herbs, ore and leather you can gather now, and what's in your bags, show as icons too.
+- Plan window: gear notes get the icon of their profession.
+
 # MagePlan 1.11.0
 
 - **New plan window.** No more wall of text:
