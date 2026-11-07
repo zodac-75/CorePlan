@@ -43,6 +43,8 @@ local function Update()
     sub = "|cffffd100" .. ns.T("SH_BARRIER") .. "|r"
   end
 
+  ns.HelperAlert(main, sub, state)
+
   local unlocked = ns.db.shatterUnlocked
   if not main and not sub and not unlocked then
     f:Hide()

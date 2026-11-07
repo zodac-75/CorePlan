@@ -47,6 +47,51 @@ function ns.SpellUsable(spell)
   return usable and not noPower and ns.CooldownLeft(spell) <= 0
 end
 
+---------------------------------------------------------------------------
+-- Size and sound, shared by every class's combat helper (all use @ADDON@ShatterFrame).
+---------------------------------------------------------------------------
+ns.HELPER_SIZES = { 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5 }
+
+function ns.SetHelperScale(s)
+  ns.db.shatterScale = s
+  local f = _G["@ADDON@ShatterFrame"]
+  if f then f:SetScale(s) end
+end
+
+-- Sound when a call-out lights up ("procs") and, if you want, when a reminder appears.
+ns.ALERT_MODES = { "off", "procs", "all" }
+ns.ALERT_SOUNDS = {
+  { key = "RAID_WARNING", id = 8959 },
+  { key = "READY_CHECK", id = 8960 },
+  { key = "TELL_MESSAGE", id = 3081 },
+  { key = "MAP_PING", id = 3175 },
+  { key = "ALARM_CLOCK_WARNING_3", id = 12889 },
+}
+
+function ns.PlayAlertSound()
+  local want = ns.db.alertSoundKit or "RAID_WARNING"
+  local id
+  for _, s in ipairs(ns.ALERT_SOUNDS) do
+    if s.key == want then id = (SOUNDKIT and SOUNDKIT[s.key]) or s.id end
+  end
+  if id and PlaySound then pcall(PlaySound, id, "Master") end
+end
+
+local lastAlertState, lastAlertSub, lastSoundAt = nil, nil, 0
+
+-- Called by each combat helper on every update with what it shows.
+function ns.HelperAlert(main, sub, state)
+  local mode = ns.db.alertSound or "off"
+  local play = false
+  if mode ~= "off" and state == "go" and lastAlertState ~= "go" then play = true end
+  if mode == "all" and sub and sub ~= lastAlertSub then play = true end
+  lastAlertState, lastAlertSub = state, sub
+  if play and GetTime() - lastSoundAt > 1.5 then
+    lastSoundAt = GetTime()
+    ns.PlayAlertSound()
+  end
+end
+
 function ns.MakeCombatHelper(update)
   local f, big, small, flash
   local acc, lastState = 0, nil
@@ -54,6 +99,7 @@ function ns.MakeCombatHelper(update)
   local function Update()
     if ns.db.shatterOff then f:Hide(); return end
     local main, sub, state = update()
+    ns.HelperAlert(main, sub, state)
     local unlocked = ns.db.shatterUnlocked
     if not main and not sub and not unlocked then
       f:Hide()

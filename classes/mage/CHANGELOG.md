@@ -1,3 +1,8 @@
+# MagePlan 1.10.0
+
+- **Combat helper size** in the settings window, from 75% to 250%. You can still unlock it with "Move combat helper" and use the mouse wheel.
+- **Alert sound:** off, on call-outs only, or on call-outs and reminders. Pick between five sounds; each one plays when you choose it.
+
 # MagePlan 1.9.6
 
 - The mugs easter egg now comes with `/drink`. WoW Forever has no `/toast` emote, so it never fired before.

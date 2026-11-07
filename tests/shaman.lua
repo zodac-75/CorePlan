@@ -121,7 +121,8 @@ function UnitIsDead() return false end
 function UnitAffectingCombat() return true end
 function InCombatLockdown() return false end
 function UnitCharacterPoints() return 2 end
-function PlaySound() end
+SIM_SOUNDS = 0
+function PlaySound() SIM_SOUNDS = SIM_SOUNDS + 1 end
 function hooksecurefunc(name, fn)
   if type(name) == "string" then
     local old = _G[name]
@@ -674,6 +675,7 @@ do
   end
   UnitAffectingCombat = function() return true end
   ns.db.shatterOff = false
+  ns.db.alertSound = "all"; SIM_SOUNDS = 0
   SIM_MAELSTROM = 5; dump("5 stacks, no shield")
   SIM_MAELSTROM = 3; dump("3 stacks")
   GetWeaponEnchantInfo = function() return false end
@@ -685,6 +687,9 @@ do
   issecretvalue = function(v) return v == SIM_SECRET end
   SIM_SHIELD = SIM_SECRET; dump("shield name hidden")
   issecretvalue = nil; SIM_SHIELD = nil
+  print("--- Ljud vid varningar: " .. SIM_SOUNDS .. " ---")
+  if SIM_SOUNDS == 0 then table.insert(errors, "inget ljud trots alertSound = all") end
+  ns.db.alertSound = nil
   UnitAffectingCombat = function() return false end
 end
 print("--- Yrkestest (PROFTEST) ---")

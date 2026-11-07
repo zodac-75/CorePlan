@@ -84,6 +84,28 @@ local SELECTORS = {
   { key = "MM_LANG",
     value = function() return ns.Lang() == "svSE" and "Svenska" or "English" end,
     step = function() ns.CycleLang() end },
+  { key = "CFG_HELPERSIZE",
+    value = function() return math.floor((ns.db.shatterScale or 1) * 100 + 0.5) .. "%" end,
+    step = function(dir)
+      local cur, i = ns.db.shatterScale or 1, 2
+      for n, v in ipairs(ns.HELPER_SIZES) do if math.abs(v - cur) < 0.01 then i = n end end
+      i = math.max(1, math.min(#ns.HELPER_SIZES, i + dir))
+      ns.SetHelperScale(ns.HELPER_SIZES[i])
+    end },
+  { key = "CFG_SOUND",
+    value = function() return ns.T("SOUND_" .. (ns.db.alertSound or "off")) end,
+    step = function(dir)
+      ns.db.alertSound = Step(ns.ALERT_MODES, ns.db.alertSound or "off", dir)
+      if ns.db.alertSound ~= "off" then ns.PlayAlertSound() end
+    end },
+  { key = "CFG_SOUNDKIT",
+    value = function() return ns.T("SNDKIT_" .. (ns.db.alertSoundKit or "RAID_WARNING")) end,
+    step = function(dir)
+      local keys = {}
+      for _, s in ipairs(ns.ALERT_SOUNDS) do table.insert(keys, s.key) end
+      ns.db.alertSoundKit = Step(keys, ns.db.alertSoundKit or "RAID_WARNING", dir)
+      ns.PlayAlertSound() -- let you hear it
+    end },
   { key = "CFG_DRINKAT",
     value = function() return (ns.db.drinkPct or 40) .. "%" end,
     step = function(dir)

@@ -128,7 +128,8 @@ function UnitIsDead() return false end
 function UnitAffectingCombat() return true end
 function InCombatLockdown() return false end
 function UnitCharacterPoints() return 2 end
-function PlaySound() end
+SIM_SOUNDS = 0
+function PlaySound() SIM_SOUNDS = SIM_SOUNDS + 1 end
 function hooksecurefunc(name, fn)
   if type(name) == "string" then
     local old = _G[name]
@@ -685,6 +686,7 @@ do
   end
   UnitAffectingCombat = function() return true end
   ns.db.shatterOff = false
+  ns.db.alertSound = "all"; SIM_SOUNDS = 0
   ns.db.paladinAura = nil; SIM_BUFFS = {}; dump("prot: no fury")
   SIM_BUFFS = { "Righteous Fury" }; dump("prot: no aura")
   ns.db.paladinAura = "Retribution Aura"; SIM_BUFFS = { "Righteous Fury", "Devotion Aura" }; dump("prot: picked Retribution Aura")
@@ -696,6 +698,9 @@ do
   SIM_HP = 80; SIM_TYPE = "Undead"; SIM_USABLE = { Exorcism = true }; dump("exorcism")
   SIM_TYPE = "Beast"; SIM_USABLE = {}; ns.db.plan = "holy"; ns.ApplyPlan(); SIM_BUFFS = {}; dump("holy: no blessing")
   ns.db.plan = nil; ns.ApplyPlan()
+  print("--- Ljud vid varningar: " .. SIM_SOUNDS .. " ---")
+  if SIM_SOUNDS == 0 then table.insert(errors, "inget ljud trots alertSound = all") end
+  ns.db.alertSound = nil
   UnitAffectingCombat = function() return false end
 end
 print("--- Yrkestest (PROFTEST) ---")
