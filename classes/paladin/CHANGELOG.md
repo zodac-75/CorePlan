@@ -1,3 +1,11 @@
+# PaladinPlan 1.0.0-beta10
+
+- **New plan window.** No more wall of text:
+  - **Do this now** at the top lists only what you can act on: a talent point to spend, spells to train, old ranks on your bars and professions that fall behind. Click a row to act on it: it opens the talent window, lists what to train or checks your bars. When there's nothing to do it says "All caught up".
+  - Spells show as icons, with the real spell tooltip when you hover them. Long lists show the first five names, and hovering shows the rest.
+  - XP, gold goal and professions on track get small icons underneath.
+  - **Coming up** (the next three levels) is folded into one line. Click it to open or close it; the window remembers your choice.
+
 # PaladinPlan 1.0.0-beta9
 
 - **Combat helper size** in the settings window, from 75% to 250%. You can still unlock it with "Move combat helper" and use the mouse wheel.

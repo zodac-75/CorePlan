@@ -683,6 +683,27 @@ local function show(name)
 end
 if arg[4] == "trainer" then fire("TRAINER_SHOW"); now = now + 1; runTimers(now) end
 ns.RefreshMain(); ns.mainFrame:Show(); ns.RefreshMain()
+-- Plan window rows: click each one, open "Coming up" and check rows were drawn.
+do
+  local mf, rows, clicked = ns.mainFrame, 0, 0
+  for _, w in ipairs(allFrames) do
+    if w.__parent == mf and w.__kind == "Button" and w.__shown then
+      rows = rows + 1
+      if w.__scripts.OnClick then
+        local ok, err = pcall(w.__scripts.OnClick, w, "LeftButton")
+        if not ok then table.insert(errors, "planrad: " .. tostring(err)) end
+        clicked = clicked + 1
+      end
+      if w.__scripts.OnEnter then
+        local ok, err = pcall(w.__scripts.OnEnter, w)
+        if not ok then table.insert(errors, "planrad tooltip: " .. tostring(err)) end
+      end
+    end
+  end
+  if rows < 3 then table.insert(errors, "planfönstret ritade bara " .. rows .. " rader") end
+  print("--- Planfönster: " .. rows .. " rader, " .. clicked .. " klickade, kommande " .. (ns.db.comingOpen and "öppen" or "stängd") .. " ---")
+  ns.db.comingOpen = true; ns.RefreshMain()
+end
 show("MagePlanFrame")
 ns.craftWindow:Show(); ns.RefreshCraft()
 show("MagePlanCraftFrame")

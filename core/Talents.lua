@@ -42,6 +42,17 @@ function ns.NextTalent()
   return "done"
 end
 
+-- Talent by name from the live tree (for its icon), or nil.
+function ns.TalentInfo(name)
+  return TalentMap()[name]
+end
+
+local function OpenTalents()
+  if InCombatLockdown and InCombatLockdown() then return end
+  if ToggleTalentFrame then pcall(ToggleTalentFrame)
+  elseif TalentFrame_LoadUI then pcall(TalentFrame_LoadUI); if PlayerTalentFrame then PlayerTalentFrame:Show() end end
+end
+
 local function Unspent()
   if UnitCharacterPoints then
     local ok, p = pcall(UnitCharacterPoints, "player")
@@ -275,11 +286,15 @@ ns.RegisterModule(function()
   ns.AddStatusProvider(function()
     local line = NextText()
     if not line then return nil end
+    local name, t = ns.NextTalent()
+    local icon = (t and t.icon) or "Interface\\Icons\\Ability_Marksmanship"
     local u = Unspent()
-    if u and u > 0 then
-      line = line .. " |cff60ff60" .. ns.T("POINTS_TO_SPEND", u) .. "|r"
+    if u and u > 0 and name ~= "done" then
+      -- A point to spend goes under "Do this now"; clicking opens the talent window.
+      return { action = true, icon = icon, click = OpenTalents, tip = ns.T("PW_CLICK_TALENT"),
+        text = line .. " |cff60ff60" .. ns.T("POINTS_TO_SPEND", u) .. "|r" }
     end
-    return line
+    return { icon = icon, text = line, click = OpenTalents, tip = ns.T("PW_CLICK_TALENT") }
   end)
 
   C_Timer.After(5, function()

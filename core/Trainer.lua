@@ -96,7 +96,9 @@ ns.RegisterModule(function()
     local list, readable = ns.Trainable()
     if readable then
       if #list > 0 then
-        return "|cff9d9dff" .. ns.T("TR_CAN") .. "|r " .. table.concat(list, ", ")
+        return { action = true, icon = "Interface\\Icons\\INV_Misc_Book_09", spells = list,
+          text = "|cff9d9dff" .. ns.T("TR_CAN") .. "|r " .. table.concat(list, ", "),
+          click = function() Ping(true) end, tip = ns.T("PW_CLICK_TRAIN") }
       end
       return nil
     end
@@ -104,7 +106,8 @@ ns.RegisterModule(function()
     local level = UnitLevel("player") or 1
     local lastEven = LastEven(level)
     if lastEven >= 2 and (ns.db.trainerVisited or 0) < lastEven then
-      return "|cff9d9dff" .. ns.T("TRAINER_DUE", lastEven) .. "|r"
+      return { action = true, icon = "Interface\\Icons\\INV_Misc_Book_09",
+        text = "|cff9d9dff" .. ns.T("TRAINER_DUE", lastEven) .. "|r" }
     end
   end)
 end)

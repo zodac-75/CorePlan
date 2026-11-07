@@ -58,7 +58,7 @@ local function CheckLow()
 end
 
 ns.RegisterModule(function()
-  ns.AddStatusProvider(Status)
+  ns.AddStatusProvider(Status, "Interface\\Icons\\INV_Drink_07")
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("BAG_UPDATE")
   ev:SetScript("OnEvent", function() ns.Debounce("supplies", 1, CheckLow) end)

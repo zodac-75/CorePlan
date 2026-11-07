@@ -169,7 +169,9 @@ ns.RegisterModule(function()
 
   ns.AddStatusProvider(function()
     if #outdated > 0 then
-      return "|cffff9900" .. ns.T("RANKS_STATUS", #outdated) .. "|r (/@SLASH@ ranks)"
+      return { action = true, icon = "Interface\\Icons\\INV_Misc_Note_01",
+        text = "|cffff9900" .. ns.T("RANKS_STATUS", #outdated) .. "|r",
+        click = function() missing = {}; Scan(true) end, tip = ns.T("PW_CLICK_RANKS") }
     end
   end)
 end)

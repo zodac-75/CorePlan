@@ -50,7 +50,7 @@ end
 ns.RegisterModule(function()
   if not (UnitXP and UnitXPMax) then return end
   Reset()
-  ns.AddStatusProvider(Status)
+  ns.AddStatusProvider(Status, "Interface\\Icons\\INV_Misc_PocketWatch_01")
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("PLAYER_XP_UPDATE")
   ev:RegisterEvent("CHAT_MSG_COMBAT_XP_GAIN")

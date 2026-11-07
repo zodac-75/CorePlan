@@ -59,8 +59,8 @@ local function FavorLine()
 end
 
 ns.RegisterModule(function()
-  ns.AddStatusProvider(GoldLine)
-  ns.AddStatusProvider(FavorLine)
+  ns.AddStatusProvider(GoldLine, "Interface\\Icons\\INV_Misc_Coin_01")
+  ns.AddStatusProvider(FavorLine, "Interface\\Icons\\INV_Misc_Note_02")
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("PLAYER_MONEY")
   ev:RegisterEvent("CURRENCY_DISPLAY_UPDATE")

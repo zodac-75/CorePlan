@@ -436,36 +436,6 @@ function ns.Unlearned(list)
   return out
 end
 
--- Untrained spells from your level and below, with the level they unlock at.
-local function UntrainedSoFar(level)
-  local out = {}
-  for lvl = 1, level do
-    for _, name in ipairs(ns.Unlearned(ns.spells[lvl])) do
-      table.insert(out, string.format("%s (%d)", name, lvl))
-    end
-  end
-  return out
-end
-
--- Spells for the current level and below are shown in the "not trained yet" line instead.
-local function LevelBlock(level, header, currentLevel)
-  local out = {}
-  local function add(s) table.insert(out, s) end
-  local t, g = ns.talents[level], ns.VisibleGear(level)
-  local s
-  if ns.spells[level] and level > (currentLevel or 0) then
-    s = table.concat(ns.spells[level], ", ")
-  end
-  if not (t or g or s) then return out end
-  add(header)
-  if t then add("  |cffffd100" .. ns.T("L_TALENT") .. "|r " .. t) end
-  if s then add("  |cff9d9dff" .. ns.T("L_TRAIN") .. "|r " .. s) end
-  if g then
-    for _, item in ipairs(g) do add("  |cff1eff00" .. ns.T("L_CRAFT") .. "|r " .. ns.Tx(item)) end
-  end
-  return out
-end
-
 -- Plan entries for a level, without the ones for professions you don't have.
 function ns.VisibleGear(level)
   local g = ns.gear[level]
@@ -486,78 +456,361 @@ local PROF_GOALS = {
   { level = 58, skill = 300 },
 }
 
-local function ProfWarnings(level)
-  local lines = {}
+-- Your skill against the goal for your level: text, and true when you're behind.
+function ns.ProfGoalLine(prof, level)
   local target
   for _, t in ipairs(PROF_GOALS) do
     if level >= t.level then target = t end
   end
-  if not target then return lines end
-  for _, prof in ipairs(ns.SelectedProfs and ns.SelectedProfs() or {}) do
-    local rank, maxRank = ns.GetProfSkill(prof)
-    if rank and rank < target.skill then
-      local note
-      if target.train and (not maxRank or maxRank <= target.train + 25) then
-        local who = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][target.train]
-        note = ns.T("GOAL_TRAIN", target.rank, who or "?")
-      else
-        note = ns.T("GOAL_PACE")
-      end
-      table.insert(lines, "|cffff6060" .. ns.T("GOAL_BEHIND", prof, rank, target.skill) .. "|r - " .. note)
-    elseif rank then
-      table.insert(lines, string.format("|cff60ff60%s %d|r ", prof, rank) .. ns.T("GOAL_DONE", target.skill))
+  if not target then return nil end
+  local rank, maxRank = ns.GetProfSkill(prof)
+  if not rank then return nil end
+  if rank < target.skill then
+    local note
+    if target.train and (not maxRank or maxRank <= target.train + 25) then
+      local who = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][target.train]
+      note = ns.T("GOAL_TRAIN", target.rank, who or "?")
+    else
+      note = ns.T("GOAL_PACE")
     end
+    return "|cffff6060" .. ns.T("GOAL_BEHIND", prof, rank, target.skill) .. "|r - " .. note, true
   end
-  return lines
+  return string.format("|cff60ff60%s %d|r ", prof, rank) .. ns.T("GOAL_DONE", target.skill), false
 end
 
-local function BuildText()
-  local level = UnitLevel("player") or 1
-  local lines = {}
-  local function addAll(tbl) for _, l in ipairs(tbl) do table.insert(lines, l) end end
+---------------------------------------------------------------------------
+-- The plan window: "Do this now" with clickable rows, then short info lines, this
+-- level's notes and a "Coming up" section you can open and close.
+-- Status providers (ns.AddStatusProvider) return either a text line (info) or a row:
+--   { text = "...", icon = texture, spells = { "Name", ... }, click = fn, tip = "...",
+--     action = true }  -- action rows go under "Do this now"
+---------------------------------------------------------------------------
+local ICON = {
+  train = "Interface\\Icons\\INV_Misc_Book_09",
+  gear = "Interface\\Icons\\INV_Misc_Bag_08",
+  talent = "Interface\\Icons\\Ability_Marksmanship",
+  done = "Interface\\RaidFrame\\ReadyCheck-Ready",
+}
+local PROF_ICON = {
+  Alchemy = "Interface\\Icons\\Trade_Alchemy", Blacksmithing = "Interface\\Icons\\Trade_BlackSmithing",
+  Enchanting = "Interface\\Icons\\Trade_Engraving", Engineering = "Interface\\Icons\\Trade_Engineering",
+  Herbalism = "Interface\\Icons\\Spell_Nature_NatureTouchGrow", Leatherworking = "Interface\\Icons\\INV_Misc_ArmorKit_17",
+  Mining = "Interface\\Icons\\Trade_Mining", Skinning = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01",
+  Tailoring = "Interface\\Icons\\Trade_Tailoring",
+}
 
-  table.insert(lines, "|cff@COLOR@@ADDON@|r - " .. ns.T("LEVEL", level))
+function ns.RunCommand(cmd, rest)
+  local fn = ns.commands[cmd]
+  if not fn then return end
+  local ok, err = pcall(fn, rest)
+  if not ok then Print(ns.T("ERROR", tostring(err))) end
+end
 
-  -- Rader från moduler (nästa talent, rank-varningar osv.)
-  if ns.statusProviders then
-    for _, fn in ipairs(ns.statusProviders) do
-      local ok, line = pcall(fn)
-      if ok and line then table.insert(lines, line) end
-    end
+-- Icon for a spell you know (nil for spells you haven't learned).
+function ns.SpellIcon(name)
+  local tex
+  if C_Spell and C_Spell.GetSpellTexture then
+    local ok, t = pcall(C_Spell.GetSpellTexture, name)
+    if ok then tex = t end
   end
-
-  local untrained = UntrainedSoFar(level)
-  if #untrained > 0 then
-    table.insert(lines, "|cffff9900" .. ns.T("UNTRAINED") .. "|r " .. table.concat(untrained, ", "))
+  if not tex and GetSpellTexture then
+    local ok, t = pcall(GetSpellTexture, name)
+    if ok then tex = t end
   end
+  if issecretvalue and issecretvalue(tex) then return nil end
+  return tex
+end
 
-  local now = LevelBlock(level, "|cffffffff" .. ns.T("NOW") .. "|r", level)
-  if #now == 0 and #untrained == 0 then
-    table.insert(lines, "|cff888888" .. ns.T("NOTHING_NEW") .. "|r")
-  else
-    addAll(now)
+local function Untrained(level)
+  local out = {}
+  for lvl = 1, level do
+    for _, name in ipairs(ns.Unlearned(ns.spells[lvl])) do table.insert(out, name) end
   end
+  return out
+end
 
+local function TalentRow(level)
+  local t = ns.talents[level]
+  if not t then return nil end
+  local name = t:match("^(.-) %d+/%d+$") or t
+  local info = ns.TalentInfo and ns.TalentInfo(name)
+  return { icon = (info and info.icon) or ICON.talent, text = "|cffffd100" .. ns.T("L_TALENT") .. "|r " .. t }
+end
+
+local function ComingUp(level)
+  local levels = {}
   for i = 1, LOOKAHEAD do
     local l = level + i
     if l <= 60 then
-      addAll(LevelBlock(l, "|cffaaaaaa" .. ns.T("LEVEL_N", l) .. "|r", level))
+      local rows = {}
+      local tr = TalentRow(l)
+      if tr then table.insert(rows, tr) end
+      if ns.spells[l] then
+        table.insert(rows, { icon = ICON.train, spells = ns.spells[l],
+          text = "|cff9d9dff" .. ns.T("L_TRAIN") .. "|r " .. table.concat(ns.spells[l], ", ") })
+      end
+      for _, item in ipairs(ns.VisibleGear(l) or {}) do
+        table.insert(rows, { icon = ICON.gear, text = "|cff1eff00" .. ns.T("L_CRAFT") .. "|r " .. ns.Tx(item) })
+      end
+      if #rows > 0 then table.insert(levels, { level = l, rows = rows }) end
+    end
+  end
+  return levels
+end
+
+local function BuildModel()
+  local level = UnitLevel("player") or 1
+  local m = { actions = {}, info = {}, now = {}, coming = ComingUp(level), level = level }
+
+  if ns.statusProviders then
+    for _, p in ipairs(ns.statusProviders) do
+      local ok, r = pcall(p.fn)
+      if ok and r then
+        if type(r) == "string" then r = { text = r, icon = p.icon } end
+        r.icon = r.icon or p.icon
+        table.insert(r.action and m.actions or m.info, r)
+      end
     end
   end
 
-  local warn = ProfWarnings(level)
-  if #warn > 0 then
-    table.insert(lines, "|cffffffff" .. ns.T("PROFS") .. "|r " .. ns.T("PROFS_HINT"))
-    for _, w in ipairs(warn) do table.insert(lines, "  " .. w) end
+  local untrained = Untrained(level)
+  if #untrained > 0 then
+    table.insert(m.actions, { icon = ICON.train, spells = untrained, action = true,
+      text = "|cffff9900" .. ns.T("UNTRAINED") .. "|r " .. table.concat(untrained, ", "),
+      click = function() ns.RunCommand("train") end, tip = ns.T("PW_CLICK_TRAIN") })
+  end
+
+  for _, prof in ipairs(ns.SelectedProfs and ns.SelectedProfs() or {}) do
+    local line, behind = ns.ProfGoalLine(prof, level)
+    if line then
+      table.insert(behind and m.actions or m.info, { icon = PROF_ICON[prof], text = line, action = behind,
+        click = function() ns.RunCommand("craft") end, tip = ns.T("PW_CLICK_CRAFT") })
+    end
+  end
+
+  for _, item in ipairs(ns.VisibleGear(level) or {}) do
+    table.insert(m.now, { icon = ICON.gear, text = ns.Tx(item) })
+  end
+  return m
+end
+
+-- Plain text of the window, for /@SLASH@ dump and the tests.
+local function ModelText(m)
+  local lines = { "@ADDON@ - " .. ns.T("LEVEL", m.level), ns.T("PW_DO") }
+  if #m.actions == 0 then table.insert(lines, "  " .. ns.T("PW_DONE")) end
+  for _, r in ipairs(m.actions) do table.insert(lines, "  > " .. r.text) end
+  for _, r in ipairs(m.info) do table.insert(lines, "  " .. r.text) end
+  if #m.now > 0 then
+    table.insert(lines, ns.T("PW_NOW"))
+    for _, r in ipairs(m.now) do table.insert(lines, "  " .. r.text) end
+  end
+  if #m.coming > 0 then
+    table.insert(lines, ns.T("PW_COMING") .. (ns.db.comingOpen and " (open)" or " (closed)"))
+    for _, lv in ipairs(m.coming) do
+      table.insert(lines, "  " .. ns.T("LEVEL_N", lv.level))
+      for _, r in ipairs(lv.rows) do table.insert(lines, "    " .. r.text) end
+    end
   end
   return table.concat(lines, "\n")
 end
 
+-- Drawing ----------------------------------------------------------------
+local rowPool, iconPool, headPool = {}, {}, {}
+local ROW_ICON, SPELL_ICON = 16, 18
+
+local function ShowTip(owner, fill)
+  if not GameTooltip then return end
+  GameTooltip:SetOwner(owner, "ANCHOR_LEFT")
+  pcall(fill, GameTooltip)
+  GameTooltip:Show()
+end
+
+local function GetRow(i)
+  local r = rowPool[i]
+  if r then return r end
+  r = CreateFrame("Button", nil, frame)
+  r:RegisterForClicks("LeftButtonUp")
+  r.hl = r:CreateTexture(nil, "HIGHLIGHT")
+  r.hl:SetAllPoints()
+  r.hl:SetColorTexture(1, 1, 1, 0.08)
+  r.icon = r:CreateTexture(nil, "ARTWORK")
+  r.icon:SetSize(ROW_ICON, ROW_ICON)
+  r.icon:SetPoint("TOPLEFT", 0, -1)
+  r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  r.text = r:CreateFontString(nil, "OVERLAY")
+  r.text:SetPoint("TOPLEFT", ROW_ICON + 6, -2)
+  r.text:SetJustifyH("LEFT")
+  r.text:SetJustifyV("TOP")
+  r:SetScript("OnClick", function(self) if self.item and self.item.click then self.item.click() end end)
+  r:SetScript("OnEnter", function(self)
+    local tip, list = self.item and self.item.tip, self.fullList
+    if tip or list then
+      ShowTip(self, function(tt)
+        tt:SetText(list or tip, 1, 1, 1, 1, true)
+        if list and tip then tt:AddLine(tip, 0.6, 0.8, 1, true) end
+      end)
+    end
+  end)
+  r:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+  rowPool[i] = r
+  return r
+end
+
+local function GetIcon(i)
+  local b = iconPool[i]
+  if b then return b end
+  b = CreateFrame("Button", nil, frame)
+  b:SetSize(SPELL_ICON, SPELL_ICON)
+  b.tex = b:CreateTexture(nil, "ARTWORK")
+  b.tex:SetAllPoints()
+  b.tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  b:SetScript("OnEnter", function(self)
+    ShowTip(self, function(tt)
+      local _, id = ns.SpellInfo(self.spell)
+      if id and tt.SetSpellByID then tt:SetSpellByID(id) else tt:SetText(self.spell) end
+    end)
+  end)
+  b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+  b:SetScript("OnClick", function(self) if self.click then self.click() end end)
+  iconPool[i] = b
+  return b
+end
+
+local function GetHead(i)
+  local h = headPool[i]
+  if h then return h end
+  h = CreateFrame("Button", nil, frame)
+  h.text = h:CreateFontString(nil, "OVERLAY")
+  h.text:SetPoint("LEFT", 0, 0)
+  h.text:SetJustifyH("LEFT")
+  h:SetScript("OnClick", function(self) if self.click then self.click() end end)
+  headPool[i] = h
+  return h
+end
+
+local function Render(m)
+  if not frame then return end
+  local fontObj = _G[ns.CurrentFont().font] or GameFontHighlightSmall
+  local width = frame:GetWidth() - 20
+  local y = -8
+  local nRow, nIcon, nHead = 0, 0, 0
+
+  local function Head(text, click)
+    nHead = nHead + 1
+    local h = GetHead(nHead)
+    h.text:SetFontObject(fontObj)
+    h.text:SetText(text)
+    h.click = click
+    h:EnableMouse(click ~= nil)
+    h:ClearAllPoints()
+    h:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, y)
+    h:SetSize(width, h.text:GetStringHeight() + 2)
+    h:Show()
+    y = y - h.text:GetStringHeight() - 4
+  end
+
+  local function Row(item, indent)
+    nRow = nRow + 1
+    local r = GetRow(nRow)
+    r.item = item
+    indent = indent or 0
+    r.icon:SetTexture(item.icon)
+    r.icon:SetShown(item.icon ~= nil)
+    r.text:SetFontObject(fontObj)
+    r.text:SetWidth(width - indent - ROW_ICON - 6)
+    -- Spells with icons are drawn as icons; the rest stay in the text.
+    local withIcon, noIcon = {}, {}
+    for _, s in ipairs(item.spells or {}) do
+      local name = s:gsub(" %d+$", "")
+      local tex = ns.SpellIcon(name)
+      if tex then table.insert(withIcon, { name = name, tex = tex }) else table.insert(noIcon, s) end
+    end
+    local text = item.text
+    r.fullList = nil
+    if item.spells then
+      -- Long lists: the first few names here, all of them in the tooltip.
+      local shown = noIcon
+      if #noIcon > 5 then
+        shown = { unpack(noIcon, 1, 5) }
+        table.insert(shown, ns.T("PW_MORE", #noIcon - 5))
+        r.fullList = table.concat(noIcon, "\n")
+      end
+      if #withIcon > 0 or #noIcon > 5 then
+        text = (item.text:match("^(|c%x+.-|r)") or "") .. (#shown > 0 and (" " .. table.concat(shown, ", ")) or "")
+      end
+    end
+    r.text:SetText(text)
+    local h = math.max(ROW_ICON + 2, r.text:GetStringHeight() + 4)
+    local iconsY = h
+    if #withIcon > 0 then h = h + SPELL_ICON + 4 end
+    r:ClearAllPoints()
+    r:SetPoint("TOPLEFT", frame, "TOPLEFT", 10 + indent, y)
+    r:SetSize(width - indent, h)
+    r:EnableMouse(item.click ~= nil or item.tip ~= nil)
+    r.hl:SetShown(item.click ~= nil)
+    r:Show()
+    for k, s in ipairs(withIcon) do
+      nIcon = nIcon + 1
+      local b = GetIcon(nIcon)
+      b.spell, b.click = s.name, item.click
+      b.tex:SetTexture(s.tex)
+      b:ClearAllPoints()
+      b:SetPoint("TOPLEFT", r, "TOPLEFT", ROW_ICON + 6 + (k - 1) * (SPELL_ICON + 3), -iconsY)
+      b:SetFrameLevel(r:GetFrameLevel() + 2)
+      b:Show()
+    end
+    y = y - h - 2
+  end
+
+  Head("|cff@COLOR@@ADDON@|r  |cffaaaaaa" .. ns.T("LEVEL", m.level) ..
+    ((#ns.PLAN_ORDER > 1) and (" · " .. ns.T("PLAN_" .. ns.PlanKey())) or "") .. "|r")
+  y = y - 2
+  Head("|cffffffff" .. ns.T("PW_DO") .. "|r")
+  if #m.actions == 0 then
+    Row({ icon = ICON.done, text = "|cff60ff60" .. ns.T("PW_DONE") .. "|r" })
+  end
+  for _, r in ipairs(m.actions) do Row(r) end
+  if #m.info > 0 then
+    y = y - 4
+    for _, r in ipairs(m.info) do Row(r) end
+  end
+  if #m.now > 0 then
+    y = y - 4
+    Head("|cffffffff" .. ns.T("PW_NOW") .. "|r")
+    for _, r in ipairs(m.now) do Row(r) end
+  end
+  if #m.coming > 0 then
+    y = y - 4
+    local nums = {}
+    for _, lv in ipairs(m.coming) do table.insert(nums, tostring(lv.level)) end
+    local open = ns.db.comingOpen
+    Head((open and "|cffffffff- " or "|cffffffff+ ") .. ns.T("PW_COMING") .. "|r  |cffaaaaaa" .. table.concat(nums, " · ") .. "|r",
+      function() ns.db.comingOpen = not ns.db.comingOpen; ns.RefreshMain() end)
+    if open then
+      for _, lv in ipairs(m.coming) do
+        Head("  |cffaaaaaa" .. ns.T("LEVEL_N", lv.level) .. "|r")
+        for _, r in ipairs(lv.rows) do Row(r, 10) end
+      end
+    end
+  end
+
+  for i = nRow + 1, #rowPool do rowPool[i]:Hide() end
+  for i = nIcon + 1, #iconPool do iconPool[i]:Hide() end
+  for i = nHead + 1, #headPool do headPool[i]:Hide() end
+  frame.rendering = true
+  frame:SetHeight(-y + 8)
+  frame.rendering = false
+end
+
 ns.statusProviders = {}
-function ns.AddStatusProvider(fn) table.insert(ns.statusProviders, fn) end
+-- fn returns a text line, a row table or nil; icon is used for text lines.
+function ns.AddStatusProvider(fn, icon) table.insert(ns.statusProviders, { fn = fn, icon = icon }) end
 
 function ns.RefreshMain()
-  if frame then frame:SetContent(BuildText()) end
+  if not frame then return end
+  local m = BuildModel()
+  frame.text:SetText(ModelText(m)) -- hidden; used by /@SLASH@ dump and the tests
+  Render(m)
 end
 
 function ns.ToggleMain()
@@ -571,6 +824,13 @@ end
 
 local function CreateUI()
   frame = ns.MakeWindow("@ADDON@Frame", 340, "pos", { "RIGHT", "RIGHT", -40, 120 })
+  -- The plan window draws rows instead of one text: the text is kept hidden for /dump.
+  frame.text:Hide()
+  function frame:SetContent() ns.RefreshMain() end
+  frame:SetScript("OnSizeChanged", function(self)
+    if self.rendering then return end
+    ns.Debounce("mainsize", 0.05, ns.RefreshMain)
+  end)
   frame.closeButton:SetScript("OnClick", function()
     frame:Hide()
     db.hidden = true
