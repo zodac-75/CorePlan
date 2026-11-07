@@ -4,9 +4,118 @@ local _, ns = ...
 local TREES = ns.TALENT_TREES
 local glow, hint
 
--- All talents: name -> {tab, index, tier, rank, max, icon}
-local function TalentMap()
+-- WoW Forever uses Blizzard's modern talent system (C_Traits, the PlayerSpellsFrame
+-- window) with the three classic trees drawn side by side. Each talent is a node with a
+-- position; we split the nodes into trees by their x position (biggest gaps) and into
+-- rows by their y position.
+local function ActiveConfig()
+  if not (C_ClassTalents and C_ClassTalents.GetActiveConfigID and C_Traits and C_Traits.GetConfigInfo) then return nil end
+  local ok, configID = pcall(C_ClassTalents.GetActiveConfigID)
+  if not ok or not configID then return nil end
+  local okI, info = pcall(C_Traits.GetConfigInfo, configID)
+  local treeIDs = okI and info and info.treeIDs
+  if not treeIDs or not treeIDs[1] then return nil end
+  return configID, treeIDs[1], treeIDs
+end
+
+local function TraitName(configID, nodeInfo)
+  local entryID = (nodeInfo.activeEntry and nodeInfo.activeEntry.entryID) or (nodeInfo.entryIDs and nodeInfo.entryIDs[1])
+  if not entryID then return nil end
+  local okE, entry = pcall(C_Traits.GetEntryInfo, configID, entryID)
+  if not okE or not entry or not entry.definitionID then return nil end
+  local okD, def = pcall(C_Traits.GetDefinitionInfo, entry.definitionID)
+  if not okD or not def then return nil end
+  local spellID = def.spellID
+  local name = def.overrideName
+  if (not name or name == "") and spellID then
+    if C_Spell and C_Spell.GetSpellName then
+      local okN, n = pcall(C_Spell.GetSpellName, spellID); if okN then name = n end
+    elseif GetSpellInfo then
+      local okN, n = pcall(GetSpellInfo, spellID); if okN then name = n end
+    end
+  end
+  local icon = def.overrideIcon
+  if not icon and spellID then
+    if C_Spell and C_Spell.GetSpellTexture then
+      local okT, t = pcall(C_Spell.GetSpellTexture, spellID); if okT then icon = t end
+    elseif GetSpellTexture then
+      local okT, t = pcall(GetSpellTexture, spellID); if okT then icon = t end
+    end
+  end
+  return name, icon
+end
+
+-- Splits sorted numbers into n groups at the n-1 biggest gaps; returns value -> group.
+local function Cluster(values, n)
+  table.sort(values)
+  local gaps = {}
+  for i = 2, #values do table.insert(gaps, { gap = values[i] - values[i - 1], at = i }) end
+  table.sort(gaps, function(a, b) return a.gap > b.gap end)
+  local cuts = {}
+  for i = 1, math.min(n - 1, #gaps) do cuts[gaps[i].at] = true end
+  local group, out = 1, {}
+  for i, v in ipairs(values) do
+    if cuts[i] then group = group + 1 end
+    out[v] = group
+  end
+  return out
+end
+
+local function TraitMap()
+  local configID, _, treeIDs = ActiveConfig()
+  if not configID then return nil end
+  -- One tree with all three side by side, or one tree each: both happen.
+  local separate = #treeIDs > 1
+  local list, xs, seenX = {}, {}, {}
+  for treeIndex, treeID in ipairs(treeIDs) do
+    local okN, nodes = pcall(C_Traits.GetTreeNodes, treeID)
+    if okN and type(nodes) == "table" then
+      for _, nodeID in ipairs(nodes) do
+        local ok, info = pcall(C_Traits.GetNodeInfo, configID, nodeID)
+        if ok and info and info.isVisible ~= false and info.posX and (info.maxRanks or 0) > 0 then
+          local name, icon = TraitName(configID, info)
+          if name then
+            table.insert(list, { nodeID = nodeID, name = name, icon = icon, x = info.posX, y = info.posY or 0,
+              rank = info.currentRank or info.ranksPurchased or 0, max = info.maxRanks,
+              treeIndex = separate and treeIndex or nil })
+            if not seenX[info.posX] then seenX[info.posX] = true; table.insert(xs, info.posX) end
+          end
+        end
+      end
+    end
+  end
+  if #list == 0 then return nil end
+  local tabOf = Cluster(xs, math.max(1, #(TREES or {})))
+  local ysByTab = {}
+  for _, n in ipairs(list) do
+    n.tab = n.treeIndex or tabOf[n.x] or 1
+    ysByTab[n.tab] = ysByTab[n.tab] or {}
+    ysByTab[n.tab][n.y] = true
+  end
+  local rowOf = {}
+  for tab, set in pairs(ysByTab) do
+    local ys = {}
+    for y in pairs(set) do table.insert(ys, y) end
+    table.sort(ys)
+    rowOf[tab] = {}
+    for i, y in ipairs(ys) do rowOf[tab][y] = i end
+  end
   local map = {}
+  for _, n in ipairs(list) do
+    map[n.name] = { tab = n.tab, index = n.nodeID, nodeID = n.nodeID, tier = rowOf[n.tab][n.y], rank = n.rank,
+      max = n.max, icon = n.icon }
+  end
+  return map
+end
+
+-- All talents: name -> {tab, index, tier, rank, max, icon, nodeID}
+local cachedMap, cachedAt = nil, -10
+local function TalentMap()
+  if cachedMap and GetTime() - cachedAt < 0.5 then return cachedMap end
+  local map = TraitMap()
+  if map then cachedMap, cachedAt = map, GetTime(); return map end
+  map = {}
+  cachedMap, cachedAt = map, GetTime()
   if not (GetNumTalentTabs and GetNumTalents and GetTalentInfo) then return map end
   local okT, tabs = pcall(GetNumTalentTabs)
   if not okT or not tabs then return map end
@@ -50,11 +159,17 @@ end
 
 local function OpenTalents()
   if InCombatLockdown and InCombatLockdown() then return end
-  if ToggleTalentFrame then pcall(ToggleTalentFrame)
+  if PlayerSpellsUtil and PlayerSpellsUtil.ToggleClassTalentFrame then pcall(PlayerSpellsUtil.ToggleClassTalentFrame)
+  elseif ToggleTalentFrame then pcall(ToggleTalentFrame)
   elseif TalentFrame_LoadUI then pcall(TalentFrame_LoadUI); if PlayerTalentFrame then PlayerTalentFrame:Show() end end
 end
 
 local function Unspent()
+  local configID, treeID = ActiveConfig()
+  if configID and C_Traits.GetTreeCurrencyInfo then
+    local ok, cur = pcall(C_Traits.GetTreeCurrencyInfo, configID, treeID, false)
+    if ok and type(cur) == "table" and cur[1] and type(cur[1].quantity) == "number" then return cur[1].quantity end
+  end
   if UnitCharacterPoints then
     local ok, p = pcall(UnitCharacterPoints, "player")
     if ok and type(p) == "number" then return p end
@@ -81,6 +196,7 @@ local roots = {}
 local function FindRoots()
   local found = {}
   if PlayerTalentFrame then found[PlayerTalentFrame] = true end
+  if PlayerSpellsFrame then found[PlayerSpellsFrame] = true end
   if EnumerateFrames then
     local f = EnumerateFrames()
     while f do
@@ -90,7 +206,7 @@ local function FindRoots()
         local okW, w = pcall(f.GetWidth, f)
         -- Only windows: skips micro buttons, alerts and other small frames.
         if okP and (parent == UIParent or parent == nil) and okW and type(w) == "number" and w >= 300
-          and not name:find("Button") then
+          and not name:find("Button") and not name:find("Dialog") then
           found[f] = true
         end
       end
@@ -136,6 +252,10 @@ end
 
 -- A button some talent windows tag with the talent's place in the tree.
 local function FieldsMatch(btn, t)
+  if t.nodeID then
+    local nodeID = rawget(btn, "nodeID")
+    if nodeID then return nodeID == t.nodeID end
+  end
   local tier = rawget(btn, "tier") or rawget(btn, "row")
   local col = rawget(btn, "column") or rawget(btn, "col")
   if tier and col and t.tier and t.column and tier == t.tier and col == t.column then
@@ -169,6 +289,12 @@ end
 local function FindButton(root, t)
   local old = (root == PlayerTalentFrame) and _G["PlayerTalentFrameTalent" .. t.index]
   if old and old:IsShown() then return old end
+  -- The modern window can give us the button for a node directly.
+  local tf = rawget(root, "TalentsFrame") or root
+  if t.nodeID and tf.GetTalentButtonByNodeID then
+    local ok, btn = pcall(tf.GetTalentButtonByNodeID, tf, t.nodeID)
+    if ok and btn then return btn end
+  end
   local forms = IconForms(t.icon)
   local function walk(f, depth)
     if depth > 10 then return nil end
@@ -332,6 +458,7 @@ ns.RegisterCommand("talentui", false, DebugTalentUI)
 function ns.RefreshTalentGlow() pcall(UpdateGlow) end
 
 local function OnPointsChanged()
+  cachedMap = nil
   ns.RefreshMain()
   pcall(UpdateGlow)
 end
@@ -340,10 +467,14 @@ ns.RegisterModule(function()
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("ADDON_LOADED")
   ev:RegisterEvent("CHARACTER_POINTS_CHANGED")
+  -- The modern talent system: points spent, staged or applied.
+  for _, e in ipairs({ "TRAIT_CONFIG_UPDATED", "TRAIT_NODE_CHANGED", "TRAIT_TREE_CURRENCY_INFO_UPDATED" }) do
+    pcall(ev.RegisterEvent, ev, e)
+  end
   ev:RegisterEvent("PLAYER_LEVEL_UP")
   ev:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" then
-      if type(arg1) == "string" and arg1:find("Talent") then
+      if type(arg1) == "string" and (arg1:find("Talent") or arg1:find("PlayerSpells")) then
         pcall(SetupTalentUI)
         C_Timer.After(0.5, function() pcall(ScanRoots) end)
       end
