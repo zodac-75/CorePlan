@@ -768,6 +768,27 @@ do
   end
   print("visas: " .. table.concat(shown, ", "))
 end
+do
+  -- Out of combat: Frost Armor with 2.5 minutes left gets the rebuff heads-up.
+  local oldC = C_UnitAuras
+  local t0 = GetTime()
+  C_UnitAuras = { GetAuraDataByIndex = function(_, i)
+    if i == 1 then return { name = "Arcane Intellect", expirationTime = t0 + 1500, duration = 1800 } end
+    if i == 2 then return { name = "Frost Armor", expirationTime = t0 + 150, duration = 1800 } end
+  end }
+  ns.db.rebuffMin = 3
+  ns.RefreshBuffWatch()
+  local h = rawget(_G, "MagePlanBuffWatch")
+  local msg = h and h.msg and h.msg:GetText() or "nil"
+  print("rebuff-text: " .. tostring(msg))
+  if not tostring(msg):find("Frost Armor") then table.insert(errors, "rebuff reminder missing: " .. tostring(msg)) end
+  ns.db.rebuffMin = 0
+  ns.RefreshBuffWatch()
+  msg = h and h.msg and h.msg:GetText() or "nil"
+  print("rebuff av: [" .. tostring(msg) .. "]")
+  if tostring(msg):find("Frost Armor") then table.insert(errors, "rebuff reminder shown while off") end
+  C_UnitAuras = oldC
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

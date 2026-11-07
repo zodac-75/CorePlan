@@ -12,6 +12,11 @@ local _, ns = ...
 local SIZE, GAP, WARN = 36, 6, 60
 local holder, buttons = nil, {}
 local acc, pendingLayout = 0, false
+local warned = {} -- spells already announced as running out (sound + message once)
+
+-- Out of combat you get an earlier "rebuff now" heads-up (minutes; 0 = off).
+ns.REBUFF_TIMES = { 0, 1, 2, 3, 5, 10 }
+local function RebuffSec() return (ns.db.rebuffMin or 3) * 60 end
 
 local function Spells(e)
   local list = type(e.spells) == "function" and e.spells(ns.PlanKey()) or e.spells or {}
@@ -21,22 +26,23 @@ local function Spells(e)
   return nil
 end
 
--- Your buffs: name -> seconds left (0 = no end); unsure when the game hides names.
+-- Your buffs: name -> seconds left (0 = no end), name -> full duration;
+-- unsure when the game hides names.
 local function PlayerBuffs()
-  local out, unsure = {}, false
+  local out, unsure, durs = {}, false, {}
   local now = GetTime()
   for i = 1, 40 do
-    local name, expires
+    local name, expires, dur
     if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
       local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, "player", i, "HELPFUL")
       if not ok then unsure = true break end
       if not a then break end
-      name, expires = a.name, a.expirationTime
+      name, expires, dur = a.name, a.expirationTime, a.duration
     elseif UnitAura then
-      local ok, n, _, _, _, _, exp = pcall(UnitAura, "player", i, "HELPFUL")
+      local ok, n, _, _, d, _, exp = pcall(UnitAura, "player", i, "HELPFUL")
       if not ok then unsure = true break end
       if not n then break end
-      name, expires = n, exp
+      name, expires, dur = n, exp, d
     else
       unsure = true
       break
@@ -46,9 +52,10 @@ local function PlayerBuffs()
     elseif type(name) == "string" then
       local left = (type(expires) == "number" and expires > 0) and (expires - now) or 0
       out[name] = math.max(out[name] or 0, left)
+      if ns.Readable(dur) and dur > 0 then durs[name] = dur end
     end
   end
-  return out, unsure
+  return out, unsure, durs
 end
 
 -- Seconds left on the weapon buff, 0 for none, nil when unknown.
@@ -62,12 +69,13 @@ end
 
 -- What each entry needs now: { spell, left } where left = 0 means missing.
 local function Needed()
-  local buffs, unsure = PlayerBuffs()
+  local buffs, unsure, durs = PlayerBuffs()
   local out = {}
+  local combat = InCombatLockdown and InCombatLockdown()
   for _, e in ipairs(ns.BUFF_WATCH or {}) do
     local spell = Spells(e)
     if spell and (not e.only or e.only()) then
-      local left
+      local left, dur
       if e.imbue then
         local l = ImbueLeft()
         left = l and (l == 0 and 0 or l) or nil
@@ -78,11 +86,21 @@ local function Needed()
           if not hit and e.buffs then
             for _, b in ipairs(e.buffs) do if b == name then hit = true break end end
           end
-          if hit then best = math.max(best or 0, l == 0 and 1e9 or l) end
+          if hit then
+            best = math.max(best or 0, l == 0 and 1e9 or l)
+            dur = durs[name] or dur
+          end
         end
         if best then left = best elseif not unsure then left = 0 end
       end
       local warn = e.warn or WARN
+      -- Out of combat: warn earlier, but at most a third of the buff's length, so a
+      -- 2-minute shout doesn't nag right after you cast it. Weapon buffs keep their own.
+      if not combat and not e.imbue and RebuffSec() > warn then
+        local r = RebuffSec()
+        if dur then r = math.min(r, dur / 3) end
+        if r > warn then warn = r end
+      end
       if left and (left == 0 or left < warn) then
         table.insert(out, { entry = e, spell = spell, left = left })
       end
@@ -92,7 +110,8 @@ local function Needed()
 end
 
 local function Short(sec)
-  if sec >= 60 then return math.floor(sec / 60 + 0.5) .. "m" end
+  if sec >= 600 then return math.floor(sec / 60 + 0.5) .. "m" end
+  if sec >= 60 then return string.format("%d:%02d", math.floor(sec / 60), math.floor(sec % 60)) end
   return math.floor(sec) .. "s"
 end
 
@@ -111,6 +130,12 @@ local function MakeButton(i)
   b.border:SetPoint("BOTTOMRIGHT", 2, -2)
   b.border:SetColorTexture(1, 0.25, 0.25, 0.9)
   b.border:SetDrawLayer("BACKGROUND")
+  b.pulse = b:CreateAnimationGroup()
+  b.pulse:SetLooping("BOUNCE")
+  local a = b.pulse:CreateAnimation("Alpha")
+  a:SetFromAlpha(1)
+  a:SetToAlpha(0.45)
+  a:SetDuration(0.6)
   b.time = b:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
   b.time:SetPoint("BOTTOM", b, "BOTTOM", 0, -12)
   b:SetScript("OnEnter", function(self)
@@ -144,6 +169,7 @@ local function Update()
   if combat then
     -- Can't add or remove buttons now: just update what's shown, and redo the row later.
     pendingLayout = true
+    holder.msg:Hide() -- the call-outs own the screen in combat
     for _, b in ipairs(buttons) do
       if b:IsShown() then
         local still
@@ -187,6 +213,30 @@ local function Update()
     b:Show()
   end
   for i = #list + 1, #buttons do buttons[i]:Hide() end
+
+  -- A heads-up the first time a buff starts running out (or goes missing) out of combat:
+  -- a line above the row, the icon pulses, and the alert sound if sounds are on.
+  local msg, now = nil, {}
+  for i, n in ipairs(list) do
+    if n.left >= 0 then
+      now[n.spell] = true
+      if not warned[n.spell] then
+        warned[n.spell] = true
+        if (ns.db.alertSound or "off") ~= "off" and ns.PlayAlertSound then ns.PlayAlertSound() end
+      end
+      local b = buttons[i]
+      if b.pulse and not b.pulse:IsPlaying() then b.pulse:Play() end
+      if not msg then
+        msg = n.left == 0 and ns.T("BW_MISSING", n.spell) or ns.T("BW_REBUFF", n.spell, Short(n.left))
+      end
+    elseif buttons[i].pulse then
+      buttons[i].pulse:Stop()
+    end
+  end
+  for s in pairs(warned) do if not now[s] then warned[s] = nil end end
+  for i = #list + 1, #buttons do if buttons[i].pulse then buttons[i].pulse:Stop() end end
+  holder.msg:SetText(msg and ("|cffffd100" .. msg .. "|r") or "")
+  holder.msg:SetShown(msg ~= nil and not unlocked)
   holder:SetWidth(math.max(SIZE, #list * (SIZE + GAP) - GAP))
   holder.label:SetShown(unlocked)
   holder.bg:SetShown(unlocked)
@@ -224,6 +274,8 @@ ns.RegisterModule(function()
   holder.label = holder:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   holder.label:SetPoint("BOTTOM", holder, "TOP", 0, 6)
   holder.label:SetText(ns.T("BW_DRAG"))
+  holder.msg = holder:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  holder.msg:SetPoint("BOTTOM", holder, "TOP", 0, 8)
 
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("UNIT_AURA")

@@ -110,6 +110,15 @@ local SELECTORS = {
       ns.db.alertSoundKit = Step(keys, ns.db.alertSoundKit or "RAID_WARNING", dir)
       ns.PlayAlertSound() -- let you hear it
     end },
+  { key = "CFG_REBUFF",
+    value = function()
+      local m = ns.db.rebuffMin or 3
+      return m == 0 and ns.T("REBUFF_OFF") or ns.T("REBUFF_MIN", m)
+    end,
+    step = function(dir)
+      ns.db.rebuffMin = Step(ns.REBUFF_TIMES, ns.db.rebuffMin or 3, dir)
+      if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
+    end },
   { key = "CFG_DRINKAT",
     value = function() return (ns.db.drinkPct or 40) .. "%" end,
     step = function(dir)
