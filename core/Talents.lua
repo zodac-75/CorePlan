@@ -328,7 +328,9 @@ local function UpdateGlow()
   if hint and line then
     hint:SetParent(root)
     hint:ClearAllPoints()
-    hint:SetPoint("BOTTOM", root, "TOP", 0, 4)
+    -- Inside the window at the bottom, so it can't end up above the top of the screen.
+    hint:SetPoint("BOTTOMLEFT", root, "BOTTOMLEFT", 24, 14)
+    hint:SetDrawLayer("OVERLAY", 7)
     hint:SetText("@ADDON@: " .. line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
     hint:Show()
   end
@@ -365,6 +367,7 @@ end
 
 local function ScanRoots()
   for f in pairs(FindRoots()) do HookRoot(f) end
+  pcall(UpdateGlow) -- the window may already be open
 end
 
 local function SetupTalentUI()
@@ -394,6 +397,17 @@ local function SetupTalentUI()
     end)
   end
   pcall(ScanRoots)
+
+  -- While a talent window is open, keep the glow on the right button: the modern
+  -- window rebuilds its buttons when you click, search or switch loadouts.
+  local acc = 0
+  local ticker = CreateFrame("Frame")
+  ticker:SetScript("OnUpdate", function(_, elapsed)
+    acc = acc + elapsed
+    if acc < 1 then return end
+    acc = 0
+    if ShownRoot() then pcall(UpdateGlow) end
+  end)
 end
 
 -- /@SLASH@ talentui: what the addon found, for when the glow doesn't show.
