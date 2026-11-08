@@ -1,3 +1,7 @@
+# ShamanPlan 1.0.0-beta38
+
+- Buff watcher: groundwork for party buffs (shown for classes with a group buff: mage, druid, paladin).
+
 # ShamanPlan 1.0.0-beta37
 
 - **Tidier settings window:** everything is sorted into groups in three columns: Combat and buffs, Gear and quests, Leveling, Windows, Talent plan, Professions (both professions and Cooking/First Aid/Fishing together), Look, Alerts and sounds, and Profiles. The quick menu on the minimap icon uses the same groups.

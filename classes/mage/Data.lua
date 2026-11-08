@@ -153,6 +153,11 @@ ns.BUFF_WATCH = {
   { spells = { "Mage Armor", "Ice Armor", "Frost Armor" }, buffs = { "Mage Armor", "Ice Armor", "Frost Armor" } },
 }
 
+-- Party buffs: Arcane Intellect on party members who use mana.
+ns.PARTY_BUFFS = {
+  { spells = { "Arcane Intellect" }, buffs = { "Arcane Intellect", "Arcane Brilliance" }, mana = true },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {
   { cost = 45,  name = "Glimmering Staff" },

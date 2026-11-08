@@ -1,3 +1,7 @@
+# MagePlan 1.19.0
+
+- **Party buffs:** the buff watcher also shows your party members who are missing your buff (Arcane Intellect on party members who use mana), one icon each with their name on it. Click the icon to cast it on them; it's faded when they're out of range. Turn it on or off with "Buff my party too" under Combat and buffs.
+
 # MagePlan 1.18.0
 
 - **Tidier settings window:** everything is sorted into groups in three columns: Combat and buffs, Gear and quests, Leveling, Windows, Talent plan, Professions (both professions and Cooking/First Aid/Fishing together), Look, Alerts and sounds, and Profiles. The quick menu on the minimap icon uses the same groups.

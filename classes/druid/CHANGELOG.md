@@ -1,3 +1,7 @@
+# DruidPlan 1.0.0-beta37
+
+- **Party buffs:** the buff watcher also shows your party members who are missing your buff (Mark of the Wild on everyone), one icon each with their name on it. Click the icon to cast it on them; it's faded when they're out of range. Turn it on or off with "Buff my party too" under Combat and buffs.
+
 # DruidPlan 1.0.0-beta36
 
 - **Tidier settings window:** everything is sorted into groups in three columns: Combat and buffs, Gear and quests, Leveling, Windows, Talent plan, Professions (both professions and Cooking/First Aid/Fishing together), Look, Alerts and sounds, and Profiles. The quick menu on the minimap icon uses the same groups.

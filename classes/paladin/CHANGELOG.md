@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0-beta31
+
+- **Party buffs:** the buff watcher also shows your party members who are missing your buff (a blessing on everyone: Wisdom for mana users, Might for the rest, and any blessing counts), one icon each with their name on it. Click the icon to cast it on them; it's faded when they're out of range. Turn it on or off with "Buff my party too" under Combat and buffs.
+
 # PaladinPlan 1.0.0-beta30
 
 - **Tidier settings window:** everything is sorted into groups in three columns: Combat and buffs, Gear and quests, Leveling, Windows, Talent plan, Professions (both professions and Cooking/First Aid/Fishing together), Look, Alerts and sounds, and Profiles. The quick menu on the minimap icon uses the same groups.

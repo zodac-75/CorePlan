@@ -7,6 +7,10 @@
 --             buffs = { names that count }, match = function(name) -> bool,
 --             imbue = true (weapon buff), only = function() -> bool, warn = seconds }
 -- The icon casts the first spell in the list you know.
+--
+-- Party buffs (ns.PARTY_BUFFS, same fields plus mana = true for mana users only, or
+-- spells = function(unit) -> list): one icon per party member who is missing it, with
+-- their name on it; a click casts it on them.
 local _, ns = ...
 
 local SIZE, GAP, WARN = 36, 6, 60
@@ -28,18 +32,19 @@ end
 
 -- Your buffs: name -> seconds left (0 = no end), name -> full duration;
 -- unsure when the game hides names.
-local function PlayerBuffs()
+local function PlayerBuffs(unit)
+  unit = unit or "player"
   local out, unsure, durs = {}, false, {}
   local now = GetTime()
   for i = 1, 40 do
     local name, expires, dur
     if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
-      local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, "player", i, "HELPFUL")
+      local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, "HELPFUL")
       if not ok then unsure = true break end
       if not a then break end
       name, expires, dur = a.name, a.expirationTime, a.duration
     elseif UnitAura then
-      local ok, n, _, _, d, _, exp = pcall(UnitAura, "player", i, "HELPFUL")
+      local ok, n, _, _, d, _, exp = pcall(UnitAura, unit, i, "HELPFUL")
       if not ok then unsure = true break end
       if not n then break end
       name, expires, dur = n, exp, d
@@ -102,11 +107,55 @@ local function Needed()
         if r > warn then warn = r end
       end
       if left and (left == 0 or left < warn) then
-        table.insert(out, { entry = e, spell = spell, left = left })
+        table.insert(out, { entry = e, spell = spell, left = left, key = spell })
+      end
+    end
+  end
+  -- Your party: whoever is missing your group buff.
+  if not ns.db.partyBuffsOff and ns.PARTY_BUFFS and IsInGroup and IsInGroup() then
+    for i = 1, 4 do
+      local unit = "party" .. i
+      if UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) then
+        local theirs, unsureP = PlayerBuffs(unit)
+        local isMana
+        local okP, pt = pcall(UnitPowerType, unit)
+        if okP and not (issecretvalue and issecretvalue(pt)) then isMana = (pt == 0) end
+        for _, e in ipairs(ns.PARTY_BUFFS) do
+          local list = type(e.spells) == "function" and e.spells(unit, isMana) or e.spells or {}
+          local spell
+          for _, s in ipairs(list) do if ns.SpellInfo(s) then spell = s break end end
+          if spell and not (e.mana and isMana == false) then
+            local best
+            for name, l in pairs(theirs) do
+              local hit = (e.match and e.match(name)) or false
+              if not hit and e.buffs then
+                for _, b in ipairs(e.buffs) do if b == name then hit = true break end end
+              end
+              if hit then best = math.max(best or 0, l == 0 and 1e9 or l) end
+            end
+            local left = best or (not unsureP and 0 or nil)
+            local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
+            if left and (left == 0 or left < warn) then
+              local okN, who = pcall(UnitName, unit)
+              if not okN or (issecretvalue and issecretvalue(who)) then who = nil end
+              table.insert(out, { entry = e, spell = spell, left = left, unit = unit, who = who,
+                key = spell .. "@" .. unit })
+            end
+          end
+        end
       end
     end
   end
   return out
+end
+
+-- Can you reach them with a buff? (unknown counts as yes)
+local function InRange(unit)
+  if not unit or not UnitInRange then return true end
+  local ok, inRange, checked = pcall(UnitInRange, unit)
+  if not ok or (issecretvalue and (issecretvalue(inRange) or issecretvalue(checked))) then return true end
+  if checked == false then return true end
+  return inRange and true or false
 end
 
 local function Short(sec)
@@ -138,12 +187,15 @@ local function MakeButton(i)
   a:SetDuration(0.6)
   b.time = b:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
   b.time:SetPoint("BOTTOM", b, "BOTTOM", 0, -12)
+  -- Party buffs: who it's for, on top of the icon.
+  b.who = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
+  b.who:SetPoint("TOP", b, "TOP", 0, 10)
   b:SetScript("OnEnter", function(self)
     if not GameTooltip or not self.spell then return end
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
     local _, id = ns.SpellInfo(self.spell)
     if id and GameTooltip.SetSpellByID then GameTooltip:SetSpellByID(id) else GameTooltip:SetText(self.spell) end
-    GameTooltip:AddLine(ns.T("BW_CLICK"), 0.6, 0.8, 1)
+    GameTooltip:AddLine(self.whoName and ns.T("BW_CLICK_ON", self.whoName) or ns.T("BW_CLICK"), 0.6, 0.8, 1)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -174,8 +226,8 @@ local function Update()
     for _, b in ipairs(buttons) do
       if b:IsShown() then
         local still
-        for _, n in ipairs(list) do if n.spell == b.spell then still = n end end
-        b:SetAlpha(still and 1 or 0.25)
+        for _, n in ipairs(list) do if n.key == b.key then still = n end end
+        b:SetAlpha(still and (InRange(still.unit) and 1 or 0.4) or 0.25)
         b.time:SetText(still and still.left > 0 and Short(still.left) or "")
       end
     end
@@ -191,15 +243,17 @@ local function Update()
       local spell = Spells(e)
       if spell and not have[spell] then
         have[spell] = true
-        table.insert(list, { entry = e, spell = spell, left = -1 })
+        table.insert(list, { entry = e, spell = spell, left = -1, key = spell })
       end
     end
   end
 
   for i, n in ipairs(list) do
     local b = buttons[i] or MakeButton(i)
-    b.spell = n.spell
+    b.spell, b.key, b.whoName = n.spell, n.key, n.who
     b:SetAttribute("spell", n.spell)
+    b:SetAttribute("unit", n.unit or "player")
+    b.who:SetText(n.who and n.who:sub(1, 7) or "")
     -- No casting while you're moving it.
     b:SetAttribute("type", (not unlocked) and "spell" or nil)
     b.icon:SetTexture(ns.SpellIcon(n.spell))
@@ -210,7 +264,7 @@ local function Update()
     b.time:SetText(n.left > 0 and Short(n.left) or "")
     b:ClearAllPoints()
     b:SetPoint("LEFT", holder, "LEFT", (i - 1) * (SIZE + GAP), 0)
-    b:SetAlpha(n.left < 0 and 0.45 or 1)
+    b:SetAlpha((n.left < 0 or not InRange(n.unit)) and 0.45 or 1)
     b:Show()
   end
   for i = #list + 1, #buttons do buttons[i]:Hide() end
@@ -220,15 +274,19 @@ local function Update()
   local msg, now = nil, {}
   for i, n in ipairs(list) do
     if n.left >= 0 then
-      now[n.spell] = true
-      if not warned[n.spell] then
-        warned[n.spell] = true
+      now[n.key] = true
+      if not warned[n.key] then
+        warned[n.key] = true
         if (ns.db.alertSound or "off") ~= "off" and ns.PlayAlertSound then ns.PlayAlertSound() end
       end
       local b = buttons[i]
       if b.pulse and not b.pulse:IsPlaying() then b.pulse:Play() end
       if not msg then
-        msg = n.left == 0 and ns.T("BW_MISSING", n.spell) or ns.T("BW_REBUFF", n.spell, Short(n.left))
+        if n.who then
+          msg = n.left == 0 and ns.T("BW_MISSING_ON", n.spell, n.who) or ns.T("BW_REBUFF_ON", n.spell, n.who, Short(n.left))
+        else
+          msg = n.left == 0 and ns.T("BW_MISSING", n.spell) or ns.T("BW_REBUFF", n.spell, Short(n.left))
+        end
       end
     elseif buttons[i].pulse then
       buttons[i].pulse:Stop()
@@ -284,8 +342,9 @@ ns.RegisterModule(function()
   ev:RegisterEvent("UNIT_AURA")
   ev:RegisterEvent("PLAYER_REGEN_ENABLED")
   ev:RegisterEvent("UNIT_INVENTORY_CHANGED")
+  pcall(ev.RegisterEvent, ev, "GROUP_ROSTER_UPDATE")
   ev:SetScript("OnEvent", function(_, event, unit)
-    if event == "UNIT_AURA" and unit ~= "player" then return end
+    if event == "UNIT_AURA" and unit ~= "player" and not (type(unit) == "string" and unit:find("^party")) then return end
     ns.Debounce("buffs", 0.2, function() pcall(Update) end)
   end)
   -- Timers count down every second.
@@ -305,3 +364,9 @@ ns.RegisterCommand("buffs", true, function()
 end)
 
 function ns.RefreshBuffWatch() pcall(Update) end
+
+ns.RegisterCommand("partybuffs", false, function()
+  ns.db.partyBuffsOff = not ns.db.partyBuffsOff
+  ns.Print(ns.db.partyBuffsOff and ns.T("PB_OFF") or ns.T("PB_ON"))
+  pcall(Update)
+end)

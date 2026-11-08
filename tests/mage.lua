@@ -816,6 +816,47 @@ do
   if tostring(msg):find("Frost Armor") then table.insert(errors, "rebuff reminder shown while off") end
   C_UnitAuras = oldC
 end
+print("--- Gruppbuffar ---")
+do
+  local oldIG, oldUE, oldC, oldU = IsInGroup, UnitExists, C_UnitAuras, UnitAura
+  IsInGroup = function() return true end
+  UnitExists = function(u) return u == "target" or u == "player" or u == "party1" or u == "party2" end
+  UnitIsConnected = function() return true end
+  UnitPowerType = function(u) if u == "party2" then return 1 end return 0 end -- party2 = warrior (rage)
+  UnitName = function(u) if u == "party1" then return "Jennie" elseif u == "party2" then return "Tank" end return "Me" end
+  UnitInRange = function() return true, true end
+  -- I have my buffs, Jennie and the warrior have nothing.
+  if C_UnitAuras then
+    C_UnitAuras = { GetAuraDataByIndex = function(u, i)
+      if u == "player" and i == 1 then return { name = "Arcane Intellect", expirationTime = 0 } end
+      if u == "player" and i == 2 then return { name = "Frost Armor", expirationTime = 0 } end
+    end }
+  else
+    UnitAura = function(u, i) if u == "player" then
+      if i == 1 then return "Arcane Intellect", 0, 0, nil, 0, 0 end
+      if i == 2 then return "Frost Armor", 0, 0, nil, 0, 0 end
+    end end
+  end
+  ns.db.buffsOff = false; ns.db.shatterUnlocked = false
+  ns.RefreshBuffWatch()
+  local shown = {}
+  for i = 1, 8 do
+    local b = rawget(_G, "MagePlanBuff" .. i)
+    if b and b.__shown then table.insert(shown, tostring(rawget(b, "spell")) .. ">" .. tostring(b.__attrs and b.__attrs.unit or rawget(b, "whoName"))) end
+  end
+  print("  visas: " .. table.concat(shown, ", "))
+  local all = table.concat(shown, ",")
+  if not all:find("Jennie", 1, true) then table.insert(errors, "party buff: Jennie missing: " .. all) end
+  if all:find("Tank", 1, true) then table.insert(errors, "party buff: Arcane Intellect offered to a rage user") end
+  ns.RunCommand("partybuffs"); ns.RefreshBuffWatch()
+  local after = 0
+  for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown then after = after + 1 end end
+  print("  avstängt: " .. after .. " ikoner")
+  if after ~= 0 then table.insert(errors, "party buffs still shown when off") end
+  ns.RunCommand("partybuffs")
+  IsInGroup, UnitExists, C_UnitAuras, UnitAura = oldIG, oldUE, oldC, oldU
+  ns.RefreshBuffWatch()
+end
 print("--- Walk on Air ---")
 do
   local oldC, oldU = C_UnitAuras, UnitAura

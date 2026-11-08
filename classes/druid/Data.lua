@@ -133,6 +133,11 @@ ns.BUFF_WATCH = {
   { spells = { "Omen of Clarity" }, buffs = { "Omen of Clarity" } },
 }
 
+-- Party buffs: Mark of the Wild on everyone in your party.
+ns.PARTY_BUFFS = {
+  { spells = { "Mark of the Wild" }, buffs = { "Mark of the Wild", "Gift of the Wild" } },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {}
 

@@ -40,6 +40,7 @@ local FEATURES = {
   { group = "CAT_COMBAT", key = "MM_SHATTER", on = function() return not ns.db.shatterOff end, cmd = ns.COMBAT_CMD or "combat" },
   { group = "CAT_COMBAT", key = "MM_MOVE", on = function() return ns.db.shatterUnlocked end, cmd = "move" },
   { group = "CAT_COMBAT", key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
+  { group = "CAT_COMBAT", key = "MM_PARTYBUFF", on = function() return not ns.db.partyBuffsOff end, cmd = "partybuffs", party = true },
   { group = "CAT_COMBAT", key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
   { group = "CAT_COMBAT", key = "MM_GLIDE", on = function() return not ns.db.glideOff end, cmd = "glide" },
   { group = "CAT_ITEMS", key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
@@ -54,6 +55,13 @@ local FEATURES = {
   { group = "CAT_PROFS", key = "MM_SEC_FA", on = function() return ns.SecondaryShown("First Aid") end, cmd = "firstaid" },
   { group = "CAT_PROFS", key = "MM_SEC_FISH", on = function() return ns.SecondaryShown("Fishing") end, cmd = "fishing" },
 }
+
+-- Only classes with a group buff get the party buff box.
+if not ns.PARTY_BUFFS then
+  for i = #FEATURES, 1, -1 do
+    if FEATURES[i].party then table.remove(FEATURES, i) end
+  end
+end
 
 -- Classes without mana get no drink settings.
 if ns.NO_MANA then

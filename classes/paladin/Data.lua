@@ -179,6 +179,16 @@ ns.BUFF_WATCH = {
     only = function() return ns.PlanKey() == "prot" end },
 }
 
+-- Party buffs: a blessing on everyone in your party (Wisdom for mana users, Might for
+-- the rest); any blessing counts.
+ns.PARTY_BUFFS = {
+  { spells = function(_, isMana)
+      if isMana then return { "Blessing of Wisdom", "Blessing of Might" } end
+      return { "Blessing of Might" }
+    end,
+    match = function(n) return n:find("Blessing of ", 1, true) ~= nil end },
+}
+
 -- Merchant's Favor goals shown in the plan window.
 ns.FAVOR_GOALS = {}
 
