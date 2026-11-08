@@ -245,3 +245,88 @@ function ns.SkinLevel(skill)
   if skill < 100 then return math.floor(skill / 10) + 10 end
   return math.floor(skill / 5)
 end
+
+---------------------------------------------------------------------------
+-- Secondary skills: Cooking, First Aid and Fishing. They don't use a profession slot,
+-- so they show in the crafting assistant when you've learned them.
+-- Routes follow wow-professions.com's Forever guides (Alliance); their 225-300 parts
+-- were written during the beta.
+---------------------------------------------------------------------------
+ns.SECONDARY = { "Cooking", "First Aid", "Fishing" }
+
+-- What you need for the next rank, by your current max skill (75 / 150 / 225).
+ns.RANK_NOTES = {
+  Cooking = {
+    [75]  = { "Journeyman: any Cooking trainer (learn it before 75)", "Journeyman: vilken Cooking-tränare som helst (lär dig före 75)" },
+    [150] = { "Expert Cookbook: Shandrina, Mystral Lake (Ashenvale), needs 125", "Expert Cookbook: Shandrina, Mystral Lake (Ashenvale), kräver 125" },
+    [225] = { "Artisan: \"I Know A Guy...\" from Daryl Riknussun (Ironforge), lvl 35", "Artisan: \"I Know A Guy...\" från Daryl Riknussun (Ironforge), lvl 35" },
+  },
+  ["First Aid"] = {
+    [75]  = { "Journeyman: your First Aid trainer (needs 50)", "Journeyman: din First Aid-tränare (kräver 50)" },
+    [150] = { "Expert First Aid - Under Wraps: Deneb Walker, Arathi Highlands (needs 125)", "Expert First Aid - Under Wraps: Deneb Walker, Arathi Highlands (kräver 125)" },
+    [225] = { "Artisan: Triage quest, Doctor Gustaf VanHowzen, Theramore (lvl 35)", "Artisan: questen Triage, Doctor Gustaf VanHowzen, Theramore (lvl 35)" },
+  },
+  Fishing = {
+    [75]  = { "Journeyman: any Fishing trainer (lvl 10, needs 50)", "Journeyman: vilken Fishing-tränare som helst (lvl 10, kräver 50)" },
+    [150] = { "Expert Fishing - The Bass and You: Old Man Heming, Booty Bay (lvl 20, needs 125)", "Expert Fishing - The Bass and You: Old Man Heming, Booty Bay (lvl 20, kräver 125)" },
+    [225] = { "Artisan: Nat Pagle, Angler Extreme quest, Dustwallow Marsh (lvl 35)", "Artisan: questen Nat Pagle, Angler Extreme, Dustwallow Marsh (lvl 35)" },
+  },
+}
+
+ns.ROUTES.Cooking = {
+  { from = 1, to = 50, crafts = 55, craft = "Charred Wolf Meat", mats = { {2672, 1, "Stringy Wolf Meat"} },
+    note = { "Trainer recipe. Or Roasted Boar Meat / Herb Baked Egg (trainer), or Brilliant Smallfish (recipe: Tharynn Bouden, Goldshire)", "Tränar-recept. Eller Roasted Boar Meat / Herb Baked Egg (tränaren), eller Brilliant Smallfish (recept: Tharynn Bouden, Goldshire)" } },
+  { from = 50, to = 100, crafts = 55, craft = "Boiled Clams", mats = { {5503, 1, "Clam Meat"}, {159, 1, "Refreshing Spring Water"} },
+    note = { "Trainer recipe. Or Coyote Steak (trainer), Longjaw Mud Snapper (recipe: Tharynn Bouden / Tansy Puddlefizz, Ironforge)", "Tränar-recept. Eller Coyote Steak (tränaren), Longjaw Mud Snapper (recept: Tharynn Bouden / Tansy Puddlefizz, Ironforge)" } },
+  { from = 100, to = 130, crafts = 40, craft = "Crab Cake", mats = { {2674, 1, "Crawler Meat"}, {2678, 1, "Mild Spices"} },
+    note = { "Trainer recipe. Or Dry Pork Ribs (trainer), Bristle Whisker Catfish (recipe: Catherine Leland, Stormwind)", "Tränar-recept. Eller Dry Pork Ribs (tränaren), Bristle Whisker Catfish (recept: Catherine Leland, Stormwind)" } },
+  { from = 130, to = 150, crafts = 25, craft = "Goblin Deviled Clams", mats = { {5504, 1, "Tangy Clam Meat"}, {2692, 1, "Hot Spices"} },
+    note = { "Trainer recipe. Or Curiously Tasty Omelet (recipe: Kendor Kabonka, Stormwind)", "Tränar-recept. Eller Curiously Tasty Omelet (recept: Kendor Kabonka, Stormwind)" } },
+  { from = 150, to = 175, crafts = 28, craft = "Curiously Tasty Omelet", mats = { {3685, 1, "Raptor Egg"}, {2692, 1, "Hot Spices"} },
+    note = { "Recipe: Kendor Kabonka, Stormwind", "Recept: Kendor Kabonka, Stormwind" } },
+  { from = 175, to = 225, crafts = 55, craft = "Mithril Headed Trout", mats = { {8365, 1, "Raw Mithril Head Trout"} },
+    note = { "Recipe: Tansy Puddlefizz (Ironforge) / Stuart Fleming (Menethil Harbor). Or Roast Raptor (recipe: Hammon Karwn, Arathi)", "Recept: Tansy Puddlefizz (Ironforge) / Stuart Fleming (Menethil Harbor). Eller Roast Raptor (recept: Hammon Karwn, Arathi)" } },
+  { from = 225, to = 275, crafts = 65, craft = "Spotted Yellowtail", mats = { {4603, 1, "Raw Spotted Yellowtail"} },
+    note = { "Artisan: bring 12 Giant Egg, 10 Zesty Clam Meat, 20 Alterac Swiss to Dirge Quikcleave (Gadgetzan). Recipe: Gikkix, Steamwheedle Port (Tanaris)", "Artisan: ta med 12 Giant Egg, 10 Zesty Clam Meat, 20 Alterac Swiss till Dirge Quikcleave (Gadgetzan). Recept: Gikkix, Steamwheedle Port (Tanaris)" } },
+  { from = 275, to = 300, crafts = 35, craft = "Nightfin Soup", mats = { {13759, 1, "Raw Nightfin Snapper"}, {159, 1, "Refreshing Spring Water"} },
+    note = { "Recipe: Gikkix, Tanaris. Or Poached Sunscale Salmon (also Gikkix)", "Recept: Gikkix, Tanaris. Eller Poached Sunscale Salmon (också Gikkix)" } },
+}
+
+ns.ROUTES["First Aid"] = {
+  { from = 1, to = 40, crafts = 50, craft = "Linen Bandage", mats = { {2589, 1, "Linen Cloth"} },
+    note = { "Trainer recipe", "Tränar-recept" } },
+  { from = 40, to = 75, crafts = 40, craft = "Heavy Linen Bandage", mats = { {2589, 2, "Linen Cloth"} },
+    note = { "Trainer recipe. Or Minor Healing Potion 1-75 (Peacebloom, Mild Spices, Empty Vial)", "Tränar-recept. Eller Minor Healing Potion 1-75 (Peacebloom, Mild Spices, Empty Vial)" } },
+  { from = 75, to = 80, crafts = 12, craft = "Heavy Linen Bandage", mats = { {2589, 2, "Linen Cloth"} } },
+  { from = 80, to = 115, crafts = 50, craft = "Wool Bandage", mats = { {2592, 1, "Wool Cloth"} },
+    note = { "Trainer recipe", "Tränar-recept" } },
+  { from = 115, to = 150, crafts = 50, craft = "Heavy Wool Bandage", mats = { {2592, 2, "Wool Cloth"} },
+    note = { "Trainer recipe. Learn Silk Bandage too before you leave", "Tränar-recept. Lär dig Silk Bandage också innan du går" } },
+  { from = 150, to = 180, crafts = 42, craft = "Silk Bandage", mats = { {4306, 1, "Silk Cloth"} } },
+  { from = 180, to = 210, crafts = 46, craft = "Heavy Silk Bandage", mats = { {4306, 2, "Silk Cloth"} },
+    note = { "Manual: Deneb Walker, Arathi Highlands", "Manual: Deneb Walker, Arathi Highlands" } },
+  { from = 210, to = 225, crafts = 19, craft = "Mageweave Bandage", mats = { {4338, 1, "Mageweave Cloth"} },
+    note = { "Manual: Deneb Walker, Arathi Highlands", "Manual: Deneb Walker, Arathi Highlands" } },
+  { from = 225, to = 240, crafts = 29, craft = "Mageweave Bandage", mats = { {4338, 1, "Mageweave Cloth"} } },
+  { from = 240, to = 260, crafts = 30, craft = "Heavy Mageweave Bandage", mats = { {4338, 2, "Mageweave Cloth"} },
+    note = { "Doctor Gustaf VanHowzen (Theramore) teaches it at 240", "Doctor Gustaf VanHowzen (Theramore) lär ut den vid 240" } },
+  { from = 260, to = 275, crafts = 20, craft = "Runecloth Bandage", mats = { {14047, 1, "Runecloth"} },
+    note = { "The doctor teaches it at 260", "Doktorn lär ut den vid 260" } },
+  { from = 275, to = 300, crafts = 30, craft = "Major Healing Potion", mats = { {13464, 1, "Golden Sansam"}, {3713, 3, "Soothing Spices"}, {8925, 1, "Crystal Vial"} },
+    note = { "Manual: Major Healing Potion drops from high-level mobs. Without it: Runecloth Bandage to 290, then Heavy Runecloth Bandage", "Manual: Major Healing Potion droppar från höglevel-mobs. Utan den: Runecloth Bandage till 290, sen Heavy Runecloth Bandage" } },
+}
+
+-- Where to fish, Alliance side: up to this Fishing skill.
+ns.FISH_ZONES = {
+  { to = 75,  zones = "any starting zone: Elwynn Forest, Dun Morogh, Teldrassil, Zephras Isle" },
+  { to = 150, zones = "Stormwind, Ironforge, Darnassus, Darkshore, Loch Modan, Westfall" },
+  { to = 225, zones = "Dustwallow Marsh (best), Arathi Highlands, Stranglethorn Vale, Desolace, Swamp of Sorrows" },
+  { to = 300, zones = "Feralas, Tanaris, The Hinterlands, Un'Goro Crater, Felwood, Western Plaguelands" },
+}
+
+-- Fishing gear by skill: up to this skill, what to use and where to buy it.
+ns.FISH_GEAR = {
+  { to = 50,  text = { "Fishing Pole + Shiny Bauble: Tharynn Bouden (Goldshire), Catherine Leland (Stormwind), Tansy Puddlefizz (Ironforge)", "Fishing Pole + Shiny Bauble: Tharynn Bouden (Goldshire), Catherine Leland (Stormwind), Tansy Puddlefizz (Ironforge)" } },
+  { to = 150, text = { "Nightcrawlers if fish get away (fishing supply vendors)", "Nightcrawlers om fiskarna smiter (fiskeförsäljare)" } },
+  { to = 300, text = { "Bright Baubles: Old Man Heming, Booty Bay", "Bright Baubles: Old Man Heming, Booty Bay" } },
+}

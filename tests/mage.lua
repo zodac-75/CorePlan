@@ -731,6 +731,21 @@ end
 show("MagePlanFrame")
 ns.craftWindow:Show(); ns.RefreshCraft()
 show("MagePlanCraftFrame")
+do
+  -- Secondary skills: Cooking 60/75, First Aid 140/150 (rank note), Fishing 200/225.
+  ns.db.profCache = ns.db.profCache or {}
+  ns.db.profCache["Cooking"] = { rank = 60, max = 75 }
+  ns.db.profCache["First Aid"] = { rank = 140, max = 150 }
+  ns.db.profCache["Fishing"] = { rank = 200, max = 225 }
+  ns.RefreshCraft()
+  local t = (ns.craftWindow.text.__text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+  local sec = t:match("Secondary skills.*") or t:match("Sekundära yrken.*") or ""
+  print("--- Sekundära yrken ---\n" .. sec)
+  for _, want in ipairs({ "Boiled Clams", "Heavy Wool Bandage", "Deneb Walker", "Dustwallow Marsh" }) do
+    if not sec:find(want, 1, true) then table.insert(errors, "secondary skills: missing " .. want) end
+  end
+  ns.db.profCache["Cooking"], ns.db.profCache["First Aid"], ns.db.profCache["Fishing"] = nil, nil, nil
+end
 print("--- Shatter-indikator ---")
 for _, w in ipairs(allFrames) do
   if w.__kind == "FontString" and w.__text and (w.__text:find("SHATTER") or w.__text:find("Fryst") or w.__text:find("Ice Barrier")) then

@@ -153,9 +153,10 @@ end
 --   3. The last value seen in the profession window or a "skill increased" message
 local function FromProfessionsAPI(profName)
   if type(GetProfessions) ~= "function" or type(GetProfessionInfo) ~= "function" then return nil end
-  local ok, a, b, c, d, e = pcall(GetProfessions)
+  -- prof1, prof2, archaeology, fishing, cooking, first aid
+  local ok, a, b, c, d, e, f = pcall(GetProfessions)
   if not ok then return nil end
-  for _, idx in ipairs({ a or false, b or false, c or false, d or false, e or false }) do
+  for _, idx in ipairs({ a or false, b or false, c or false, d or false, e or false, f or false }) do
     if idx then
       local okI, name, _, rank, maxRank = pcall(GetProfessionInfo, idx)
       if okI and name == profName and type(rank) == "number" then return rank, maxRank end

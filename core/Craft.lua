@@ -111,6 +111,8 @@ local PROF_ICON = {
   Herbalism = "Interface\\Icons\\Spell_Nature_NatureTouchGrow", Leatherworking = "Interface\\Icons\\INV_Misc_ArmorKit_17",
   Mining = "Interface\\Icons\\Trade_Mining", Skinning = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01",
   Tailoring = "Interface\\Icons\\Trade_Tailoring",
+  Cooking = "Interface\\Icons\\INV_Misc_Food_15", ["First Aid"] = "Interface\\Icons\\Spell_Holy_SealOfSacrifice",
+  Fishing = "Interface\\Icons\\Trade_Fishing",
 }
 
 -- The window is a list of rows (see Rows.lua): { text, icon, items, bar, indent }.
@@ -130,12 +132,15 @@ local function Header(prof, out)
     (maxRank and maxRank > 0 and ns.T("CR_SKILL", skill, maxRank) or ns.T("CR_SKILL_ONLY", skill)) .. "|r"
   local cap = (maxRank and maxRank > 0) and maxRank or 300
   local warn = maxRank and maxRank < 300 and skill >= maxRank - 25
-  if warn then
+  local rankNote = warn and ns.RANK_NOTES and ns.RANK_NOTES[prof] and ns.RANK_NOTES[prof][maxRank]
+  if warn and not rankNote then
     local lvl = ns.RANK_LEVEL[maxRank]
     row.text = row.text .. "  |cffff9900" .. (lvl and ns.T("CR_TRAIN_LVL", lvl) or ns.T("CR_TRAIN")) .. "|r"
   end
   -- Orange when you're close to the cap and need to train, blue otherwise.
   row.bar = { value = skill, max = cap, color = warn and { 1, 0.6, 0.1 } or { 0.35, 0.75, 1 } }
+  -- Secondary skills say exactly where the next rank is (a book or a quest).
+  if rankNote then table.insert(out, { indent = 22, text = "|cffff9900" .. ns.Tx(rankNote) .. "|r" }) end
   return skill
 end
 
@@ -209,8 +214,26 @@ local function SkinSection(out)
   end
 end
 
+local function FishSection(out)
+  local skill = Header("Fishing", out)
+  if not skill then return end
+  for _, z in ipairs(ns.FISH_ZONES) do
+    if skill < z.to then
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. z.zones })
+      break
+    end
+  end
+  for _, g in ipairs(ns.FISH_GEAR) do
+    if skill < g.to then
+      table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.Tx(g.text) .. "|r" })
+      break
+    end
+  end
+end
+
 local function Section(prof, out)
-  if prof == "Herbalism" then NodeSection(prof, out, ns.HERBS, ns.HERB_ZONES)
+  if prof == "Fishing" then FishSection(out)
+  elseif prof == "Herbalism" then NodeSection(prof, out, ns.HERBS, ns.HERB_ZONES)
   elseif prof == "Mining" then NodeSection(prof, out, ns.ORES, ns.MINING_ZONES)
   elseif prof == "Skinning" then SkinSection(out)
   elseif ns.ROUTES[prof] then RouteSection(prof, out) end
@@ -246,6 +269,20 @@ local function Build()
   for i, prof in ipairs(ns.SelectedProfs()) do
     if i > 1 then table.insert(out, { gap = 6 }) end
     Section(prof, out)
+  end
+  -- Cooking, First Aid and Fishing: the ones you've learned (no profession slot).
+  if not ns.db.secondaryOff and ns.SECONDARY then
+    local learned = {}
+    for _, p in ipairs(ns.SECONDARY) do if ns.GetProfSkill(p) then table.insert(learned, p) end end
+    table.insert(out, { gap = 6 })
+    table.insert(out, { head = "|cff@COLOR@" .. ns.T("CR_SECONDARY") .. "|r" })
+    if #learned == 0 then
+      table.insert(out, { text = "|cff888888" .. ns.T("CR_SECONDARY_NONE") .. "|r" })
+    end
+    for i, p in ipairs(learned) do
+      if i > 1 then table.insert(out, { gap = 4 }) end
+      Section(p, out)
+    end
   end
   MatsSummary(out)
   return out
@@ -306,4 +343,10 @@ ns.RegisterCommand("craft", true, function()
   else
     win:Show(); ns.db.craftShown = true; ns.RefreshCraft()
   end
+end)
+
+ns.RegisterCommand("secondary", true, function()
+  ns.db.secondaryOff = not ns.db.secondaryOff
+  ns.Print(ns.db.secondaryOff and ns.T("SEC_OFF") or ns.T("SEC_ON"))
+  ns.RefreshCraft()
 end)

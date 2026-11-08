@@ -1,3 +1,11 @@
+# MagePlan 1.17.0
+
+- **Cooking, First Aid and Fishing** in the crafting assistant. They don't use a profession slot, so they show below your two main professions once you've learned them:
+  - **Cooking and First Aid:** what to make for every skill range, with the materials you have and need, and where to learn or buy the recipe (trainer or vendor).
+  - **Fishing:** where to fish for your skill, and which pole and lures to use and where to buy them.
+  - When you're close to the cap: where the next rank is (Expert books, the Clamlette Surprise, Triage and Nat Pagle quests).
+  - Turn them off under Features ("Cooking, First Aid, Fishing") or with `/mp secondary`.
+
 # MagePlan 1.16.0
 
 - **Walk on Air timer (Skyborne):** when you use Walk on Air, a big countdown with a bar shows how long you can still glide. It turns yellow, then red with "LAND NOW!" for the last 3 seconds, and plays the alert sound if sounds are on, so you don't drop out of the sky. It moves with the combat helper ("Move"), Ctrl + mouse wheel for size, and you can turn it off under Features or with `/mp glide`.
