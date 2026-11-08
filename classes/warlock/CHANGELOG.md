@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta2
+
+- The real WarlockPlan logo and minimap icon.
+
 # WarlockPlan 1.0.0-beta1
 
 First version of WarlockPlan for WoW Forever.
