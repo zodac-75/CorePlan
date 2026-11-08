@@ -1,4 +1,4 @@
-# MagePlan 1.20.3
+# MagePlan 1.20.4
 
 - Drink alert: reports problems in chat instead of failing silently, and `/mp drinktest` shows what it sees (for bug reports).
 

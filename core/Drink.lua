@@ -201,6 +201,9 @@ ns.RegisterCommand("drinktest", false, function()
     tostring(ns.db.drinkOff), okP and tostring(pct) or ("error " .. tostring(pct)),
     tostring(ns.db.drinkPct or 40), tostring(UnitAffectingCombat("player")), tostring(f and f:IsShown())))
   ns.Print("  " .. table.concat(raw, "  "))
+  ns.Print(string.format("  InCombatLockdown=%s C_CurveUtil=%s CurveConstants=%s SetAlphaFromBoolean=%s",
+    tostring(InCombatLockdown and InCombatLockdown()), tostring(C_CurveUtil ~= nil), tostring(CurveConstants ~= nil),
+    tostring(f and f.SetAlphaFromBoolean ~= nil)))
   local ok, err = pcall(Check)
   if not ok then ns.Print("  error: " .. tostring(err)) end
 end)
