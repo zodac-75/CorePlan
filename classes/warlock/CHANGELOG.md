@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta8
+
+- **Tick boxes for secondary skills:** Cooking, First Aid and Fishing each have their own tick box under Features. Ticked shows it in the crafting assistant (with where to learn it if you haven't yet), unticked hides it. By default the ones you've learned are ticked.
+
 # WarlockPlan 1.0.0-beta7
 
 - **Pick your secondary skills:** a new "Secondary" choice in the settings, below your professions: Auto (the ones you've learned), all three, any one or two of Cooking, First Aid and Fishing, or none. Ones you pick but haven't learned yet show with where to learn them. `/wl secondary` steps through the choices.

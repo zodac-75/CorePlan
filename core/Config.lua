@@ -44,6 +44,10 @@ local FEATURES = {
   { key = "MM_GLIDE", on = function() return not ns.db.glideOff end, cmd = "glide" },
   { key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
   { key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
+  -- Secondary skills in the crafting assistant (ticked = shown).
+  { key = "MM_SEC_COOK", on = function() return ns.SecondaryShown("Cooking") end, cmd = "cooking" },
+  { key = "MM_SEC_FA", on = function() return ns.SecondaryShown("First Aid") end, cmd = "firstaid" },
+  { key = "MM_SEC_FISH", on = function() return ns.SecondaryShown("Fishing") end, cmd = "fishing" },
   { key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
   { key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
   { key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
@@ -71,9 +75,6 @@ local SELECTORS = {
   { key = "CFG_PROF2",
     value = function() return ns.ProfLabel(2) end,
     step = function(dir) ns.StepProf(2, dir) end },
-  { key = "CFG_SECONDARY",
-    value = function() return ns.SecondaryLabel() end,
-    step = function(dir) ns.StepSecondary(dir) end },
   { key = "MM_THEME",
     value = function() return ns.T("THEME_" .. ns.CurrentTheme().key) end,
     step = function(dir)

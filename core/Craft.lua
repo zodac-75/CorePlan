@@ -67,45 +67,46 @@ function ns.StepProf(slot, dir)
   if ns.RefreshCraft then ns.RefreshCraft() end
 end
 
--- Secondary skills (Cooking, First Aid, Fishing): which ones the crafting assistant shows.
--- "auto" = the ones you've learned; a list = exactly those (with where to learn them).
-ns.SECONDARY_MODES = {
-  { key = "auto" }, { key = "all", list = { "Cooking", "First Aid", "Fishing" } },
-  { key = "c", list = { "Cooking" } }, { key = "f", list = { "First Aid" } }, { key = "s", list = { "Fishing" } },
-  { key = "cf", list = { "Cooking", "First Aid" } }, { key = "cs", list = { "Cooking", "Fishing" } },
-  { key = "fs", list = { "First Aid", "Fishing" } }, { key = "off", list = {} },
-}
-
-local function SecondaryMode()
-  local key = ns.db.secondary or (ns.db.secondaryOff and "off") or "auto"
-  for _, m in ipairs(ns.SECONDARY_MODES) do if m.key == key then return m end end
-  return ns.SECONDARY_MODES[1]
+-- Secondary skills (Cooking, First Aid, Fishing): one tick box each in the settings.
+-- ns.db.secShow[name]: true = show, false = hide, nil = show once you've learned it.
+local function SecSettings()
+  ns.db.secShow = ns.db.secShow or {}
+  -- Earlier versions had one on/off switch.
+  if ns.db.secondaryOff then
+    for _, p in ipairs(ns.SECONDARY or {}) do ns.db.secShow[p] = false end
+    ns.db.secondaryOff = nil
+  end
+  -- The version before had one "Secondary" choice: keep what was picked.
+  local old = { off = {}, all = { "Cooking", "First Aid", "Fishing" }, c = { "Cooking" }, f = { "First Aid" },
+    s = { "Fishing" }, cf = { "Cooking", "First Aid" }, cs = { "Cooking", "Fishing" }, fs = { "First Aid", "Fishing" } }
+  local list = ns.db.secondary and old[ns.db.secondary]
+  if list then
+    for _, p in ipairs(ns.SECONDARY or {}) do ns.db.secShow[p] = false end
+    for _, p in ipairs(list) do ns.db.secShow[p] = true end
+  end
+  ns.db.secondary = nil
+  return ns.db.secShow
 end
 
--- The secondary skills to show, and whether you picked them (show them even if not learned).
+function ns.SecondaryShown(p)
+  local v = SecSettings()[p]
+  if v == nil then return ns.GetProfSkill(p) ~= nil end
+  return v
+end
+
+-- The secondary skills to show, and whether any of them is still on "auto".
 function ns.ShownSecondary()
-  local m = SecondaryMode()
-  if m.list then return m.list, true end
-  local out = {}
-  for _, p in ipairs(ns.SECONDARY or {}) do if ns.GetProfSkill(p) then table.insert(out, p) end end
-  return out, false
+  local out, auto = {}, false
+  for _, p in ipairs(ns.SECONDARY or {}) do
+    if SecSettings()[p] == nil then auto = true end
+    if ns.SecondaryShown(p) then table.insert(out, p) end
+  end
+  return out, auto
 end
 
-function ns.SecondaryLabel()
-  local m = SecondaryMode()
-  if m.key == "auto" then return ns.T("SEC_AUTO") end
-  if m.key == "all" then return ns.T("SEC_ALL") end
-  if m.key == "off" then return ns.T("SEC_NONE") end
-  return table.concat(m.list, " + ")
-end
-
-function ns.StepSecondary(dir)
-  local cur = SecondaryMode()
-  local i = 1
-  for n, m in ipairs(ns.SECONDARY_MODES) do if m == cur then i = n end end
-  i = ((i - 1 + dir) % #ns.SECONDARY_MODES) + 1
-  ns.db.secondary = ns.SECONDARY_MODES[i].key
-  ns.db.secondaryOff = nil
+function ns.ToggleSecondary(p)
+  SecSettings()[p] = not ns.SecondaryShown(p)
+  ns.Print(ns.T(ns.db.secShow[p] and "SEC_SHOW" or "SEC_HIDE", p))
   if ns.RefreshCraft then ns.RefreshCraft() end
 end
 
@@ -313,8 +314,9 @@ local function Build()
     Section(prof, out)
   end
   -- Cooking, First Aid and Fishing: the ones you've learned (no profession slot).
-  local shown, picked = ns.ShownSecondary()
-  if ns.SECONDARY and (picked and #shown > 0 or not picked) then
+  local shown, auto = ns.ShownSecondary()
+  -- Nothing learned and nothing ticked: a hint, unless you've unticked them all.
+  if ns.SECONDARY and (#shown > 0 or auto) then
     table.insert(out, { gap = 6 })
     table.insert(out, { head = "|cff@COLOR@" .. ns.T("CR_SECONDARY") .. "|r" })
     if #shown == 0 then
@@ -389,8 +391,6 @@ ns.RegisterCommand("craft", true, function()
   end
 end)
 
--- /@SLASH@ secondary: steps through the choices (same as the settings window).
-ns.RegisterCommand("secondary", true, function()
-  ns.StepSecondary(1)
-  ns.Print(ns.T("SEC_NOW", ns.SecondaryLabel()))
-end)
+ns.RegisterCommand("cooking", false, function() ns.ToggleSecondary("Cooking") end)
+ns.RegisterCommand("firstaid", false, function() ns.ToggleSecondary("First Aid") end)
+ns.RegisterCommand("fishing", false, function() ns.ToggleSecondary("Fishing") end)

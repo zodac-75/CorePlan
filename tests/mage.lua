@@ -733,6 +733,7 @@ ns.craftWindow:Show(); ns.RefreshCraft()
 show("MagePlanCraftFrame")
 do
   -- Secondary skills: Cooking 60/75, First Aid 140/150 (rank note), Fishing 200/225.
+  ns.db.secShow = nil -- the settings test clicked the tick boxes; back to "auto"
   ns.db.profCache = ns.db.profCache or {}
   ns.db.profCache["Cooking"] = { rank = 60, max = 75 }
   ns.db.profCache["First Aid"] = { rank = 140, max = 150 }
@@ -745,17 +746,17 @@ do
     if not sec:find(want, 1, true) then table.insert(errors, "secondary skills: missing " .. want) end
   end
   ns.db.profCache["Cooking"], ns.db.profCache["First Aid"], ns.db.profCache["Fishing"] = nil, nil, nil
-  -- Picked "Fishing" only, not learned: it still shows, with where to learn it.
-  ns.db.secondary = "s"; ns.RefreshCraft()
+  -- Ticked Fishing only, not learned: it still shows, with where to learn it.
+  ns.db.secShow = { Cooking = false, ["First Aid"] = false, Fishing = true }; ns.RefreshCraft()
   t = (ns.craftWindow.text.__text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
   if not (t:find("Fishing", 1, true) and (t:find("Learn Fishing", 1, true) or t:find("Lär dig Fishing", 1, true))) or t:find("Cooking", 1, true) then
     table.insert(errors, "secondary pick: " .. t)
   end
-  ns.db.secondary = "off"; ns.RefreshCraft()
+  ns.RunCommand("fishing") -- untick
   t = (ns.craftWindow.text.__text or "")
-  if t:find("Secondary skills", 1, true) or t:find("Sekundära yrken", 1, true) then table.insert(errors, "secondary off still shows") end
-  print("  val: " .. ns.SecondaryLabel())
-  ns.db.secondary = nil
+  if t:find("Secondary skills", 1, true) or t:find("Sekundära yrken", 1, true) then table.insert(errors, "all unticked still shows") end
+  print("  fishing: " .. tostring(ns.SecondaryShown("Fishing")))
+  ns.db.secShow = nil
 end
 print("--- Shatter-indikator ---")
 for _, w in ipairs(allFrames) do
