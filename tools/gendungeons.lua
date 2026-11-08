@@ -37,10 +37,11 @@ local CLASSES = {
   shaman = { mask = 64, gear = { [2] = { [0] = true, [1] = true, [4] = true, [5] = true, [10] = true, [13] = true, [15] = true }, [4] = { [0] = true, [2] = true, [3] = true, [6] = true } } },
   warrior = { mask = 1, gear = { [2] = { [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true, [10] = true, [13] = true, [15] = true, [16] = true, [18] = true }, [4] = { [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [6] = true } } },
   paladin = { mask = 2, gear = { [2] = { [0] = true, [1] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }, [4] = { [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [6] = true } } },
+  priest = { mask = 16, gear = { [2] = { [4] = true, [10] = true, [15] = true, [19] = true }, [4] = { [0] = true, [1] = true } } },
   warlock = { mask = 256, gear = { [2] = { [7] = true, [10] = true, [15] = true, [19] = true }, [4] = { [0] = true, [1] = true } } },
   druid = { mask = 1024, gear = { [2] = { [4] = true, [5] = true, [6] = true, [10] = true, [13] = true, [15] = true }, [4] = { [0] = true, [2] = true } } },
 }
-local CLASS = assert(CLASSES[arg[1]], "usage: gendungeons.lua <mage|shaman|druid|warrior|paladin|warlock> <out>")
+local CLASS = assert(CLASSES[arg[1]], "usage: gendungeons.lua <mage|shaman|druid|warrior|paladin|warlock|priest> <out>")
 local SHAMAN = CLASS.mask
 local RACECODE = { [1] = "H", [4] = "D", [8] = "N", [64] = "G", [SKY] = "S" }
 

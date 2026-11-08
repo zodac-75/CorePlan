@@ -1,0 +1,10 @@
+{
+  "name": "PriestPlan",
+  "color": "ffffff",
+  "slash": "pp",
+  "class": "PRIEST",
+  "modules": [
+    "Combat.lua"
+  ],
+  "notes": "Priest leveling companion with Shadow, Holy and Discipline plans: talent plan, upgrade check, rank check, Mind Blast and DoT alerts, party Fortitude, dungeon guide, profession assistant, XP tracker."
+}
