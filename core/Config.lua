@@ -41,7 +41,6 @@ local FEATURES = {
   { key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
   { key = "MM_QUEST", on = function() return not ns.db.questOff end, cmd = "quest" },
   { key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
-  { key = "MM_SECONDARY", on = function() return not ns.db.secondaryOff end, cmd = "secondary" },
   { key = "MM_GLIDE", on = function() return not ns.db.glideOff end, cmd = "glide" },
   { key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
   { key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
@@ -72,6 +71,9 @@ local SELECTORS = {
   { key = "CFG_PROF2",
     value = function() return ns.ProfLabel(2) end,
     step = function(dir) ns.StepProf(2, dir) end },
+  { key = "CFG_SECONDARY",
+    value = function() return ns.SecondaryLabel() end,
+    step = function(dir) ns.StepSecondary(dir) end },
   { key = "MM_THEME",
     value = function() return ns.T("THEME_" .. ns.CurrentTheme().key) end,
     step = function(dir)

@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta7
+
+- **Pick your secondary skills:** a new "Secondary" choice in the settings, below your professions: Auto (the ones you've learned), all three, any one or two of Cooking, First Aid and Fishing, or none. Ones you pick but haven't learned yet show with where to learn them. `/wl secondary` steps through the choices.
+
 # WarlockPlan 1.0.0-beta6
 
 - **Cooking, First Aid and Fishing** in the crafting assistant. They don't use a profession slot, so they show below your two main professions once you've learned them:

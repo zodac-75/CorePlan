@@ -745,6 +745,17 @@ do
     if not sec:find(want, 1, true) then table.insert(errors, "secondary skills: missing " .. want) end
   end
   ns.db.profCache["Cooking"], ns.db.profCache["First Aid"], ns.db.profCache["Fishing"] = nil, nil, nil
+  -- Picked "Fishing" only, not learned: it still shows, with where to learn it.
+  ns.db.secondary = "s"; ns.RefreshCraft()
+  t = (ns.craftWindow.text.__text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+  if not (t:find("Fishing", 1, true) and (t:find("Learn Fishing", 1, true) or t:find("Lär dig Fishing", 1, true))) or t:find("Cooking", 1, true) then
+    table.insert(errors, "secondary pick: " .. t)
+  end
+  ns.db.secondary = "off"; ns.RefreshCraft()
+  t = (ns.craftWindow.text.__text or "")
+  if t:find("Secondary skills", 1, true) or t:find("Sekundära yrken", 1, true) then table.insert(errors, "secondary off still shows") end
+  print("  val: " .. ns.SecondaryLabel())
+  ns.db.secondary = nil
 end
 print("--- Shatter-indikator ---")
 for _, w in ipairs(allFrames) do

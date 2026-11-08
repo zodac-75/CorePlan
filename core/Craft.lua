@@ -67,6 +67,48 @@ function ns.StepProf(slot, dir)
   if ns.RefreshCraft then ns.RefreshCraft() end
 end
 
+-- Secondary skills (Cooking, First Aid, Fishing): which ones the crafting assistant shows.
+-- "auto" = the ones you've learned; a list = exactly those (with where to learn them).
+ns.SECONDARY_MODES = {
+  { key = "auto" }, { key = "all", list = { "Cooking", "First Aid", "Fishing" } },
+  { key = "c", list = { "Cooking" } }, { key = "f", list = { "First Aid" } }, { key = "s", list = { "Fishing" } },
+  { key = "cf", list = { "Cooking", "First Aid" } }, { key = "cs", list = { "Cooking", "Fishing" } },
+  { key = "fs", list = { "First Aid", "Fishing" } }, { key = "off", list = {} },
+}
+
+local function SecondaryMode()
+  local key = ns.db.secondary or (ns.db.secondaryOff and "off") or "auto"
+  for _, m in ipairs(ns.SECONDARY_MODES) do if m.key == key then return m end end
+  return ns.SECONDARY_MODES[1]
+end
+
+-- The secondary skills to show, and whether you picked them (show them even if not learned).
+function ns.ShownSecondary()
+  local m = SecondaryMode()
+  if m.list then return m.list, true end
+  local out = {}
+  for _, p in ipairs(ns.SECONDARY or {}) do if ns.GetProfSkill(p) then table.insert(out, p) end end
+  return out, false
+end
+
+function ns.SecondaryLabel()
+  local m = SecondaryMode()
+  if m.key == "auto" then return ns.T("SEC_AUTO") end
+  if m.key == "all" then return ns.T("SEC_ALL") end
+  if m.key == "off" then return ns.T("SEC_NONE") end
+  return table.concat(m.list, " + ")
+end
+
+function ns.StepSecondary(dir)
+  local cur = SecondaryMode()
+  local i = 1
+  for n, m in ipairs(ns.SECONDARY_MODES) do if m == cur then i = n end end
+  i = ((i - 1 + dir) % #ns.SECONDARY_MODES) + 1
+  ns.db.secondary = ns.SECONDARY_MODES[i].key
+  ns.db.secondaryOff = nil
+  if ns.RefreshCraft then ns.RefreshCraft() end
+end
+
 function ns.ProfLabel(slot)
   local p = ns.db.profs and ns.db.profs[slot]
   if p then return p end
@@ -271,17 +313,19 @@ local function Build()
     Section(prof, out)
   end
   -- Cooking, First Aid and Fishing: the ones you've learned (no profession slot).
-  if not ns.db.secondaryOff and ns.SECONDARY then
-    local learned = {}
-    for _, p in ipairs(ns.SECONDARY) do if ns.GetProfSkill(p) then table.insert(learned, p) end end
+  local shown, picked = ns.ShownSecondary()
+  if ns.SECONDARY and (picked and #shown > 0 or not picked) then
     table.insert(out, { gap = 6 })
     table.insert(out, { head = "|cff@COLOR@" .. ns.T("CR_SECONDARY") .. "|r" })
-    if #learned == 0 then
+    if #shown == 0 then
       table.insert(out, { text = "|cff888888" .. ns.T("CR_SECONDARY_NONE") .. "|r" })
     end
-    for i, p in ipairs(learned) do
+    for i, p in ipairs(shown) do
       if i > 1 then table.insert(out, { gap = 4 }) end
       Section(p, out)
+      if not ns.GetProfSkill(p) then
+        table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.T("CR_SEC_LEARN", p) .. "|r" })
+      end
     end
   end
   MatsSummary(out)
@@ -345,8 +389,8 @@ ns.RegisterCommand("craft", true, function()
   end
 end)
 
+-- /@SLASH@ secondary: steps through the choices (same as the settings window).
 ns.RegisterCommand("secondary", true, function()
-  ns.db.secondaryOff = not ns.db.secondaryOff
-  ns.Print(ns.db.secondaryOff and ns.T("SEC_OFF") or ns.T("SEC_ON"))
-  ns.RefreshCraft()
+  ns.StepSecondary(1)
+  ns.Print(ns.T("SEC_NOW", ns.SecondaryLabel()))
 end)
