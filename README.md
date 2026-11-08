@@ -4,11 +4,12 @@ Leveling companions for **WoW Forever**, one addon per class, built from one sha
 
 | Addon | Class / spec | CurseForge |
 |---|---|---|
-| MagePlan | Frost mage | [mageplan](https://www.curseforge.com/wow/addons/mageplan) (1785085) |
-| ShamanPlan | Enhancement shaman | project 1787755 |
-| DruidPlan | Feral druid | project 1787775 |
+| MagePlan | Frost, Fire or Arcane mage | [mageplan](https://www.curseforge.com/wow/addons/mageplan) (1785085) |
+| ShamanPlan | Enhancement, Elemental or Restoration shaman | project 1787755 |
+| DruidPlan | Feral, Balance or Restoration druid | project 1787775 |
 | WarriorPlan | Arms, Fury or Protection warrior | project 1787968 |
 | PaladinPlan | Protection, Retribution or Holy paladin | project 1787977 |
+| WarlockPlan | Affliction, Demonology or Destruction warlock | not on CurseForge yet |
 
 ## Layout
 

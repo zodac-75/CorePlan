@@ -1,0 +1,10 @@
+{
+  "name": "WarlockPlan",
+  "color": "9482c9",
+  "slash": "wl",
+  "class": "WARLOCK",
+  "modules": [
+    "Combat.lua"
+  ],
+  "notes": "Warlock leveling companion with Affliction, Demonology and Destruction plans: talent plan, upgrade check, rank check, Shadow Trance and DoT alerts, dungeon guide, profession assistant, XP tracker."
+}
