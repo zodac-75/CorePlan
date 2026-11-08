@@ -50,11 +50,20 @@ local function CheckLow()
   if not ns.SpellInfo("Conjure Water") then return end
   local min = ns.db.waterMin or 10
   local water = Count(WATER)
-  if lastWater and lastWater >= min and water < min then
-    ns.Print("|cffff9900" .. ns.T("SUP_LOW", water) .. "|r")
-  end
   lastWater = water
   ns.RefreshMain()
+  if ns.RefreshRestAlert then ns.RefreshRestAlert() end
+end
+
+-- Low on water: a line in the out-of-combat alert (with Drink!), not just in chat.
+if ns.AddRestAlert then
+  ns.AddRestAlert(function()
+    if not ns.SpellInfo("Conjure Water") then return nil end
+    local water = Count(WATER)
+    if water < (ns.db.waterMin or 10) then
+      return ns.T("SUP_LOW", water), ns.SpellIcon("Conjure Water") or "Interface\\Icons\\INV_Drink_18"
+    end
+  end)
 end
 
 ns.RegisterModule(function()

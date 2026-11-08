@@ -1,7 +1,10 @@
--- @ADDON@: drink reminder. Out of combat with low mana and not drinking: show a nudge.
+-- @ADDON@: out-of-combat alert. Low mana and not drinking: a big "Drink!" with an icon,
+-- a short flash and the alert sound (if sounds are on for all reminders). Other modules
+-- add lines with ns.AddRestAlert (mage: low on conjured water). Moves with the combat
+-- helper ("Move" switch), mouse wheel for size.
 local _, ns = ...
 
-local f, txt
+local f, big, small
 local DRINK_BUFFS = { ["Drink"] = true, ["Food & Drink"] = true, ["Refreshment"] = true }
 
 -- Mana in percent, or nil when the game hides the value from addons ("secret" values).
@@ -35,30 +38,105 @@ function ns.ManaPct()
   return nil
 end
 
-local function Check()
-  if not f then return end
-  if ns.db.drinkOff or UnitAffectingCombat("player") or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player")) then
-    f:Hide()
-    return
-  end
+-- Other out-of-combat reminders can join the same alert (mage: low on water).
+-- fn() returns text, icon or nil.
+local extra = {}
+function ns.AddRestAlert(fn) table.insert(extra, fn) end
+
+local shownKey, flash
+
+local function DrinkLine()
+  if ns.db.drinkOff then return nil end
   local pct = ns.ManaPct()
-  if not pct then f:Hide() return end
+  if not pct then return nil end
   local drinking = ns.ForEachAura("player", "HELPFUL", function(n) return DRINK_BUFFS[n] end)
   if pct < (ns.db.drinkPct or 40) and not drinking then
-    txt:SetText("|cff66ccff" .. ns.T("DRINK", math.floor(pct)) .. "|r")
-    f:Show()
-  else
-    f:Hide()
+    return ns.T("DRINK", math.floor(pct)), "Interface\\Icons\\INV_Drink_07"
   end
 end
 
+local function Line(text, icon, big)
+  local size = big and 30 or 20
+  local tag = icon and ("|T" .. icon .. ":" .. size .. ":" .. size .. ":0:0:64:64:5:59:5:59|t ") or ""
+  return tag .. text
+end
+
+local function Check()
+  if not f then return end
+  local busy = UnitAffectingCombat("player") or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
+    or (UnitOnTaxi and UnitOnTaxi("player"))
+  local lines = {}
+  if not busy then
+    local t, icon = DrinkLine()
+    if t then table.insert(lines, { t, icon, "|cff66ccff" }) end
+    for _, fn in ipairs(extra) do
+      local ok, et, eicon = pcall(fn)
+      if ok and et then table.insert(lines, { et, eicon, "|cffffd100" }) end
+    end
+  end
+  if #lines == 0 then
+    if ns.db.shatterUnlocked and (ns.HasMana() or #extra > 0) then
+      -- So you can find it and move it with the combat helper.
+      big:SetText("|cff888888" .. Line(ns.T("DRINK_DRAG"), "Interface\\Icons\\INV_Drink_07", true) .. "|r")
+      small:SetText("")
+      f:SetAlpha(0.7)
+      f:Show()
+    else
+      f:Hide()
+    end
+    shownKey = nil
+    return
+  end
+  f:SetAlpha(1)
+  big:SetText(lines[1][3] .. Line(lines[1][1], lines[1][2], true) .. "|r")
+  local rest = {}
+  for k = 2, #lines do table.insert(rest, lines[k][3] .. Line(lines[k][1], lines[k][2]) .. "|r") end
+  small:SetText(table.concat(rest, "\n"))
+  f:Show()
+  -- Flash and the alert sound when it first shows up (not on every mana tick).
+  local key = #lines .. lines[1][2]
+  if shownKey ~= key then
+    if flash then flash:Play() end
+    if (ns.db.alertSound or "off") == "all" and ns.PlayAlertSound then ns.PlayAlertSound() end
+  end
+  shownKey = key
+end
+ns.RefreshRestAlert = function() pcall(Check) end
+
 ns.RegisterModule(function()
   f = CreateFrame("Frame", "@ADDON@DrinkFrame", UIParent)
-  f:SetSize(300, 24)
-  f:SetPoint("TOP", _G.@ADDON@ShatterFrame or UIParent, _G.@ADDON@ShatterFrame and "BOTTOM" or "CENTER", 0, _G.@ADDON@ShatterFrame and -6 or -210)
-  txt = f:CreateFontString(nil, "OVERLAY")
-  txt:SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
-  txt:SetPoint("CENTER")
+  f:SetSize(380, 60)
+  local p = ns.db.drinkPos
+  if p then f:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else f:SetPoint("CENTER", UIParent, "CENTER", 0, -40) end
+  f:SetScale(ns.db.drinkScale or 1)
+  f:SetClampedToScreen(true)
+  f:SetMovable(true)
+  f:EnableMouse(true)
+  f:RegisterForDrag("LeftButton")
+  f:SetScript("OnDragStart", function(self) if ns.db.shatterUnlocked then self:StartMoving() end end)
+  f:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    local point, _, relPoint, x, y = self:GetPoint()
+    ns.db.drinkPos = { point, relPoint, x, y }
+  end)
+  f:EnableMouseWheel(true)
+  f:SetScript("OnMouseWheel", function(self, delta)
+    if not ns.db.shatterUnlocked then return end
+    local sc = math.max(0.5, math.min(2.5, self:GetScale() + delta * 0.1))
+    self:SetScale(sc)
+    ns.db.drinkScale = sc
+  end)
+  big = f:CreateFontString(nil, "OVERLAY")
+  big:SetFont(STANDARD_TEXT_FONT, 22, "OUTLINE")
+  big:SetPoint("TOP", f, "TOP", 0, 0)
+  small = f:CreateFontString(nil, "OVERLAY")
+  small:SetFont(STANDARD_TEXT_FONT, 15, "OUTLINE")
+  small:SetPoint("TOP", big, "BOTTOM", 0, -4)
+  flash = f:CreateAnimationGroup()
+  local a = flash:CreateAnimation("Alpha")
+  a:SetFromAlpha(0.2)
+  a:SetToAlpha(1)
+  a:SetDuration(0.3)
   f:Hide()
 
   local ev = CreateFrame("Frame")
@@ -67,9 +145,18 @@ ns.RegisterModule(function()
   ev:RegisterEvent("UNIT_POWER_UPDATE")
   ev:RegisterEvent("UNIT_AURA")
   ev:RegisterEvent("PLAYER_ENTERING_WORLD")
+  ev:RegisterEvent("BAG_UPDATE")
   ev:SetScript("OnEvent", function(_, event, unit)
     if (event == "UNIT_POWER_UPDATE" or event == "UNIT_AURA") and unit ~= "player" then return end
     ns.Debounce("drink", 0.2, Check)
+  end)
+  -- The "Move" switch shows a preview; check now and then so it follows.
+  local acc = 0
+  ev:SetScript("OnUpdate", function(_, e)
+    acc = acc + e
+    if acc < 1 then return end
+    acc = 0
+    pcall(Check)
   end)
 end)
 

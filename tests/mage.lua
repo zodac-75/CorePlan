@@ -687,6 +687,14 @@ UnitAffectingCombat = function() return false end
 fire("PLAYER_REGEN_ENABLED"); now = now + 1; runTimers(now)
 local df = rawget(_G, "MagePlanDrinkFrame")
 table.insert(chat, "[sim] drink shown at 30%: " .. tostring(df and df.__shown))
+do
+  local txt = ""
+  for _, w in ipairs(allFrames) do
+    if w.__kind == "FontString" and type(w.__text) == "string" and (w.__text:find("Drink!", 1, true) or w.__text:find("Drick!", 1, true)) then txt = w.__text end
+  end
+  table.insert(chat, "[sim] drink alert: " .. txt)
+  if not (df and df.__shown and txt:find("INV_Drink", 1, true)) then table.insert(errors, "drink alert not shown with icon: " .. txt) end
+end
 SIM.setMana(900); fire("UNIT_POWER_UPDATE", "player"); now = now + 1; runTimers(now)
 table.insert(chat, "[sim] drink shown at 90%: " .. tostring(df and df.__shown))
 fire("TRADE_SKILL_SHOW"); now = now + 1; runTimers(now)

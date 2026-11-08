@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0-beta34
+
+- **Real drink alert:** low mana out of combat now shows a big "Drink! Mana 23%" with a drink icon in the middle of the screen, like the combat helper's call-outs, with a short flash and the alert sound (when sounds are on for all reminders). It hides in combat, while you drink and when you're full. Move it with the "Move" switch, mouse wheel for size.
+
 # PaladinPlan 1.0.0-beta33
 
 - **Pick a blessing per player:** right-click a blessing icon in the buff watcher (yours or a party member's) to cycle Auto, Wisdom, Might, Kings, Salvation and the others you know. The addon remembers it by name, so Jennie always gets Wisdom and your warrior friend always gets Might. With a pick, only that blessing counts; on Auto it's Wisdom for mana users, Might for the rest, and any blessing counts. Left-click still casts it.

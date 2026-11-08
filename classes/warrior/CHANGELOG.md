@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta33
+
+- Out-of-combat alert reworked (warriors have no drink reminder, nothing changes for you).
+
 # WarriorPlan 1.0.0-beta32
 
 - Buff watcher: right-click support for icons that have a choice (used by PaladinPlan's blessings).
