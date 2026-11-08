@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta4
+
+- **Separate lock for the buff row:** the buff watcher now moves with the combat helper ("Move combat helper & buffs" in the settings or the quick menu, or `/wl move`) instead of with "Lock windows". You can keep your windows unlocked and the buff row stays put, or move the buff row without unlocking every window.
+
 # WarlockPlan 1.0.0-beta3
 
 - First version on CurseForge.

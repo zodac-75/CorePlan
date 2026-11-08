@@ -155,5 +155,6 @@ ns.RegisterCommand("move", true, function()
   ns.db.shatterUnlocked = not ns.db.shatterUnlocked
   f:EnableMouse(ns.db.shatterUnlocked and true or false)
   f:EnableMouseWheel(ns.db.shatterUnlocked and true or false)
+  if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
   ns.Print(ns.db.shatterUnlocked and ns.T("SH_UNLOCKED") or ns.T("SH_LOCKED"))
 end)

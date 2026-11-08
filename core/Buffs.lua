@@ -1,7 +1,7 @@
 -- @ADDON@: buff watcher. A movable row of icons for your own buffs (ns.BUFF_WATCH in
 -- the class Data.lua) that shows up when a buff is missing or about to run out.
--- Click an icon to cast the buff. Unlock windows (/@SLASH@ lock) to see every watched
--- buff, drag the row by any icon and resize it with Ctrl + mouse wheel.
+-- Click an icon to cast the buff. Turn on "Move" (/@SLASH@ move, same switch as the combat
+-- helper) to see every watched buff, drag the row by any icon and resize it with Ctrl + wheel.
 --
 -- An entry: { spells = { "Arcane Intellect" } or function(plan) -> list,
 --             buffs = { names that count }, match = function(name) -> bool,
@@ -150,7 +150,7 @@ local function MakeButton(i)
   -- While unlocked, dragging an icon moves the whole row.
   b:RegisterForDrag("LeftButton")
   b:SetScript("OnDragStart", function()
-    if not ns.db.locked and not (InCombatLockdown and InCombatLockdown()) then holder:StartMoving() end
+    if ns.db.shatterUnlocked and not (InCombatLockdown and InCombatLockdown()) then holder:StartMoving() end
   end)
   b:SetScript("OnDragStop", function() holder:GetScript("OnDragStop")(holder) end)
   b:EnableMouseWheel(true)
@@ -164,7 +164,8 @@ local function Update()
   if not holder then return end
   local combat = InCombatLockdown and InCombatLockdown()
   local list = (ns.db.buffsOff or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))) and {} or Needed()
-  local unlocked = not ns.db.locked and not ns.db.buffsOff
+  -- Moved together with the combat helper ("Move" switch), not with the window lock.
+  local unlocked = ns.db.shatterUnlocked and not ns.db.buffsOff
 
   if combat then
     -- Can't add or remove buttons now: just update what's shown, and redo the row later.
@@ -254,7 +255,7 @@ ns.RegisterModule(function()
   holder:EnableMouse(true)
   holder:RegisterForDrag("LeftButton")
   holder:SetScript("OnDragStart", function(self)
-    if not ns.db.locked and not (InCombatLockdown and InCombatLockdown()) then self:StartMoving() end
+    if ns.db.shatterUnlocked and not (InCombatLockdown and InCombatLockdown()) then self:StartMoving() end
   end)
   holder:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
@@ -263,12 +264,12 @@ ns.RegisterModule(function()
   end)
   holder:EnableMouseWheel(true)
   holder:SetScript("OnMouseWheel", function(self, delta)
-    if not IsControlKeyDown() or ns.db.locked or (InCombatLockdown and InCombatLockdown()) then return end
+    if not IsControlKeyDown() or not ns.db.shatterUnlocked or (InCombatLockdown and InCombatLockdown()) then return end
     local s = math.max(0.5, math.min(2.5, self:GetScale() + delta * 0.1))
     self:SetScale(s)
     ns.db.buffScale = s
   end)
-  -- While windows are unlocked: a faint box and a label so you can find and drag it.
+  -- While "Move" is on: a faint box and a label so you can find and drag it.
   holder.bg = holder:CreateTexture(nil, "BACKGROUND")
   holder.bg:SetPoint("TOPLEFT", -4, 4)
   holder.bg:SetPoint("BOTTOMRIGHT", 4, -4)
