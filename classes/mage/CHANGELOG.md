@@ -1,3 +1,7 @@
+# MagePlan 1.16.0
+
+- **Walk on Air timer (Skyborne):** when you use Walk on Air, a big countdown with a bar shows how long you can still glide. It turns yellow, then red with "LAND NOW!" for the last 3 seconds, and plays the alert sound if sounds are on, so you don't drop out of the sky. It moves with the combat helper ("Move"), Ctrl + mouse wheel for size, and you can turn it off under Features or with `/mp glide`.
+
 # MagePlan 1.15.4
 
 - **Separate lock for the buff row:** the buff watcher now moves with the shatter indicator ("Move shatter indicator & buffs" in the settings or the quick menu, or `/mp move`) instead of with "Lock windows". You can keep your windows unlocked and the buff row stays put, or move the buff row without unlocking every window.

@@ -789,6 +789,33 @@ do
   if tostring(msg):find("Frost Armor") then table.insert(errors, "rebuff reminder shown while off") end
   C_UnitAuras = oldC
 end
+print("--- Walk on Air ---")
+do
+  local oldC, oldU = C_UnitAuras, UnitAura
+  local t0 = GetTime()
+  if C_UnitAuras then
+    C_UnitAuras = { GetAuraDataByIndex = function(_, i)
+      if i == 1 then return { name = "Walk on Air", expirationTime = t0 + 2, duration = 10 } end
+    end }
+  else
+    UnitAura = function(_, i) if i == 1 then return "Walk on Air", 0, 0, nil, 10, t0 + 2 end end
+  end
+  local gf = rawget(_G, "MagePlanGlideFrame")
+  for _, w in ipairs(allFrames) do
+    if w.__scripts and w.__scripts.OnUpdate and w.__events and w.__events["UNIT_SPELLCAST_SUCCEEDED"] then w.__scripts.OnUpdate(w, 1) end
+  end
+  local text = ""
+  for _, w in ipairs(allFrames) do
+    if w.__kind == "FontString" and type(w.__text) == "string" and w.__text:find("LAND") then text = w.__text end
+  end
+  print("  glide: shown=" .. tostring(gf and gf.__shown) .. " " .. text)
+  if not (gf and gf.__shown and text:find("LAND")) then table.insert(errors, "Walk on Air timer: " .. text) end
+  C_UnitAuras, UnitAura = oldC, oldU
+  for _, w in ipairs(allFrames) do
+    if w.__scripts and w.__scripts.OnUpdate and w.__events and w.__events["UNIT_SPELLCAST_SUCCEEDED"] then w.__scripts.OnUpdate(w, 1) end
+  end
+  print("  efter: shown=" .. tostring(gf and gf.__shown))
+end
 print("--- Rank-koll utan rank-text (Forever) ---")
 do
   local oldSub = GetSpellSubtext
