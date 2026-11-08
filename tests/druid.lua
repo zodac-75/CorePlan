@@ -804,6 +804,26 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
 end
+print("--- Buffar med dold auralista ---")
+if MODE == "modern" then
+  local oldSecret, oldBuffs = issecretvalue, SIM_BUFFS
+  local oldByName = C_UnitAuras.GetAuraDataBySpellName
+  issecretvalue = function(v) return v == "Secret Aura" end
+  SIM_BUFFS = { "Secret Aura", "Thorns" }
+  C_UnitAuras.GetAuraDataBySpellName = function(u, n) if n == "Thorns" then return { name = n, expirationTime = 0 } end end
+  ns.db.buffsOff = false; ns.db.shatterUnlocked = false; ns.db.buffHide = nil
+  ns.RefreshBuffWatch()
+  local shown = {}
+  for i = 1, 6 do
+    local b = rawget(_G, "DruidPlanBuff" .. i)
+    if b and b.__shown then table.insert(shown, tostring(rawget(b, "spell"))) end
+  end
+  print("  visas: " .. table.concat(shown, ", "))
+  if not table.concat(shown, ","):find("Mark of the Wild", 1, true) then table.insert(errors, "Mark of the Wild syns inte när auralistan är dold") end
+  if table.concat(shown, ","):find("Thorns", 1, true) then table.insert(errors, "Thorns visas fast den finns") end
+  slash("buffdebug")
+  issecretvalue, SIM_BUFFS, C_UnitAuras.GetAuraDataBySpellName = oldSecret, oldBuffs, oldByName
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

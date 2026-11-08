@@ -107,6 +107,22 @@ local function PlayerBuffs(unit)
   return out, unsure, durs
 end
 
+-- When the aura list is hidden (secret values), ask for the buff by name instead.
+-- Seconds left (1e9 = no end or unknown), 0 = missing for sure, nil = can't tell.
+local function LookupByName(unit, names)
+  if not (names and C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName) then return nil end
+  for _, n in ipairs(names) do
+    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, n, "HELPFUL")
+    if not ok then return nil end
+    if a then
+      local exp = a.expirationTime
+      if ns.Readable(exp) and exp > 0 then return math.max(0.1, exp - GetTime()) end
+      return 1e9
+    end
+  end
+  return 0
+end
+
 -- Seconds left on the weapon buff, 0 for none, nil when unknown.
 local function ImbueLeft()
   if not GetWeaponEnchantInfo then return nil end
@@ -140,7 +156,8 @@ local function Needed()
             dur = durs[name] or dur
           end
         end
-        if best then left = best elseif not unsure then left = 0 end
+        if best then left = best elseif not unsure then left = 0
+        elseif not e.match then left = LookupByName("player", e.buffs) end
       end
       local warn = e.warn or WARN
       -- Out of combat: warn earlier, but at most a third of the buff's length, so a
@@ -178,6 +195,7 @@ local function Needed()
               if hit then best = math.max(best or 0, l == 0 and 1e9 or l) end
             end
             local left = best or (not unsureP and 0 or nil)
+            if left == nil and not e.match then left = LookupByName(unit, e.buffs) end
             local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
             if left and (left == 0 or left < warn) then
               local okN, who = pcall(UnitName, unit)
@@ -253,7 +271,9 @@ local function MakeButton(i)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
     local _, id = ns.SpellInfo(self.spell)
     if id and GameTooltip.SetSpellByID then GameTooltip:SetSpellByID(id) else GameTooltip:SetText(self.spell) end
-    if self.outOfRange then
+    if ns.db.shatterUnlocked then
+      GameTooltip:AddLine(ns.T("BW_MOVE_ON"), 1, 0.4, 0.4)
+    elseif self.outOfRange then
       GameTooltip:AddLine(ns.T("BW_OUT_OF_RANGE", self.whoName or ""), 1, 0.4, 0.4)
     else
       GameTooltip:AddLine(self.whoName and ns.T("BW_CLICK_ON", self.whoName) or ns.T("BW_CLICK"), 0.6, 0.8, 1)
@@ -448,6 +468,27 @@ ns.RegisterCommand("buffs", true, function()
 end)
 
 function ns.RefreshBuffWatch() pcall(Update) end
+
+-- /@SLASH@ buffdebug: why an icon does or doesn't show.
+ns.RegisterCommand("buffdebug", false, function()
+  local buffs, unsure = PlayerBuffs()
+  ns.Print(string.format("buffs %s, move %s, combat %s, aura list %s", ns.db.buffsOff and "OFF" or "on",
+    ns.db.shatterUnlocked and "ON" or "off", (InCombatLockdown and InCombatLockdown()) and "yes" or "no",
+    unsure and "HIDDEN (secret)" or "readable"))
+  for idx, e in ipairs(ns.BUFF_WATCH or {}) do
+    local spell = Spells(e)
+    local found
+    for _, b in ipairs(e.buffs or {}) do if buffs[b] then found = b end end
+    local byName = LookupByName("player", e.buffs)
+    ns.Print(string.format("  %s: known %s, ticked %s, for this spec %s, on you %s, by name %s",
+      EntryLabel(e, false), spell and "yes" or "NO", Hidden(EntryKey(e, idx, false)) and "NO" or "yes",
+      (not e.only or e.only()) and "yes" or "no", found and "yes" or "no",
+      byName == nil and "?" or (byName > 0 and "yes" or "no")))
+  end
+  local n = 0
+  for _, b in ipairs(buttons) do if b:IsShown() then n = n + 1 end end
+  ns.Print("  icons shown: " .. n)
+end)
 
 ns.RegisterCommand("partybuffs", false, function()
   ns.db.partyBuffsOff = not ns.db.partyBuffsOff

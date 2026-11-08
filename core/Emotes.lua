@@ -7,7 +7,7 @@
 --   /train   a little train chugs across  /sleep   Z z z floats up
 --   /laugh   bouncing HA HA HA             /salute  fireworks (also /applaud, /clap)
 --   /cry     a rain cloud drizzles         /flex    a strong arm and gold stars
--- Dance party: /dance at each other within 10 seconds for a much bigger disco.
+-- Dance party: /dance at each other within 30 seconds for a much bigger disco.
 -- Ding party: when a Plan user in your group or guild levels up, everyone with a Plan
 -- addon gets fireworks. Your own ding and finishing the talent plan get one too.
 -- All of it can be turned off with /@SLASH@ eggs (or the box in the settings).
@@ -511,8 +511,10 @@ local ALIAS = { DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "S
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP" }
 
--- When you last did an emote at someone (short name), for the dance party.
-local didAt = {}
+-- When you last did an emote at someone, and when someone last danced at you (short
+-- names), for the dance party.
+local didAt, gotAt = {}, {}
+local PARTY_WINDOW = 30
 
 local function OnEmote(token, unit)
   if type(token) ~= "string" then return end
@@ -528,6 +530,16 @@ local function OnEmote(token, unit)
   if lastSent[key] and GetTime() - lastSent[key] < 5 then return end
   lastSent[key] = GetTime()
   didAt[token .. Short(full)] = GetTime()
+  -- Dancing back at someone who just danced at you: the party starts for both of you.
+  local got = gotAt[Short(full)]
+  if token == "DANCE" and got and GetTime() - got < PARTY_WINDOW then
+    gotAt[Short(full)] = nil
+    didAt["DANCE" .. Short(full)] = nil
+    lastShown.PARTY = nil
+    Show("PARTY", full)
+    Send("EB:PARTY", full)
+    return
+  end
   Send(token == "KISS" and "KISS" or ("E:" .. token), full)
 end
 
@@ -548,13 +560,15 @@ local function OnMessage(msg, sender)
     if not emote or not EFFECTS[emote] then return end
     -- Dance party: they danced at you within 10 seconds of you dancing at them.
     local mine = didAt["DANCE" .. Short(sender)]
-    if emote == "DANCE" and back == "E" and mine and GetTime() - mine < 10 then
+    if emote == "DANCE" and back == "E" and mine and GetTime() - mine < PARTY_WINDOW then
       didAt["DANCE" .. Short(sender)] = nil
+      gotAt[Short(sender)] = nil
       lastShown.PARTY = nil
       Show("PARTY", sender)
       Send("EB:PARTY", sender)
       return
     end
+    if emote == "DANCE" and back == "E" then gotAt[Short(sender)] = GetTime() end
     Show(emote, sender)
     if back == "E" then Send("EB:" .. emote, sender) end
   end

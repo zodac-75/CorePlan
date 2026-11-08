@@ -617,6 +617,15 @@ do
   local sent = SIM_ADDONMSG[before + 1] or ""
   print("  dansfest skickade: " .. sent)
   if not sent:find("EB:PARTY", 1, true) then table.insert(errors, "dance party: " .. sent) end
+  -- The other way round: Kissy dances first, I dance back 20 s later -> my addon starts the party.
+  now = now + 6
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:DANCE", "WHISPER", "Kissy-Realm")
+  now = now + 20
+  before = #SIM_ADDONMSG
+  DoEmote("DANCE", "target")
+  sent = table.concat(SIM_ADDONMSG, ", ", before + 1)
+  print("  dansfest (dansade tillbaka) skickade: " .. sent)
+  if sent ~= "ZodacPlan:EB:PARTY>Kissy" then table.insert(errors, "dansa tillbaka gav ingen fest: " .. sent) end
   -- A friend dings.
   fire("CHAT_MSG_ADDON", "ZodacPlan", "D:30", "PARTY", "Jennie")
   fire("PLAYER_LEVEL_UP", 31)

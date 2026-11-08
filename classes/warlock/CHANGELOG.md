@@ -1,3 +1,10 @@
+# WarlockPlan 1.0.0-beta19
+
+- **Fix: a missing buff could stay hidden** when the game hides the aura list (secret values in WoW Forever). The buff watcher now asks for the buff by name, so the icon shows up again (for you and your party).
+- **Fix: the dance party didn't always start** when you /dance at each other. Now whoever dances back starts it for both of you, and you have 30 seconds (it used to be 10).
+- The buff icons' tooltip tells you when "Move" is on, since a click doesn't cast then.
+- New: `/wl buffdebug` shows why a buff icon does or doesn't show.
+
 # WarlockPlan 1.0.0-beta18
 
 - **Bag check window** (`/wl de`, or "Bag check" in the settings): lists the junk, gear to vendor, gear to disenchant and gear worth more on the AH in your bags, with what each is worth.

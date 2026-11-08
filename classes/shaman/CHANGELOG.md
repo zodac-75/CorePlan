@@ -1,3 +1,10 @@
+# ShamanPlan 1.0.0-beta47
+
+- **Fix: a missing buff could stay hidden** when the game hides the aura list (secret values in WoW Forever). The buff watcher now asks for the buff by name, so the icon shows up again (for you and your party).
+- **Fix: the dance party didn't always start** when you /dance at each other. Now whoever dances back starts it for both of you, and you have 30 seconds (it used to be 10).
+- The buff icons' tooltip tells you when "Move" is on, since a click doesn't cast then.
+- New: `/sp buffdebug` shows why a buff icon does or doesn't show.
+
 # ShamanPlan 1.0.0-beta46
 
 - **Bag check window** (`/sp de`, or "Bag check" in the settings): lists the junk, gear to vendor, gear to disenchant and gear worth more on the AH in your bags, with what each is worth.
