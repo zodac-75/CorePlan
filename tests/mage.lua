@@ -48,6 +48,8 @@ function methods:GetTexture() return rawget(self, "__tex") end
 function methods:UnregisterEvent(e) self.__events[e] = nil end
 function methods:SetText(t) self.__text = t or "" end
 function methods:SetAlpha(a) self.__alpha = a end
+function methods:SetAttribute(k, v) self.__attrs = self.__attrs or {}; self.__attrs[k] = v end
+function methods:GetAttribute(k) return self.__attrs and self.__attrs[k] end
 function methods:GetAlpha() return self.__alpha or 1 end
 function methods:GetText() return self.__text end
 function methods:GetStringHeight() local _, n = (self.__text or ""):gsub("\n", ""); return (n + 1) * 12 end
@@ -929,12 +931,25 @@ do
   local shown = {}
   for i = 1, 8 do
     local b = rawget(_G, "MagePlanBuff" .. i)
-    if b and b.__shown then table.insert(shown, tostring(rawget(b, "spell")) .. ">" .. tostring(b.__attrs and b.__attrs.unit or rawget(b, "whoName"))) end
+    if b and b.__shown then table.insert(shown, tostring(rawget(b, "spell")) .. ">" .. tostring(rawget(b, "whoName"))) end
   end
   print("  visas: " .. table.concat(shown, ", "))
   local all = table.concat(shown, ",")
   if not all:find("Jennie", 1, true) then table.insert(errors, "party buff: Jennie missing: " .. all) end
   if all:find("Tank", 1, true) then table.insert(errors, "party buff: Arcane Intellect offered to a rage user") end
+  -- Jennie's button: an explicit-target /cast, never a plain spell on "party1".
+  local jb
+  for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown and rawget(b, "whoName") == "Jennie" then jb = b end end
+  local attrs = jb and jb.__attrs or {}
+  print("  Jennie: type1=" .. tostring(attrs.type1) .. " macro=" .. tostring(attrs.macrotext1))
+  if attrs.type1 ~= "macro" or not tostring(attrs.macrotext1):find("@party1", 1, true) then table.insert(errors, "party buff should cast with an explicit target") end
+  -- Out of spell range: clicking does nothing (no self-buff by auto self-cast).
+  IsSpellInRange = function() return 0 end
+  ns.RefreshBuffWatch()
+  attrs = jb and jb.__attrs or {}
+  print("  utom räckhåll: type1=" .. tostring(attrs.type1))
+  if attrs.type1 ~= nil then table.insert(errors, "out of range but still clickable") end
+  IsSpellInRange = nil
   ns.RunCommand("partybuffs"); ns.RefreshBuffWatch()
   local after = 0
   for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown then after = after + 1 end end

@@ -194,8 +194,21 @@ local function Needed()
 end
 
 -- Can you reach them with a buff? (unknown counts as yes)
-local function InRange(unit)
-  if not unit or not UnitInRange then return true end
+-- Can your buff reach them? The spell's own range first (buffs reach 30 yards; the
+-- party range check is about 40), then the party range check. nil = can't tell.
+local function SpellRange(spell, unit)
+  local f = (C_Spell and C_Spell.IsSpellInRange) or IsSpellInRange
+  if not (f and spell) then return nil end
+  local ok, r = pcall(f, spell, unit)
+  if not ok or r == nil or (issecretvalue and issecretvalue(r)) then return nil end
+  return r == true or r == 1
+end
+
+local function InRange(unit, spell)
+  if not unit then return true end
+  local r = SpellRange(spell, unit)
+  if r ~= nil then return r end
+  if not UnitInRange then return true end
   local ok, inRange, checked = pcall(UnitInRange, unit)
   if not ok or (issecretvalue and (issecretvalue(inRange) or issecretvalue(checked))) then return true end
   if checked == false then return true end
@@ -240,7 +253,11 @@ local function MakeButton(i)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
     local _, id = ns.SpellInfo(self.spell)
     if id and GameTooltip.SetSpellByID then GameTooltip:SetSpellByID(id) else GameTooltip:SetText(self.spell) end
-    GameTooltip:AddLine(self.whoName and ns.T("BW_CLICK_ON", self.whoName) or ns.T("BW_CLICK"), 0.6, 0.8, 1)
+    if self.outOfRange then
+      GameTooltip:AddLine(ns.T("BW_OUT_OF_RANGE", self.whoName or ""), 1, 0.4, 0.4)
+    else
+      GameTooltip:AddLine(self.whoName and ns.T("BW_CLICK_ON", self.whoName) or ns.T("BW_CLICK"), 0.6, 0.8, 1)
+    end
     if self.entry and self.entry.choice then
       local ok, c = pcall(self.entry.choice, self.unit or "player")
       GameTooltip:AddLine(ns.T("BW_RIGHT_PICK", ok and c or "?"), 0.6, 0.8, 1)
@@ -283,7 +300,7 @@ local function Update()
       if b:IsShown() then
         local still
         for _, n in ipairs(list) do if n.key == b.key then still = n end end
-        b:SetAlpha(still and (InRange(still.unit) and 1 or 0.4) or 0.25)
+        b:SetAlpha(still and (InRange(still.unit, still.spell) and 1 or 0.4) or 0.25)
         b.time:SetText(still and still.left > 0 and Short(still.left) or "")
       end
     end
@@ -307,11 +324,22 @@ local function Update()
   for i, n in ipairs(list) do
     local b = buttons[i] or MakeButton(i)
     b.spell, b.key, b.whoName, b.entry, b.unit = n.spell, n.key, n.who, n.entry, n.unit
-    b:SetAttribute("spell1", n.spell)
+    local reach = InRange(n.unit, n.spell)
+    b.outOfRange = not reach
+    if n.unit then
+      -- Party: a /cast that names its target, so the game can never put it on you instead
+      -- (auto self-cast); out of range, the click does nothing at all.
+      b:SetAttribute("spell1", nil)
+      b:SetAttribute("macrotext1", "/cast [@" .. n.unit .. ",help,nodead] " .. n.spell)
+    else
+      b:SetAttribute("macrotext1", nil)
+      b:SetAttribute("spell1", n.spell)
+    end
     b:SetAttribute("unit", n.unit or "player")
     b.who:SetText(n.who and n.who:sub(1, 7) or "")
     -- No casting while you're moving it.
-    b:SetAttribute("type1", (not unlocked) and "spell" or nil)
+    local castType = n.unit and "macro" or "spell"
+    b:SetAttribute("type1", (not unlocked and reach) and castType or nil)
     b.icon:SetTexture(ns.SpellIcon(n.spell))
     -- Red frame: missing. Yellow frame: running out.
     if n.left == 0 then b.border:SetColorTexture(1, 0.25, 0.25, 0.9)
@@ -320,7 +348,7 @@ local function Update()
     b.time:SetText(n.left > 0 and Short(n.left) or "")
     b:ClearAllPoints()
     b:SetPoint("LEFT", holder, "LEFT", (i - 1) * (SIZE + GAP), 0)
-    b:SetAlpha((n.left < 0 or not InRange(n.unit)) and 0.45 or 1)
+    b:SetAlpha((n.left < 0 or not reach) and 0.45 or 1)
     b:Show()
   end
   for i = #list + 1, #buttons do buttons[i]:Hide() end
