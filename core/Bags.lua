@@ -416,7 +416,9 @@ local function Create()
   win = CreateFrame("Frame", "@ADDON@Bags", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
   win:SetWidth(WIDTH)
   win:SetHeight(80)
-  win:SetFrameStrata("MEDIUM")
+  -- Same layer as the settings window, so opening it from there puts it on top.
+  win:SetFrameStrata("DIALOG")
+  win:SetToplevel(true)
   win:SetClampedToScreen(true)
   win:SetScale(ns.db.bagScale or 1)
   table.insert(ns.themedFrames, win)
@@ -481,6 +483,7 @@ function ns.ToggleBags(show)
   autoOpened = false
   if show then
     win:Show()
+    win:Raise()
     Refresh()
   else
     win:Hide()

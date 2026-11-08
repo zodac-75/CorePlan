@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta41
+
+- **Fix: the bag check opened behind the settings window**, so clicking "Bag check" there looked like it did nothing. It now opens on top.
+
 # WarriorPlan 1.0.0-beta40
 
 - The Walk on Air timer setting only shows on Skyborne characters (High Order and Windshaper), since nobody else has the racial.

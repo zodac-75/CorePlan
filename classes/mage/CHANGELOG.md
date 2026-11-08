@@ -1,3 +1,7 @@
+# MagePlan 1.22.3
+
+- **Fix: the bag check opened behind the settings window**, so clicking "Bag check" there looked like it did nothing. It now opens on top.
+
 # MagePlan 1.22.2
 
 - The Walk on Air timer setting only shows on Skyborne characters (High Order and Windshaper), since nobody else has the racial.
