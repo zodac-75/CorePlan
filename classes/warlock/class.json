@@ -3,6 +3,7 @@
   "color": "9482c9",
   "slash": "wl",
   "class": "WARLOCK",
+  "curseId": 1792150,
   "modules": [
     "Combat.lua"
   ],

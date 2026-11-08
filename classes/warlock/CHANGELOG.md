@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta3
+
+- First version on CurseForge.
+
 # WarlockPlan 1.0.0-beta2
 
 - The real WarlockPlan logo and minimap icon.
