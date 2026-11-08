@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta40
+
+- The Walk on Air timer setting only shows on Skyborne characters (High Order and Windshaper), since nobody else has the racial.
+
 # WarriorPlan 1.0.0-beta39
 
 - **Fix: a missing buff could stay hidden** when the game hides the aura list (secret values in WoW Forever). The buff watcher now asks for the buff by name, so the icon shows up again (for you and your party).

@@ -66,6 +66,13 @@ if not ns.PARTY_BUFFS then
   end
 end
 
+-- Walk on Air is a Skyborne racial: nobody else gets the timer setting.
+if not (ns.HasGlide and ns.HasGlide()) then
+  for i = #FEATURES, 1, -1 do
+    if FEATURES[i].key == "MM_GLIDE" then table.remove(FEATURES, i) end
+  end
+end
+
 -- Classes without mana get no drink settings.
 if ns.NO_MANA then
   for i = #FEATURES, 1, -1 do

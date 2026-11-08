@@ -5,6 +5,22 @@
 local _, ns = ...
 
 local SPELL = "Walk on Air"
+
+-- Only Skyborne have Walk on Air (both High Order and Windshaper), so the setting is
+-- hidden for everyone else.
+function ns.HasGlide()
+  local ok, race, raceFile = pcall(UnitRace, "player")
+  if ok then
+    local r = tostring(race or "") .. " " .. tostring(raceFile or "")
+    if r:find("Skyborne") or r:find("Windshaper") or r:find("High ?Order") then return true end
+  end
+  local _, id = ns.SpellInfo(SPELL)
+  if id and IsPlayerSpell then
+    local okK, known = pcall(IsPlayerSpell, id)
+    if okK and known == true then return true end
+  end
+  return false
+end
 local DURATION = 10
 local WARN = 3
 

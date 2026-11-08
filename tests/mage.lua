@@ -1058,6 +1058,15 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
 end
+do
+  if not ns.HasGlide() then table.insert(errors, "Skyborne borde ha Walk on Air") end
+  local oldRace = UnitRace
+  UnitRace = function() return "Human", "Human", 1 end
+  if ns.HasGlide() then table.insert(errors, "Human ska inte ha Walk on Air") end
+  UnitRace = function() return "Windshaper", "SkyborneHorde", 31 end
+  if not ns.HasGlide() then table.insert(errors, "Windshaper borde ha Walk on Air") end
+  UnitRace = oldRace
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end
