@@ -1,3 +1,17 @@
+# WarlockPlan 1.0.0-beta11
+
+- **More easter eggs** (with a friend who also runs a Plan addon):
+  - `/train`: a little train chugs across the screen.
+  - `/sleep`: Z z z floats up.
+  - `/laugh`: bouncing HA HA HA.
+  - `/salute` or `/applaud`: fireworks.
+  - `/cry`: a rain cloud drizzles.
+  - `/flex`: a strong arm and gold stars.
+- **Dance party:** `/dance` at each other within 10 seconds and you both get a much bigger disco with confetti.
+- **Ding party:** when you level up you get fireworks, and so does everyone in your group or guild who runs a Plan addon ("Jennie reached level 30!").
+- **Talent plan complete:** a little celebration when the last talent of your plan goes in.
+- **Easter eggs on/off:** a new box under Fun in the settings (or `/wl eggs`) turns all of it off.
+
 # WarlockPlan 1.0.0-beta10
 
 - Buff watcher: groundwork for party buffs (shown for classes with a group buff: mage, druid, paladin).

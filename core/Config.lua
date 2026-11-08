@@ -50,6 +50,7 @@ local FEATURES = {
   { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
   { group = "CAT_WINDOWS", key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
   { group = "CAT_WINDOWS", key = "CFG_MINIMAP", on = function() return not ns.db.minimapHidden end, cmd = "minimap" },
+  { group = "CAT_FUN", key = "MM_EGGS", on = function() return not ns.db.eggsOff end, cmd = "eggs" },
   -- Secondary skills in the crafting assistant (ticked = shown).
   { group = "CAT_PROFS", key = "MM_SEC_COOK", on = function() return ns.SecondaryShown("Cooking") end, cmd = "cooking" },
   { group = "CAT_PROFS", key = "MM_SEC_FA", on = function() return ns.SecondaryShown("First Aid") end, cmd = "firstaid" },
@@ -380,6 +381,7 @@ local function CreateConfig()
     { head = "CAT_ITEMS", checks = Group(FEATURES, "CAT_ITEMS") },
     { head = "CAT_LEVEL", checks = Group(FEATURES, "CAT_LEVEL") },
     { head = "CAT_WINDOWS", checks = Group(FEATURES, "CAT_WINDOWS") },
+    { head = "CAT_FUN", checks = Group(FEATURES, "CAT_FUN") },
   })
   Column(COL[2], {
     { head = "CAT_PLAN", sels = PLAN_SELECTORS },

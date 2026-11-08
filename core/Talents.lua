@@ -535,10 +535,20 @@ ns.RegisterCommand("talentui", false, DebugTalentUI)
 
 function ns.RefreshTalentGlow() pcall(UpdateGlow) end
 
+-- Celebrate when the last talent of the plan goes in (not when you log in already done).
+local wasDone
+local function CheckPlanDone()
+  local ok, name = pcall(ns.NextTalent)
+  local done = ok and name == "done"
+  if done and wasDone == false and ns.CelebratePlanDone then ns.CelebratePlanDone() end
+  wasDone = done
+end
+
 local function OnPointsChanged()
   cachedMap = nil
   ns.RefreshMain()
   pcall(UpdateGlow)
+  C_Timer.After(0.5, CheckPlanDone)
 end
 
 ns.RegisterModule(function()

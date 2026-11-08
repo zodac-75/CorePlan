@@ -1,3 +1,17 @@
+# PaladinPlan 1.0.0-beta32
+
+- **More easter eggs** (with a friend who also runs a Plan addon):
+  - `/train`: a little train chugs across the screen.
+  - `/sleep`: Z z z floats up.
+  - `/laugh`: bouncing HA HA HA.
+  - `/salute` or `/applaud`: fireworks.
+  - `/cry`: a rain cloud drizzles.
+  - `/flex`: a strong arm and gold stars.
+- **Dance party:** `/dance` at each other within 10 seconds and you both get a much bigger disco with confetti.
+- **Ding party:** when you level up you get fireworks, and so does everyone in your group or guild who runs a Plan addon ("Jennie reached level 30!").
+- **Talent plan complete:** a little celebration when the last talent of your plan goes in.
+- **Easter eggs on/off:** a new box under Fun in the settings (or `/pal eggs`) turns all of it off.
+
 # PaladinPlan 1.0.0-beta31
 
 - **Party buffs:** the buff watcher also shows your party members who are missing your buff (a blessing on everyone: Wisdom for mana users, Might for the rest, and any blessing counts), one icon each with their name on it. Click the icon to cast it on them; it's faded when they're out of range. Turn it on or off with "Buff my party too" under Combat and buffs.

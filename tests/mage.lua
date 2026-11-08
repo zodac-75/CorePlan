@@ -594,6 +594,38 @@ do
   if table.concat(SIM_ADDONMSG, ", ") ~= want then table.insert(errors, "emote-meddelanden: " .. table.concat(SIM_ADDONMSG, ", ")) end
 end
 
+-- New emotes, dance party, ding party, talent plan done, and the off switch.
+do
+  local printed = {}
+  local oldPrint = ns.Print
+  ns.Print = function(m) table.insert(printed, tostring(m)) end
+  ns.debug = true
+  for _, e in ipairs({ "TRAIN", "SLEEP", "LAUGH", "SALUTE", "CRY", "FLEX", "PARTY" }) do
+    printed = {}
+    ns.ShowEmoteEgg(e, "Tester")
+    if #printed > 0 then table.insert(errors, "emote " .. e .. ": " .. printed[1]) end
+  end
+  ns.RunCommand("egg", "ding"); ns.RunCommand("egg", "plan")
+  if #printed > 0 then table.insert(errors, "ding/plan: " .. printed[1]) end
+  -- Dance party: I danced at Kissy above; Kissy dances back within 10 s.
+  local before = #SIM_ADDONMSG
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:DANCE", "WHISPER", "Kissy")
+  local sent = SIM_ADDONMSG[before + 1] or ""
+  print("  dansfest skickade: " .. sent)
+  if not sent:find("EB:PARTY", 1, true) then table.insert(errors, "dance party: " .. sent) end
+  -- A friend dings.
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "D:30", "PARTY", "Jennie")
+  fire("PLAYER_LEVEL_UP", 31)
+  -- Off: no effects and no replies.
+  ns.RunCommand("eggs")
+  before = #SIM_ADDONMSG
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:HUG", "WHISPER", "Pal-Realm")
+  if #SIM_ADDONMSG ~= before then table.insert(errors, "eggs off but still answered") end
+  ns.RunCommand("eggs")
+  ns.debug = nil
+  ns.Print = oldPrint
+end
+
 -- PROFSELECT: pick professions in the settings
 do
   local saved = ns.db.profs

@@ -13,7 +13,7 @@ local KEYS = {
   -- windows
   "pos", "posW", "posS", "hidden",
   "craftPos", "craftPosW", "craftPosS",
-  "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "glideOff", "secShow", "partyBuffsOff", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
+  "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
   "arrowPos", "dungeonPos", "configPos",
   "minimapAngle", "minimapHidden",
   -- look
