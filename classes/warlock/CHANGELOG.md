@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta15
+
+- **Fix: the drink alert never showed on WoW Forever.** Forever hides your current mana from addons, so the addon couldn't tell you were low. Now the addon gives the game a rule ("show below your drink %") and the game shows or hides the alert itself, the official way to handle hidden values.
+
 # WarlockPlan 1.0.0-beta14
 
 - Drink alert: reports problems in chat instead of failing silently, and `/wl drinktest` shows what it sees (for bug reports).

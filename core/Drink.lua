@@ -5,6 +5,7 @@
 local _, ns = ...
 
 local f, big, small
+local sf, sbig -- the drink line when the game hides your mana (see SecretDrink)
 local DRINK_BUFFS = { ["Drink"] = true, ["Food & Drink"] = true, ["Refreshment"] = true }
 
 -- Mana in percent, or nil when the game hides the value from addons ("secret" values).
@@ -61,8 +62,59 @@ local function Line(text, icon, big)
   return tag .. text
 end
 
+---------------------------------------------------------------------------
+-- When the game hides your current mana from addons ("secret"), the addon can't compare
+-- it with your drink %. Instead it hands the game a rule, a curve that is 1 below your
+-- drink % and 0 above it, and lets the game set the alert's transparency from it: the
+-- alert shows when you're low without the addon ever seeing the number.
+---------------------------------------------------------------------------
+local curve, curveAt
+
+local function LowCurve()
+  local at = ns.db.drinkPct or 40
+  if curve and curveAt == at then return curve end
+  if not (C_CurveUtil and C_CurveUtil.CreateCurve) then return nil end
+  local ok, c = pcall(C_CurveUtil.CreateCurve)
+  if not ok or not c then return nil end
+  if Enum and Enum.LuaCurveType and Enum.LuaCurveType.Step and c.SetType then
+    pcall(c.SetType, c, Enum.LuaCurveType.Step)
+  end
+  local x = at / 100
+  -- Also right if the curve is linear: 1 up to just under the line, then 0.
+  for _, pt in ipairs({ { 0, 1 }, { math.max(0, x - 0.001), 1 }, { x, 0 }, { 1, 0 } }) do
+    local okP = pcall(c.AddPoint, c, pt[1], pt[2])
+    if not okP then return nil end
+  end
+  curve, curveAt = c, at
+  return c
+end
+
+local function SecretDrink()
+  if not (sf and UnitPowerPercent) then return false end
+  local c = LowCurve()
+  if not c then return false end
+  local ok, v = pcall(UnitPowerPercent, "player", 0, false, c)
+  if not ok or v == nil then return false end
+  if not pcall(sf.SetAlpha, sf, v) then return false end
+  local tag = "|TInterface\\Icons\\INV_Drink_07:30:30:0:0:64:64:5:59:5:59|t |cff66ccff"
+  local okP, pct = pcall(UnitPowerPercent, "player", 0, false, CurveConstants and CurveConstants.ScaleTo100)
+  local shown = okP and pct ~= nil and pcall(sbig.SetFormattedText, sbig, tag .. ns.T("DRINK") .. "|r", pct)
+  if not shown then sbig:SetText(tag .. ns.T("DRINK_LOW") .. "|r") end
+  sf:Show()
+  return true
+end
+
 local function Check()
   if not f then return end
+  -- Hidden mana: the game decides when the drink line shows (out of combat, not drinking).
+  local secretShown = false
+  if not ns.db.drinkOff and ns.HasMana() and not ns.ManaPct()
+    and not (UnitAffectingCombat("player") or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
+      or (UnitOnTaxi and UnitOnTaxi("player"))) then
+    local drinking = ns.ForEachAura("player", "HELPFUL", function(n) return DRINK_BUFFS[n] end)
+    if not drinking then secretShown = SecretDrink() end
+  end
+  if not secretShown and sf then sf:Hide() end
   local busy = UnitAffectingCombat("player") or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))
     or (UnitOnTaxi and UnitOnTaxi("player"))
   local lines = {}
@@ -141,6 +193,13 @@ ns.RegisterModule(function()
   small = f:CreateFontString(nil, "OVERLAY")
   small:SetFont(STANDARD_TEXT_FONT, 15, "OUTLINE")
   small:SetPoint("TOP", big, "BOTTOM", 0, -4)
+  sf = CreateFrame("Frame", "@ADDON@DrinkFrame2", UIParent)
+  sf:SetSize(380, 32)
+  sf:SetPoint("BOTTOM", f, "TOP", 0, 2)
+  sbig = sf:CreateFontString(nil, "OVERLAY")
+  sbig:SetFont(STANDARD_TEXT_FONT, 22, "OUTLINE")
+  sbig:SetPoint("CENTER")
+  sf:Hide()
   flash = f:CreateAnimationGroup()
   local a = flash:CreateAnimation("Alpha")
   a:SetFromAlpha(0.2)

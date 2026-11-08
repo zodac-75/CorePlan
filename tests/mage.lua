@@ -47,6 +47,8 @@ end
 function methods:GetTexture() return rawget(self, "__tex") end
 function methods:UnregisterEvent(e) self.__events[e] = nil end
 function methods:SetText(t) self.__text = t or "" end
+function methods:SetAlpha(a) self.__alpha = a end
+function methods:GetAlpha() return self.__alpha or 1 end
 function methods:GetText() return self.__text end
 function methods:GetStringHeight() local _, n = (self.__text or ""):gsub("\n", ""); return (n + 1) * 12 end
 function methods:GetWidth() return self.__w or 31 end
@@ -694,6 +696,33 @@ do
   end
   table.insert(chat, "[sim] drink alert: " .. txt)
   if not (df and df.__shown and txt:find("INV_Drink", 1, true)) then table.insert(errors, "drink alert not shown with icon: " .. txt) end
+end
+-- Hidden (secret) mana, as on WoW Forever: the game sets the alert's transparency.
+do
+  local oldP, oldPP, oldCU, oldCC, oldIS = UnitPower, UnitPowerPercent, C_CurveUtil, CurveConstants, issecretvalue
+  local SECRET = {}
+  issecretvalue = function(v) return v == SECRET end
+  UnitPower = function() return SECRET end
+  local made
+  C_CurveUtil = { CreateCurve = function()
+    made = { pts = {} }
+    function made:SetType() end
+    function made:AddPoint(x, y) table.insert(self.pts, { x, y }) end
+    function made:Eval(x) local y = 0; for _, p in ipairs(self.pts) do if x >= p[1] then y = p[2] end end; return y end
+    return made
+  end }
+  CurveConstants = { ScaleTo100 = { Eval = function(_, x) return x * 100 end } }
+  local manaFrac = 0.2
+  -- The step curve gives 1/0 (which the game would also keep secret); the % itself is secret.
+  UnitPowerPercent = function(_, _, _, c) if c and c.pts then return c:Eval(manaFrac) end return SECRET end
+  ns.RefreshRestAlert()
+  local s2 = rawget(_G, "MagePlanDrinkFrame2")
+  table.insert(chat, "[sim] secret mana 20%: shown=" .. tostring(s2 and s2.__shown) .. " alpha=" .. tostring(s2 and s2.__alpha))
+  if not (s2 and s2.__shown) then table.insert(errors, "secret-mana drink alert not shown") end
+  manaFrac = 0.9; ns.RefreshRestAlert()
+  table.insert(chat, "[sim] secret mana 90%: alpha=" .. tostring(s2 and s2.__alpha))
+  UnitPower, UnitPowerPercent, C_CurveUtil, CurveConstants, issecretvalue = oldP, oldPP, oldCU, oldCC, oldIS
+  ns.RefreshRestAlert()
 end
 SIM.setMana(900); fire("UNIT_POWER_UPDATE", "player"); now = now + 1; runTimers(now)
 table.insert(chat, "[sim] drink shown at 90%: " .. tostring(df and df.__shown))
