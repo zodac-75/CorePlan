@@ -171,22 +171,70 @@ ns.BUFF_WATCH = {
       return name:sub(-5) == " Aura"
     end },
   { spells = function(plan)
+      local pick = ns.BlessingFor("player")
+      if pick then return { pick } end
       if plan == "holy" then return { "Blessing of Wisdom", "Blessing of Might" } end
       return { "Blessing of Might", "Blessing of Wisdom" }
     end,
-    match = function(name) return name:find("Blessing of ", 1, true) ~= nil end },
+    match = function(name) return ns.BlessingMatches(name, "player") end,
+    cycle = function() ns.CycleBlessing("player") end,
+    choice = function() return ns.BlessingChoice("player") end },
   { spells = { "Righteous Fury" }, buffs = { "Righteous Fury" },
     only = function() return ns.PlanKey() == "prot" end },
 }
 
--- Party buffs: a blessing on everyone in your party (Wisdom for mana users, Might for
--- the rest); any blessing counts.
+-- Blessings per player: right-click a blessing icon in the buff watcher to pick one for
+-- that player (remembered by name); "Auto" = Wisdom for mana users, Might for the rest,
+-- and then any blessing counts.
+local BLESSINGS = { "Blessing of Wisdom", "Blessing of Might", "Blessing of Kings",
+  "Blessing of Salvation", "Blessing of Light", "Blessing of Sanctuary" }
+
+local function NameOf(unit)
+  local ok, n = pcall(UnitName, unit)
+  if ok and type(n) == "string" and not (issecretvalue and issecretvalue(n)) then return n end
+end
+
+function ns.BlessingFor(unit)
+  local n = NameOf(unit)
+  local pick = n and ns.db.blessFor and ns.db.blessFor[n]
+  if pick and ns.SpellInfo(pick) then return pick end
+  return nil
+end
+
+function ns.BlessingChoice(unit)
+  return ns.BlessingFor(unit) or ns.T("BLESS_AUTO")
+end
+
+-- With a pick, only that blessing (or its Greater version) counts; on Auto any does.
+function ns.BlessingMatches(name, unit)
+  local pick = ns.BlessingFor(unit)
+  if pick then return name == pick or name == "Greater " .. pick end
+  return name:find("Blessing of ", 1, true) ~= nil
+end
+
+function ns.CycleBlessing(unit)
+  local n = NameOf(unit)
+  if not n then return end
+  ns.db.blessFor = ns.db.blessFor or {}
+  local list = { false }
+  for _, b in ipairs(BLESSINGS) do if ns.SpellInfo(b) then table.insert(list, b) end end
+  local cur = 1
+  for i, b in ipairs(list) do if b == (ns.db.blessFor[n] or false) then cur = i end end
+  ns.db.blessFor[n] = list[(cur % #list) + 1] or nil
+  ns.Print(ns.T("BLESS_SET", n, ns.db.blessFor[n] or ns.T("BLESS_AUTO")))
+end
+
+-- Party buffs: a blessing on everyone in your party.
 ns.PARTY_BUFFS = {
-  { spells = function(_, isMana)
+  { spells = function(unit, isMana)
+      local pick = ns.BlessingFor(unit)
+      if pick then return { pick } end
       if isMana then return { "Blessing of Wisdom", "Blessing of Might" } end
       return { "Blessing of Might" }
     end,
-    match = function(n) return n:find("Blessing of ", 1, true) ~= nil end },
+    match = function(n, unit) return ns.BlessingMatches(n, unit) end,
+    cycle = function(unit) ns.CycleBlessing(unit) end,
+    choice = function(unit) return ns.BlessingChoice(unit) end },
 }
 
 -- Merchant's Favor goals shown in the plan window.

@@ -87,7 +87,7 @@ local function Needed()
       else
         local best
         for name, l in pairs(buffs) do
-          local hit = (e.match and e.match(name)) or false
+          local hit = (e.match and e.match(name, "player")) or false
           if not hit and e.buffs then
             for _, b in ipairs(e.buffs) do if b == name then hit = true break end end
           end
@@ -127,7 +127,7 @@ local function Needed()
           if spell and not (e.mana and isMana == false) then
             local best
             for name, l in pairs(theirs) do
-              local hit = (e.match and e.match(name)) or false
+              local hit = (e.match and e.match(name, unit)) or false
               if not hit and e.buffs then
                 for _, b in ipairs(e.buffs) do if b == name then hit = true break end end
               end
@@ -169,7 +169,8 @@ local function MakeButton(i)
   local b = CreateFrame("Button", "@ADDON@Buff" .. i, holder, "SecureActionButtonTemplate")
   b:SetSize(SIZE, SIZE)
   b:RegisterForClicks("AnyUp", "AnyDown")
-  b:SetAttribute("type", "spell")
+  -- Left-click casts; right-click is ours (e.g. pick a blessing for that player).
+  b:SetAttribute("type1", "spell")
   b:SetAttribute("unit", "player")
   b.icon = b:CreateTexture(nil, "ARTWORK")
   b.icon:SetAllPoints()
@@ -196,9 +197,20 @@ local function MakeButton(i)
     local _, id = ns.SpellInfo(self.spell)
     if id and GameTooltip.SetSpellByID then GameTooltip:SetSpellByID(id) else GameTooltip:SetText(self.spell) end
     GameTooltip:AddLine(self.whoName and ns.T("BW_CLICK_ON", self.whoName) or ns.T("BW_CLICK"), 0.6, 0.8, 1)
+    if self.entry and self.entry.choice then
+      local ok, c = pcall(self.entry.choice, self.unit or "player")
+      GameTooltip:AddLine(ns.T("BW_RIGHT_PICK", ok and c or "?"), 0.6, 0.8, 1)
+    end
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+  b:HookScript("OnMouseUp", function(self, mouse)
+    if mouse ~= "RightButton" or not (self.entry and self.entry.cycle) then return end
+    if InCombatLockdown and InCombatLockdown() then ns.Print(ns.T("BW_NOT_IN_COMBAT")) return end
+    pcall(self.entry.cycle, self.unit or "player")
+    ns.RefreshBuffWatch()
+    if GameTooltip and GameTooltip:IsOwned(self) then self:GetScript("OnEnter")(self) end
+  end)
   -- While unlocked, dragging an icon moves the whole row.
   b:RegisterForDrag("LeftButton")
   b:SetScript("OnDragStart", function()
@@ -250,12 +262,12 @@ local function Update()
 
   for i, n in ipairs(list) do
     local b = buttons[i] or MakeButton(i)
-    b.spell, b.key, b.whoName = n.spell, n.key, n.who
-    b:SetAttribute("spell", n.spell)
+    b.spell, b.key, b.whoName, b.entry, b.unit = n.spell, n.key, n.who, n.entry, n.unit
+    b:SetAttribute("spell1", n.spell)
     b:SetAttribute("unit", n.unit or "player")
     b.who:SetText(n.who and n.who:sub(1, 7) or "")
     -- No casting while you're moving it.
-    b:SetAttribute("type", (not unlocked) and "spell" or nil)
+    b:SetAttribute("type1", (not unlocked) and "spell" or nil)
     b.icon:SetTexture(ns.SpellIcon(n.spell))
     -- Red frame: missing. Yellow frame: running out.
     if n.left == 0 then b.border:SetColorTexture(1, 0.25, 0.25, 0.9)

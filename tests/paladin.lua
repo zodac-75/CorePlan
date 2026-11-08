@@ -154,7 +154,7 @@ C_ChatInfo = { RegisterAddonMessagePrefix = function() return true end,
 
 -- Spells: namn -> {id, rank}
 local spells = {
-  ["Holy Strike"] = { 20271, 2 }, ["Seal of Righteousness"] = { 20154, 2 }, ["Blessing of Might"] = { 19740, 2 },
+  ["Holy Strike"] = { 20271, 2 }, ["Seal of Righteousness"] = { 20154, 2 }, ["Blessing of Might"] = { 19740, 2 }, ["Blessing of Wisdom"] = { 19742, 1 }, ["Blessing of Kings"] = { 20217, 1 },
   ["Judgement"] = { 20272, 1 }, ["Righteous Fury"] = { 25780, 1 }, ["Hammer of Justice"] = { 853, 1 },
   ["Exorcism"] = { 879, 1 }, ["Hammer of Wrath"] = { 24275, 1 }, ["Holy Light"] = { 639, 3 },
   ["Consecration"] = { 26573, 1 }, ["Holy Shield"] = { 20925, 1 }, ["Devotion Aura"] = { 465, 1 }, ["Retribution Aura"] = { 7294, 1 },
@@ -750,6 +750,57 @@ do
   if SIM_SOUNDS == 0 then table.insert(errors, "inget ljud trots alertSound = all") end
   ns.db.alertSound = nil
   UnitAffectingCombat = function() return false end
+end
+print("--- Blessing per spelare ---")
+do
+  local oldIG, oldUE, oldC, oldU = IsInGroup, UnitExists, C_UnitAuras, UnitAura
+  IsInGroup = function() return true end
+  UnitExists = function(u) return u == "target" or u == "player" or u == "party1" end
+  UnitIsConnected = function() return true end
+  UnitPowerType = function() return 0 end
+  UnitName = function(u) if u == "party1" then return "Jennie" end return "Me" end
+  UnitInRange = function() return true, true end
+  -- I have Might and Devotion; Jennie has Wisdom.
+  local mine = { "Blessing of Might", "Devotion Aura", "Righteous Fury" }
+  if C_UnitAuras then
+    C_UnitAuras = { GetAuraDataByIndex = function(u, i)
+      if u == "player" and mine[i] then return { name = mine[i], expirationTime = 0 } end
+      if u == "party1" and i == 1 then return { name = "Blessing of Wisdom", expirationTime = 0 } end
+    end }
+  else
+    UnitAura = function(u, i)
+      if u == "player" and mine[i] then return mine[i], 0, 0, nil, 0, 0 end
+      if u == "party1" and i == 1 then return "Blessing of Wisdom", 0, 0, nil, 0, 0 end
+    end
+  end
+  ns.db.buffsOff = false; ns.db.shatterUnlocked = false; ns.db.blessFor = nil
+  local function shown()
+    local t = {}
+    for i = 1, 8 do
+      local b = rawget(_G, "PaladinPlanBuff" .. i)
+      if b and b.__shown then table.insert(t, { b = b, s = tostring(rawget(b, "spell")) .. ">" .. tostring(rawget(b, "whoName"))  }) end
+    end
+    return t
+  end
+  ns.RefreshBuffWatch()
+  print("  auto: " .. #shown() .. " ikoner")
+  if #shown() ~= 0 then table.insert(errors, "blessing auto: Jennie has Wisdom, nothing should show") end
+  -- Pick Might for Jennie: she has Wisdom, so now she needs Might.
+  ns.db.blessFor = { Jennie = "Blessing of Might" }
+  ns.RefreshBuffWatch()
+  local s = shown()
+  print("  Might vald: " .. (s[1] and s[1].s or "-"))
+  if not (s[1] and s[1].s == "Blessing of Might>Jennie") then table.insert(errors, "blessing pick: " .. (s[1] and s[1].s or "none")) end
+  -- Right-click the icon: next blessing (Kings).
+  if s[1] then
+    local up = s[1].b.__scripts.OnMouseUp
+    if up then up(s[1].b, "RightButton") end
+  end
+  print("  efter högerklick: " .. tostring(ns.db.blessFor.Jennie))
+  if ns.db.blessFor.Jennie ~= "Blessing of Kings" then table.insert(errors, "right-click cycle: " .. tostring(ns.db.blessFor.Jennie)) end
+  ns.db.blessFor = nil
+  IsInGroup, UnitExists, C_UnitAuras, UnitAura = oldIG, oldUE, oldC, oldU
+  ns.RefreshBuffWatch()
 end
 print("--- Yrkestest (PROFTEST) ---")
 GetNumSkillLines, GetSkillLineInfo = nil, nil

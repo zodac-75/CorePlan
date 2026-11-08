@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta32
+
+- Buff watcher: right-click support for icons that have a choice (used by PaladinPlan's blessings).
+
 # WarriorPlan 1.0.0-beta31
 
 - **More easter eggs** (with a friend who also runs a Plan addon):

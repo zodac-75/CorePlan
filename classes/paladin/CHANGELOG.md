@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0-beta33
+
+- **Pick a blessing per player:** right-click a blessing icon in the buff watcher (yours or a party member's) to cycle Auto, Wisdom, Might, Kings, Salvation and the others you know. The addon remembers it by name, so Jennie always gets Wisdom and your warrior friend always gets Might. With a pick, only that blessing counts; on Auto it's Wisdom for mana users, Might for the rest, and any blessing counts. Left-click still casts it.
+
 # PaladinPlan 1.0.0-beta32
 
 - **More easter eggs** (with a friend who also runs a Plan addon):

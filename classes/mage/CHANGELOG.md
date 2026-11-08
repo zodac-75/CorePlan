@@ -1,3 +1,7 @@
+# MagePlan 1.20.1
+
+- Buff watcher: right-click support for icons that have a choice (used by PaladinPlan's blessings).
+
 # MagePlan 1.20.0
 
 - **More easter eggs** (with a friend who also runs a Plan addon):
