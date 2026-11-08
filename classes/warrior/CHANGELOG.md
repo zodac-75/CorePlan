@@ -1,3 +1,7 @@
+# WarriorPlan 1.0.0-beta34
+
+- Drink alert: reports problems in chat instead of failing silently, and `/war drinktest` shows what it sees (for bug reports).
+
 # WarriorPlan 1.0.0-beta33
 
 - Out-of-combat alert reworked (warriors have no drink reminder, nothing changes for you).

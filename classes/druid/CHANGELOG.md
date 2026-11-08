@@ -1,3 +1,7 @@
+# DruidPlan 1.0.0-beta41
+
+- Drink alert: reports problems in chat instead of failing silently, and `/dp drinktest` shows what it sees (for bug reports).
+
 # DruidPlan 1.0.0-beta40
 
 - **Real drink alert:** low mana out of combat now shows a big "Drink! Mana 23%" with a drink icon in the middle of the screen, like the combat helper's call-outs, with a short flash and the alert sound (when sounds are on for all reminders). It hides in combat, while you drink and when you're full. Move it with the "Move" switch, mouse wheel for size.

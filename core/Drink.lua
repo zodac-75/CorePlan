@@ -101,7 +101,16 @@ local function Check()
   end
   shownKey = key
 end
-ns.RefreshRestAlert = function() pcall(Check) end
+-- Runs Check and reports the first error in chat instead of failing silently.
+local errShown
+local function SafeCheck()
+  local ok, err = pcall(Check)
+  if not ok and not errShown then
+    errShown = true
+    ns.Print(ns.T("ERROR", tostring(err)))
+  end
+end
+ns.RefreshRestAlert = SafeCheck
 
 ns.RegisterModule(function()
   f = CreateFrame("Frame", "@ADDON@DrinkFrame", UIParent)
@@ -148,7 +157,7 @@ ns.RegisterModule(function()
   ev:RegisterEvent("BAG_UPDATE")
   ev:SetScript("OnEvent", function(_, event, unit)
     if (event == "UNIT_POWER_UPDATE" or event == "UNIT_AURA") and unit ~= "player" then return end
-    ns.Debounce("drink", 0.2, Check)
+    ns.Debounce("drink", 0.2, SafeCheck)
   end)
   -- The "Move" switch shows a preview; check now and then so it follows.
   local acc = 0
@@ -156,14 +165,14 @@ ns.RegisterModule(function()
     acc = acc + e
     if acc < 1 then return end
     acc = 0
-    pcall(Check)
+    SafeCheck()
   end)
 end)
 
 ns.RegisterCommand("drink", not ns.NO_MANA, function()
   ns.db.drinkOff = not ns.db.drinkOff
   ns.Print(ns.db.drinkOff and ns.T("DRINK_OFF") or ns.T("DRINK_ON"))
-  pcall(Check)
+  SafeCheck()
 end)
 
 ns.RegisterCommand("drinkat", not ns.NO_MANA, function(rest)
@@ -171,6 +180,27 @@ ns.RegisterCommand("drinkat", not ns.NO_MANA, function(rest)
   if n and n > 0 and n < 100 then
     ns.db.drinkPct = n
     ns.Print(ns.T("DRINK_SET", n))
-    pcall(Check)
+    SafeCheck()
   end
+end)
+
+-- /@SLASH@ drinktest: what the drink alert sees right now (for bug reports).
+ns.RegisterCommand("drinktest", false, function()
+  local okP, pct = pcall(ns.ManaPct)
+  local raw = {}
+  for _, fn in ipairs({ "UnitPower", "UnitPowerMax", "UnitPowerPercent" }) do
+    local g = _G[fn]
+    if g then
+      local ok, v = pcall(g, "player", 0)
+      raw[#raw + 1] = fn .. "=" .. ((issecretvalue and ok and issecretvalue(v)) and "secret" or tostring(ok and v or "error"))
+    else
+      raw[#raw + 1] = fn .. "=missing"
+    end
+  end
+  ns.Print(string.format("drink: off=%s mana%%=%s (at %s%%) combat=%s shown=%s",
+    tostring(ns.db.drinkOff), okP and tostring(pct) or ("error " .. tostring(pct)),
+    tostring(ns.db.drinkPct or 40), tostring(UnitAffectingCombat("player")), tostring(f and f:IsShown())))
+  ns.Print("  " .. table.concat(raw, "  "))
+  local ok, err = pcall(Check)
+  if not ok then ns.Print("  error: " .. tostring(err)) end
 end)
