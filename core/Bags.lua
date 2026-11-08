@@ -553,6 +553,114 @@ ns.RegisterModule(function()
   end)
 end)
 
+---------------------------------------------------------------------------
+-- A small button on your open bags. Our own frame (never parented to Blizzard's),
+-- only anchored to the bag frame that is showing.
+---------------------------------------------------------------------------
+local bagBtn
+-- Blizzard's bags and the bag addons we know. Anything else: a name scan for the
+-- usual patterns, once, when a bag opens and none of these is showing.
+local BAG_FRAMES = {
+  "ContainerFrameCombinedBags", "ContainerFrame1",
+  "Baganator_SingleViewBackpackViewFramedefault", "Baganator_SingleViewBackpackViewFrame",
+  "Baganator_BackpackViewFrame", "BagnonInventory1", "BagnonInventoryFrame1",
+  "AdiBagsContainer1", "ARKINV_Frame1", "BetterBagsBagBackpack", "ElvUI_ContainerFrame",
+}
+local BAG_PATTERNS = { "^Baganator.*Backpack.*Frame", "^Bagnon.*Inventory", "^BetterBags.*Backpack", "^AdiBagsContainer1$" }
+local scanned = {}
+
+local function Visible(f)
+  return type(f) == "table" and f.IsVisible and f:IsVisible()
+end
+
+local function FindBagFrame()
+  for _, name in ipairs(BAG_FRAMES) do
+    if Visible(_G[name]) then return _G[name] end
+  end
+  for name in pairs(scanned) do
+    if Visible(_G[name]) then return _G[name] end
+  end
+end
+
+local function ScanBagAddons()
+  for name, f in pairs(_G) do
+    if type(name) == "string" and type(f) == "table" and not scanned[name] then
+      for _, p in ipairs(BAG_PATTERNS) do
+        if name:find(p) and f.IsVisible then scanned[name] = true break end
+      end
+    end
+  end
+end
+
+local placedOn
+local function PlaceBagButton()
+  if not bagBtn then return end
+  local f = not ns.db.bagBtnOff and FindBagFrame() or nil
+  if not f then
+    placedOn = nil
+    bagBtn:Hide()
+    return
+  end
+  if f ~= placedOn then
+    placedOn = f
+    bagBtn:ClearAllPoints()
+    bagBtn:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", -6, 2)
+  end
+  bagBtn:Show()
+end
+ns.PlaceBagButton = PlaceBagButton
+
+local function MakeBagButton()
+  bagBtn = CreateFrame("Button", "@ADDON@BagButton", UIParent)
+  bagBtn:SetSize(26, 26)
+  bagBtn:SetFrameStrata("HIGH")
+  local icon = bagBtn:CreateTexture(nil, "ARTWORK")
+  icon:SetAllPoints()
+  icon:SetTexture("Interface\\Icons\\INV_Enchant_Disenchant")
+  icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  local hl = bagBtn:CreateTexture(nil, "HIGHLIGHT")
+  hl:SetAllPoints()
+  hl:SetColorTexture(1, 1, 1, 0.2)
+  bagBtn:SetScript("OnClick", function() GameTooltip:Hide(); ns.ToggleBags() end)
+  bagBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText("|cff@COLOR@@ADDON@|r - " .. ns.T("BAG_TITLE"))
+    GameTooltip:AddLine(ns.T("BAG_BTN_TT"), 1, 1, 1)
+    GameTooltip:Show()
+  end)
+  bagBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  bagBtn:Hide()
+  -- Bag addons make their frames whenever they like, so look twice a second
+  -- (a handful of lookups) instead of hooking frames that may not exist yet.
+  local watcher = CreateFrame("Frame")
+  local acc, scanSoon = 0, false
+  -- You opened your bags (key B or the bag bar) but we found no frame: look once for
+  -- a bag addon we don't know by name.
+  for _, fn in ipairs({ "ToggleAllBags", "OpenAllBags", "ToggleBackpack", "OpenBackpack" }) do
+    if _G[fn] then hooksecurefunc(fn, function() scanSoon = true; acc = 0.3 end) end
+  end
+  watcher:SetScript("OnUpdate", function(_, elapsed)
+    acc = acc + (elapsed or 0)
+    if acc < 0.5 then return end
+    acc = 0
+    local ok = pcall(PlaceBagButton)
+    if ok and scanSoon then
+      scanSoon = false
+      if not placedOn and not ns.db.bagBtnOff then
+        pcall(ScanBagAddons)
+        pcall(PlaceBagButton)
+      end
+    end
+  end)
+end
+
+ns.RegisterModule(function() pcall(MakeBagButton) end)
+
+ns.RegisterCommand("bagbutton", true, function()
+  ns.db.bagBtnOff = not ns.db.bagBtnOff
+  PlaceBagButton()
+end)
+
 ns.RegisterCommand("de", true, function() ns.ToggleBags() end)
 
 ns.RegisterCommand("bagauto", true, function()

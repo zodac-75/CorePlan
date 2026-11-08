@@ -27,7 +27,7 @@ local function CreateButton()
   btn:SetSize(31, 31)
   btn:SetFrameStrata("MEDIUM")
   btn:SetFrameLevel(8)
-  btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  btn:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
   btn:RegisterForDrag("LeftButton")
   btn:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 
@@ -50,6 +50,8 @@ local function CreateButton()
     GameTooltip:Hide()
     if mouse == "RightButton" then
       ns.ToggleConfig()
+    elseif mouse == "MiddleButton" then
+      if ns.ToggleBags then ns.ToggleBags() end
     else
       ns.ToggleQuickMenu(btn)
     end
@@ -65,6 +67,7 @@ local function CreateButton()
     GameTooltip:AddLine("|cff@COLOR@@ADDON@|r")
     GameTooltip:AddLine(ns.T("MM_TIP_LEFT"), 1, 1, 1)
     GameTooltip:AddLine(ns.T("MM_TIP_RIGHT"), 1, 1, 1)
+    GameTooltip:AddLine(ns.T("MM_TIP_MIDDLE"), 1, 1, 1)
     GameTooltip:AddLine(ns.T("MM_TIP_DRAG"), 0.7, 0.7, 0.7)
     GameTooltip:Show()
   end)

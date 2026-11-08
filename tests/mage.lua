@@ -1067,6 +1067,17 @@ do
   if not ns.HasGlide() then table.insert(errors, "Windshaper borde ha Walk on Air") end
   UnitRace = oldRace
 end
+do
+  local mm
+  for _, w in ipairs(allFrames) do if w.__scripts.OnClick and rawget(w, "__name") and tostring(w.__name):find("Minimap") then mm = w end end
+  local bw = rawget(_G, "MagePlanBags")
+  if bw then bw:Hide() end
+  if mm then
+    mm.__scripts.OnClick(mm, "MiddleButton")
+    if not (bw and bw.__shown) then table.insert(errors, "mittenklick öppnade inte väskgenomgången") end
+  else table.insert(errors, "hittade inte minimapknappen") end
+  slash("bagbutton"); slash("bagbutton")
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

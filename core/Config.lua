@@ -46,6 +46,7 @@ local FEATURES = {
   { group = "CAT_ITEMS", key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
   { group = "CAT_ITEMS", key = "MM_QUEST", on = function() return not ns.db.questOff end, cmd = "quest" },
   { group = "CAT_ITEMS", key = "MM_TT", on = function() return not ns.db.tooltipOff end, cmd = "tooltip" },
+  { group = "CAT_ITEMS", key = "MM_BAGBTN", on = function() return not ns.db.bagBtnOff end, cmd = "bagbutton" },
   { group = "CAT_ITEMS", key = "MM_BAGAUTO", on = function() return not ns.db.bagAutoOff end, cmd = "bagauto" },
   { group = "CAT_LEVEL", key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
   { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },

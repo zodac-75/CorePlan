@@ -1,3 +1,8 @@
+# ShamanPlan 1.0.0-beta50
+
+- **Bag check button on your bags:** a small disenchant icon above your open bags opens the bag check. Works with the normal bags and with Baganator, Bagnon, AdiBags, ArkInventory, BetterBags and ElvUI bags. Turn it off with "Bag check button on your bags" in the settings.
+- **Middle-click the minimap icon** to open the bag check.
+
 # ShamanPlan 1.0.0-beta49
 
 - **Fix: the bag check opened behind the settings window**, so clicking "Bag check" there looked like it did nothing. It now opens on top.
