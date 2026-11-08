@@ -197,7 +197,7 @@ end
 -- Settings window: the combat helper's command, extra checkboxes and tools, logo layout.
 ns.COMBAT_CMD = "shatter"
 ns.EXTRA_FEATURES = {
-  { key = "MM_TT", on = function() return not ns.db.tooltipOff end, cmd = "tooltip" },
+  { group = "CAT_ITEMS", key = "MM_TT", on = function() return not ns.db.tooltipOff end, cmd = "tooltip" },
   { key = "MM_POLY", on = function() return not ns.db.polyOff end, cmd = "poly" },
 }
 ns.EXTRA_TOOLS = { { key = "MM_DE", cmd = "de" } }

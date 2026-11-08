@@ -35,31 +35,25 @@ end
 ---------------------------------------------------------------------------
 -- What the window controls
 ---------------------------------------------------------------------------
+-- Tick boxes, each in a group (the headings in the settings window and the quick menu).
 local FEATURES = {
-  { key = "MM_SHATTER", on = function() return not ns.db.shatterOff end, cmd = ns.COMBAT_CMD or "combat" },
-  { key = "MM_MOVE", on = function() return ns.db.shatterUnlocked end, cmd = "move" },
-  { key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
-  { key = "MM_QUEST", on = function() return not ns.db.questOff end, cmd = "quest" },
-  { key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
-  { key = "MM_GLIDE", on = function() return not ns.db.glideOff end, cmd = "glide" },
-  { key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
-  { key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
+  { group = "CAT_COMBAT", key = "MM_SHATTER", on = function() return not ns.db.shatterOff end, cmd = ns.COMBAT_CMD or "combat" },
+  { group = "CAT_COMBAT", key = "MM_MOVE", on = function() return ns.db.shatterUnlocked end, cmd = "move" },
+  { group = "CAT_COMBAT", key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
+  { group = "CAT_COMBAT", key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
+  { group = "CAT_COMBAT", key = "MM_GLIDE", on = function() return not ns.db.glideOff end, cmd = "glide" },
+  { group = "CAT_ITEMS", key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
+  { group = "CAT_ITEMS", key = "MM_QUEST", on = function() return not ns.db.questOff end, cmd = "quest" },
+  { group = "CAT_LEVEL", key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
+  { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
+  { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
+  { group = "CAT_WINDOWS", key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
+  { group = "CAT_WINDOWS", key = "CFG_MINIMAP", on = function() return not ns.db.minimapHidden end, cmd = "minimap" },
   -- Secondary skills in the crafting assistant (ticked = shown).
-  { key = "MM_SEC_COOK", on = function() return ns.SecondaryShown("Cooking") end, cmd = "cooking" },
-  { key = "MM_SEC_FA", on = function() return ns.SecondaryShown("First Aid") end, cmd = "firstaid" },
-  { key = "MM_SEC_FISH", on = function() return ns.SecondaryShown("Fishing") end, cmd = "fishing" },
-  { key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
-  { key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
-  { key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
-  { key = "CFG_MINIMAP", on = function() return not ns.db.minimapHidden end, cmd = "minimap" },
+  { group = "CAT_PROFS", key = "MM_SEC_COOK", on = function() return ns.SecondaryShown("Cooking") end, cmd = "cooking" },
+  { group = "CAT_PROFS", key = "MM_SEC_FA", on = function() return ns.SecondaryShown("First Aid") end, cmd = "firstaid" },
+  { group = "CAT_PROFS", key = "MM_SEC_FISH", on = function() return ns.SecondaryShown("Fishing") end, cmd = "fishing" },
 }
-
--- Class-specific checkboxes go after the upgrade check.
-for i = #(ns.EXTRA_FEATURES or {}), 1, -1 do
-  for pos, f in ipairs(FEATURES) do
-    if f.key == "MM_UPGRADE" then table.insert(FEATURES, pos + 1, ns.EXTRA_FEATURES[i]) break end
-  end
-end
 
 -- Classes without mana get no drink settings.
 if ns.NO_MANA then
@@ -68,13 +62,47 @@ if ns.NO_MANA then
   end
 end
 
-local SELECTORS = {
+-- Class-specific tick boxes (ns.EXTRA_FEATURES, with a group; combat by default) go
+-- last in their group.
+for _, extra in ipairs(ns.EXTRA_FEATURES or {}) do
+  extra.group = extra.group or "CAT_COMBAT"
+  local at = #FEATURES + 1
+  for pos, f in ipairs(FEATURES) do if f.group == extra.group then at = pos + 1 end end
+  table.insert(FEATURES, at, extra)
+end
+
+local function Group(list, group)
+  local out = {}
+  for _, f in ipairs(list) do if f.group == group then table.insert(out, f) end end
+  return out
+end
+
+-- Arrow selectors, by group.
+local PLAN_SELECTORS = {}
+if #ns.PLAN_ORDER > 1 then
+  table.insert(PLAN_SELECTORS, { key = "MM_PLANSEL",
+    value = function() return ns.T("PLAN_" .. ns.PlanKey()) end,
+    step = function(dir)
+      ns.db.plan = Step(ns.PLAN_ORDER, ns.PlanKey(), dir)
+      ns.ApplyPlan()
+      ns.RefreshMain()
+      if ns.RefreshTalentGlow then ns.RefreshTalentGlow() end
+    end })
+end
+-- Class settings (ns.EXTRA_SELECTORS in the class Data.lua) go right after the spec.
+-- Each is { key = locale key, value = function() -> text, step = function(dir) }.
+for _, e in ipairs(ns.EXTRA_SELECTORS or {}) do table.insert(PLAN_SELECTORS, e) end
+
+local PROF_SELECTORS = {
   { key = "CFG_PROF1",
     value = function() return ns.ProfLabel(1) end,
     step = function(dir) ns.StepProf(1, dir) end },
   { key = "CFG_PROF2",
     value = function() return ns.ProfLabel(2) end,
     step = function(dir) ns.StepProf(2, dir) end },
+}
+
+local LOOK_SELECTORS = {
   { key = "MM_THEME",
     value = function() return ns.T("THEME_" .. ns.CurrentTheme().key) end,
     step = function(dir)
@@ -90,6 +118,9 @@ local SELECTORS = {
   { key = "MM_LANG",
     value = function() return ns.Lang() == "svSE" and "Svenska" or "English" end,
     step = function() ns.CycleLang() end },
+}
+
+local ALERT_SELECTORS = {
   { key = "CFG_HELPERSIZE",
     value = function() return math.floor((ns.db.shatterScale or 1) * 100 + 0.5) .. "%" end,
     step = function(dir)
@@ -124,35 +155,14 @@ local SELECTORS = {
       ns.db.rebuffMin = Step(ns.REBUFF_TIMES, ns.db.rebuffMin or 3, dir)
       if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
     end },
-  { key = "CFG_DRINKAT",
+}
+if not ns.NO_MANA then
+  table.insert(ALERT_SELECTORS, { key = "CFG_DRINKAT",
     value = function() return (ns.db.drinkPct or 40) .. "%" end,
     step = function(dir)
       local n = math.max(10, math.min(90, (ns.db.drinkPct or 40) + dir * 5))
       Run("drinkat", tostring(n))
-    end },
-}
-if ns.NO_MANA then
-  for i = #SELECTORS, 1, -1 do
-    if SELECTORS[i].key == "CFG_DRINKAT" then table.remove(SELECTORS, i) end
-  end
-end
-
--- The talent plan selector only shows when the class has more than one plan.
-if #ns.PLAN_ORDER > 1 then
-  table.insert(SELECTORS, 1, { key = "MM_PLANSEL",
-    value = function() return ns.T("PLAN_" .. ns.PlanKey()) end,
-    step = function(dir)
-      ns.db.plan = Step(ns.PLAN_ORDER, ns.PlanKey(), dir)
-      ns.ApplyPlan()
-      ns.RefreshMain()
-      if ns.RefreshTalentGlow then ns.RefreshTalentGlow() end
     end })
-end
-
--- Class settings (ns.EXTRA_SELECTORS in the class Data.lua) go right after the spec.
--- Each is { key = locale key, value = function() -> text, step = function(dir) }.
-for i = #(ns.EXTRA_SELECTORS or {}), 1, -1 do
-  table.insert(SELECTORS, #ns.PLAN_ORDER > 1 and 2 or 1, ns.EXTRA_SELECTORS[i])
 end
 
 local PROFILE_SELECTORS = {
@@ -283,7 +293,7 @@ end
 ---------------------------------------------------------------------------
 local function CreateConfig()
   win = CreateFrame("Frame", "@ADDON@Config", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  win:SetSize(540, 500)
+  win:SetSize(800, 500)
   win:SetFrameStrata("DIALOG")
   win:SetToplevel(true)
   win:SetClampedToScreen(true)
@@ -321,30 +331,33 @@ local function CreateConfig()
   version:SetPoint("TOPLEFT", 12, -10)
   version:SetText(Version())
 
+  -- Three columns of groups, then the tool buttons across the bottom.
   local top = -142
-  -- Left: features
-  Header(win, "CFG_FEATURES", 16, top)
-  for i, item in ipairs(FEATURES) do CheckRow(win, item, 14, top - 22 - (i - 1) * 22) end
+  local COL = { 16, 280, 544 }
+  local CHECK_H, SEL_H, HEAD_H = 21, 25, 24
+  local bottom = top
+  local function Column(x, blocks)
+    local y = top
+    for _, b in ipairs(blocks) do
+      local checks = b.checks or {}
+      local sels = b.sels or {}
+      if #checks > 0 or #sels > 0 or b.after then
+        Header(win, b.head, x, y)
+        y = y - HEAD_H
+        for _, item in ipairs(sels) do SelectorRow(win, item, x, y); y = y - SEL_H end
+        for _, item in ipairs(checks) do CheckRow(win, item, x - 2, y); y = y - CHECK_H end
+        if b.after then y = b.after(x, y) end
+        y = y - 8
+      end
+    end
+    bottom = math.min(bottom, y)
+  end
 
-  -- Right: plan and look
-  Header(win, "CFG_LOOK", 288, top)
-  for i, item in ipairs(SELECTORS) do SelectorRow(win, item, 288, top - 24 - (i - 1) * 28) end
-  local hint = win:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  hint:SetPoint("TOPLEFT", 288, top - 24 - #SELECTORS * 28 - 2)
-  hint:SetWidth(236)
-  hint:SetJustifyH("LEFT")
-  hint.key = "MM_HINT"
-  table.insert(labels, hint)
-
-  -- Right, below: profiles (shared by all characters)
-  local py = top - 24 - #SELECTORS * 28 - 34
-  Header(win, "CFG_PROFILES", 288, py)
-  for i, item in ipairs(PROFILE_SELECTORS) do SelectorRow(win, item, 288, py - 24 - (i - 1) * 28) end
-  py = py - 24 - #PROFILE_SELECTORS * 28
-  local function SmallButton(key, x, fn)
+  win.tools = {}
+  local function SmallButton(key, x, y, fn)
     local b = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
     b:SetSize(115, 22)
-    b:SetPoint("TOPLEFT", x, py)
+    b:SetPoint("TOPLEFT", x, y)
     b.key = key
     b:SetScript("OnClick", function()
       local ok, err = pcall(fn)
@@ -353,23 +366,48 @@ local function CreateConfig()
     end)
     table.insert(win.tools, b)
   end
-  win.tools = {}
-  SmallButton("CFG_NEW", 288, function() ns.AskNewProfile() end)
-  SmallButton("CFG_DELETE", 409, function() ns.AskDeleteProfile() end)
-  py = py - 26
 
-  -- Bottom: tools, three columns of buttons
-  local toolsTop = math.min(top - 22 - #FEATURES * 22, py) - 14
+  Column(COL[1], {
+    { head = "CAT_COMBAT", checks = Group(FEATURES, "CAT_COMBAT") },
+    { head = "CAT_ITEMS", checks = Group(FEATURES, "CAT_ITEMS") },
+    { head = "CAT_LEVEL", checks = Group(FEATURES, "CAT_LEVEL") },
+    { head = "CAT_WINDOWS", checks = Group(FEATURES, "CAT_WINDOWS") },
+  })
+  Column(COL[2], {
+    { head = "CAT_PLAN", sels = PLAN_SELECTORS },
+    { head = "CAT_PROFS", sels = PROF_SELECTORS, checks = Group(FEATURES, "CAT_PROFS") },
+    { head = "CAT_LOOK", sels = LOOK_SELECTORS, after = function(x, y)
+      local hint = win:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+      hint:SetPoint("TOPLEFT", x, y - 2)
+      hint:SetWidth(236)
+      hint:SetJustifyH("LEFT")
+      hint.key = "MM_HINT"
+      table.insert(labels, hint)
+      return y - 26
+    end },
+  })
+  Column(COL[3], {
+    { head = "CAT_ALERTS", sels = ALERT_SELECTORS },
+    -- Profiles are shared by all characters.
+    { head = "CFG_PROFILES", sels = PROFILE_SELECTORS, after = function(x, y)
+      SmallButton("CFG_NEW", x, y, function() ns.AskNewProfile() end)
+      SmallButton("CFG_DELETE", x + 121, y, function() ns.AskDeleteProfile() end)
+      return y - 26
+    end },
+  })
+
+  -- Bottom: tools, four columns of buttons
+  local toolsTop = bottom - 6
   Header(win, "CFG_TOOLS", 16, toolsTop)
   local line = win:CreateTexture(nil, "ARTWORK")
   line:SetColorTexture(0.41, 0.8, 0.94, 0.35)
   line:SetPoint("TOPLEFT", 252, toolsTop - 16)
-  line:SetSize(272, 1)
+  line:SetSize(532, 1)
   for i, t in ipairs(TOOLS) do
     local b = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
-    b:SetSize(164, 22)
-    local col, row = (i - 1) % 3, math.floor((i - 1) / 3)
-    b:SetPoint("TOPLEFT", 16 + col * 172, toolsTop - 24 - row * 26)
+    b:SetSize(184, 22)
+    local col, row = (i - 1) % 4, math.floor((i - 1) / 4)
+    b:SetPoint("TOPLEFT", 16 + col * 192, toolsTop - 24 - row * 26)
     b.key = t.key
     b:SetScript("OnClick", function()
       local ok, err = pcall(t.func)
@@ -378,7 +416,7 @@ local function CreateConfig()
     end)
     table.insert(win.tools, b)
   end
-  local rows = math.ceil(#TOOLS / 3)
+  local rows = math.ceil(#TOOLS / 4)
   win:SetHeight(-(toolsTop - 24 - rows * 26) + 12)
 
   win:SetScript("OnShow", Refresh)
@@ -506,10 +544,14 @@ local function BuildQuick()
     y = y - QROW_H
   end
 
-  y = y - 4
-  table.insert(quick.headers, QuickHeader(quick, y, "QM_TOGGLE"))
-  y = y - 16
+  local lastGroup
   for _, item in ipairs(FEATURES) do
+    if item.group ~= lastGroup then
+      lastGroup = item.group
+      y = y - 4
+      table.insert(quick.headers, QuickHeader(quick, y, item.group))
+      y = y - 16
+    end
     local r = QuickRow(quick, y)
     r.item = item
     r:SetScript("OnClick", function()
