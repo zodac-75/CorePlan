@@ -3,6 +3,7 @@
   "color": "ffffff",
   "slash": "pp",
   "class": "PRIEST",
+  "curseId": 1792569,
   "modules": [
     "Combat.lua"
   ],

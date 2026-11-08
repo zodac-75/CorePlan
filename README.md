@@ -10,7 +10,7 @@ Leveling companions for **WoW Forever**, one addon per class, built from one sha
 | WarriorPlan | Arms, Fury or Protection warrior | project 1787968 |
 | PaladinPlan | Protection, Retribution or Holy paladin | project 1787977 |
 | WarlockPlan | Affliction, Demonology or Destruction warlock | project 1792150 |
-| PriestPlan | Shadow, Holy or Discipline priest | not on CurseForge yet |
+| PriestPlan | Shadow, Holy or Discipline priest | project 1792569 |
 
 ## Layout
 

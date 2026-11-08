@@ -1,3 +1,7 @@
+# PriestPlan 1.0.0-beta2
+
+- First version on CurseForge.
+
 # PriestPlan 1.0.0-beta1
 
 First version of PriestPlan for WoW Forever.
