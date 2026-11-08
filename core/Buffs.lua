@@ -30,6 +30,50 @@ local function Spells(e)
   return nil
 end
 
+-- Each entry can be turned off on its own in the settings (ns.db.buffHide[key]).
+local function EntryKey(e, i, party)
+  local first = type(e.spells) == "table" and e.spells[1] or e.id or ("entry" .. i)
+  return (party and "party:" or "") .. first
+end
+
+local function EntryLabel(e, party)
+  local name
+  if type(e.spells) == "function" then
+    local ok, list = pcall(e.spells, ns.PlanKey(), true)
+    if ok and type(list) == "table" then
+      for _, s in ipairs(list) do if ns.SpellInfo(s) then name = s break end end
+      name = name or list[1]
+    end
+  else
+    for _, s in ipairs(e.spells or {}) do if ns.SpellInfo(s) then name = s break end end
+    name = name or (e.spells and e.spells[1])
+  end
+  name = e.label and ns.Tx(e.label) or name or "?"
+  return party and ns.T("BW_PARTY_LABEL", name) or name
+end
+
+local function Hidden(key) return ns.db.buffHide and ns.db.buffHide[key] end
+
+-- Tick boxes for the settings window: one per watched buff, then the party ones.
+function ns.BuffWatchToggles()
+  local out = {}
+  local function add(e, i, party)
+    local key = EntryKey(e, i, party)
+    table.insert(out, {
+      text = function() return EntryLabel(e, party) end,
+      on = function() return not Hidden(key) end,
+      toggle = function()
+        ns.db.buffHide = ns.db.buffHide or {}
+        ns.db.buffHide[key] = not ns.db.buffHide[key] or nil
+        if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
+      end,
+    })
+  end
+  for i, e in ipairs(ns.BUFF_WATCH or {}) do add(e, i, false) end
+  for i, e in ipairs(ns.PARTY_BUFFS or {}) do add(e, i, true) end
+  return out
+end
+
 -- Your buffs: name -> seconds left (0 = no end), name -> full duration;
 -- unsure when the game hides names.
 local function PlayerBuffs(unit)
@@ -77,9 +121,9 @@ local function Needed()
   local buffs, unsure, durs = PlayerBuffs()
   local out = {}
   local combat = InCombatLockdown and InCombatLockdown()
-  for _, e in ipairs(ns.BUFF_WATCH or {}) do
+  for idx, e in ipairs(ns.BUFF_WATCH or {}) do
     local spell = Spells(e)
-    if spell and (not e.only or e.only()) then
+    if spell and not Hidden(EntryKey(e, idx, false)) and (not e.only or e.only()) then
       local left, dur
       if e.imbue then
         local l = ImbueLeft()
@@ -120,11 +164,11 @@ local function Needed()
         local isMana
         local okP, pt = pcall(UnitPowerType, unit)
         if okP and not (issecretvalue and issecretvalue(pt)) then isMana = (pt == 0) end
-        for _, e in ipairs(ns.PARTY_BUFFS) do
+        for idx, e in ipairs(ns.PARTY_BUFFS) do
           local list = type(e.spells) == "function" and e.spells(unit, isMana) or e.spells or {}
           local spell
           for _, s in ipairs(list) do if ns.SpellInfo(s) then spell = s break end end
-          if spell and not (e.mana and isMana == false) then
+          if spell and not Hidden(EntryKey(e, idx, true)) and not (e.mana and isMana == false) then
             local best
             for name, l in pairs(theirs) do
               local hit = (e.match and e.match(name, unit)) or false
@@ -251,9 +295,9 @@ local function Update()
   if unlocked then
     local have = {}
     for _, n in ipairs(list) do have[n.spell] = true end
-    for _, e in ipairs(ns.BUFF_WATCH or {}) do
+    for idx, e in ipairs(ns.BUFF_WATCH or {}) do
       local spell = Spells(e)
-      if spell and not have[spell] then
+      if spell and not have[spell] and not Hidden(EntryKey(e, idx, false)) then
         have[spell] = true
         table.insert(list, { entry = e, spell = spell, left = -1, key = spell })
       end

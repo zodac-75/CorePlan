@@ -885,6 +885,24 @@ do
   if tostring(msg):find("Frost Armor") then table.insert(errors, "rebuff reminder shown while off") end
   C_UnitAuras = oldC
 end
+print("--- Välj buffar ---")
+do
+  local t = ns.BuffWatchToggles()
+  local labels = {}
+  for _, x in ipairs(t) do table.insert(labels, x.text()) end
+  print("  rutor: " .. table.concat(labels, ", "))
+  -- Hide Arcane Intellect: with no buffs on, only the armor icon shows.
+  local oldC, oldU = C_UnitAuras, UnitAura
+  if C_UnitAuras then C_UnitAuras = { GetAuraDataByIndex = function() end } else UnitAura = function() end end
+  ns.db.buffsOff = false; ns.db.shatterUnlocked = false
+  t[1].toggle(); ns.RefreshBuffWatch()
+  local shown = {}
+  for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown then table.insert(shown, tostring(rawget(b, "spell"))) end end
+  print("  visas med AI avbockad: " .. table.concat(shown, ", "))
+  if table.concat(shown, ","):find("Arcane Intellect", 1, true) then table.insert(errors, "hidden buff still shown") end
+  t[1].toggle(); ns.RefreshBuffWatch()
+  C_UnitAuras, UnitAura = oldC, oldU
+end
 print("--- Gruppbuffar ---")
 do
   local oldIG, oldUE, oldC, oldU = IsInGroup, UnitExists, C_UnitAuras, UnitAura

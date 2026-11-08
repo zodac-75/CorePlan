@@ -39,9 +39,9 @@ end
 local FEATURES = {
   { group = "CAT_COMBAT", key = "MM_SHATTER", on = function() return not ns.db.shatterOff end, cmd = ns.COMBAT_CMD or "combat" },
   { group = "CAT_COMBAT", key = "MM_MOVE", on = function() return ns.db.shatterUnlocked end, cmd = "move" },
-  { group = "CAT_COMBAT", key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
-  { group = "CAT_COMBAT", key = "MM_PARTYBUFF", on = function() return not ns.db.partyBuffsOff end, cmd = "partybuffs", party = true },
-  { group = "CAT_COMBAT", key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
+  { group = "CAT_BUFFS", key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
+  { group = "CAT_BUFFS", key = "MM_PARTYBUFF", on = function() return not ns.db.partyBuffsOff end, cmd = "partybuffs", party = true },
+  { group = "CAT_BUFFS", key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
   { group = "CAT_COMBAT", key = "MM_GLIDE", on = function() return not ns.db.glideOff end, cmd = "glide" },
   { group = "CAT_ITEMS", key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
   { group = "CAT_ITEMS", key = "MM_QUEST", on = function() return not ns.db.questOff end, cmd = "quest" },
@@ -78,6 +78,33 @@ for _, extra in ipairs(ns.EXTRA_FEATURES or {}) do
   local at = #FEATURES + 1
   for pos, f in ipairs(FEATURES) do if f.group == extra.group then at = pos + 1 end end
   table.insert(FEATURES, at, extra)
+end
+
+-- Buffs and reminders: the buff watcher, one box per watched buff (indented), the party
+-- buff and its buffs, then the drink reminder. Kept together at the end of the list.
+do
+  local byKey, keep = {}, {}
+  for _, f in ipairs(FEATURES) do
+    if f.group == "CAT_BUFFS" then byKey[f.key] = f else table.insert(keep, f) end
+  end
+  local toggles = ns.BuffWatchToggles and ns.BuffWatchToggles() or {}
+  local own, party = {}, {}
+  for _, t in ipairs(toggles) do
+    t.group, t.indent = "CAT_BUFFS", 16
+    local ok, label = pcall(t.text)
+    if ok and type(label) == "string" and label:find(ns.T("BW_PARTY_LABEL", ""), 1, true) == 1 then
+      table.insert(party, t)
+    else
+      table.insert(own, t)
+    end
+  end
+  FEATURES = keep
+  local function push(f) if f then table.insert(FEATURES, f) end end
+  push(byKey.MM_BUFFS)
+  for _, t in ipairs(own) do push(t) end
+  push(byKey.MM_PARTYBUFF)
+  if byKey.MM_PARTYBUFF then for _, t in ipairs(party) do push(t) end end
+  push(byKey.MM_DRINK)
 end
 
 local function Group(list, group)
@@ -207,7 +234,7 @@ local function Refresh()
   for _, cb in ipairs(checks) do
     local ok, on = pcall(cb.item.on)
     cb:SetChecked(ok and on and true or false)
-    cb.label:SetText(ns.T(cb.item.key))
+    cb.label:SetText(cb.item.text and cb.item.text() or ns.T(cb.item.key))
   end
   for _, s in ipairs(selectors) do
     s.label:SetText((ns.T(s.item.key):gsub(":$", "")))
@@ -245,7 +272,7 @@ local function CheckRow(parent, item, x, y)
   cb.label = label
   cb.item = item
   cb:SetScript("OnClick", function()
-    Run(item.cmd)
+    if item.toggle then pcall(item.toggle) else Run(item.cmd) end
     Refresh()
   end)
   table.insert(checks, cb)
@@ -354,7 +381,7 @@ local function CreateConfig()
         Header(win, b.head, x, y)
         y = y - HEAD_H
         for _, item in ipairs(sels) do SelectorRow(win, item, x, y); y = y - SEL_H end
-        for _, item in ipairs(checks) do CheckRow(win, item, x - 2, y); y = y - CHECK_H end
+        for _, item in ipairs(checks) do CheckRow(win, item, x - 2 + (item.indent or 0), y); y = y - CHECK_H end
         if b.after then y = b.after(x, y) end
         y = y - 8
       end
@@ -395,15 +422,16 @@ local function CreateConfig()
       table.insert(labels, hint)
       return y - 26
     end },
-  })
-  Column(COL[3], {
-    { head = "CAT_ALERTS", sels = ALERT_SELECTORS },
     -- Profiles are shared by all characters.
     { head = "CFG_PROFILES", sels = PROFILE_SELECTORS, after = function(x, y)
       SmallButton("CFG_NEW", x, y, function() ns.AskNewProfile() end)
       SmallButton("CFG_DELETE", x + 121, y, function() ns.AskDeleteProfile() end)
       return y - 26
     end },
+  })
+  Column(COL[3], {
+    { head = "CAT_ALERTS", sels = ALERT_SELECTORS },
+    { head = "CAT_BUFFS", checks = Group(FEATURES, "CAT_BUFFS") },
   })
 
   -- Bottom: tools, four columns of buttons
@@ -486,7 +514,7 @@ local function RefreshQuick()
   for _, r in ipairs(quick.toggles) do
     local ok, on = pcall(r.item.on)
     r.check:SetTexture(ok and on and "Interface\\Buttons\\UI-CheckBox-Check" or "Interface\\Buttons\\UI-CheckBox-Up")
-    r.text:SetText(ns.T(r.item.key))
+    r.text:SetText(r.item.text and r.item.text() or ns.T(r.item.key))
   end
   quick.more.text:SetText(ns.T("QM_SETTINGS"))
 end
@@ -565,7 +593,7 @@ local function BuildQuick()
     local r = QuickRow(quick, y)
     r.item = item
     r:SetScript("OnClick", function()
-      Run(item.cmd)
+      if item.toggle then pcall(item.toggle) else Run(item.cmd) end
       Refresh()
       RefreshQuick()
     end)
