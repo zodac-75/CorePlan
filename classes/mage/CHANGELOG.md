@@ -1,3 +1,11 @@
+# MagePlan 1.22.0
+
+- **Bag check window** (`/mp de`, or "Bag check" in the settings): lists the junk, gear to vendor, gear to disenchant and gear worth more on the AH in your bags, with what each is worth.
+- **Sell and disenchant from it:** with a vendor open, click a row to sell it, or press "Sell junk and vendor items" (12 at a time, so you can still buy them back). With Enchanting, click a row to disenchant it. Shift-click sells anything to the vendor anyway.
+- **Keep items:** right-click a row and that item is never sold or disenchanted from the window.
+- Opens by itself when you talk to a vendor and have something to sell (turn it off with "Open the bag check at vendors").
+- The sell / disenchant / AH advice in item tooltips is still there, and now in every Plan addon (turn it off under "Gear and quests").
+
 # MagePlan 1.21.1
 
 - **Fix: clicking a party member's buff icon could buff you instead** when they were out of range (the game's auto self-cast). The range now uses the buff spell's own range (30 yards, not the 40-yard party range); out of range the icon is faded, says so in its tooltip and a click does nothing; and the click names its target, so the game can never put it on you.

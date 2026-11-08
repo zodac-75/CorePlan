@@ -13,13 +13,13 @@ local KEYS = {
   -- windows
   "pos", "posW", "posS", "hidden",
   "craftPos", "craftPosW", "craftPosS",
-  "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
+  "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "bagPos", "bagScale", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
   "arrowPos", "dungeonPos", "configPos",
   "minimapAngle", "minimapHidden",
   -- look
   "theme", "fontSize",
   -- features
-  "shatterOff", "tooltipOff", "upgradeOff", "questOff", "polyOff",
+  "shatterOff", "tooltipOff", "bagAutoOff", "upgradeOff", "questOff", "polyOff",
   "drinkOff", "drinkPct", "xpOff", "zoneTipsOff", "locked", "dungeonAutoOpen",
 }
 

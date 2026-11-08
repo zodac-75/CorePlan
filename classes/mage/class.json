@@ -6,7 +6,6 @@
   "curseId": 1785085,
   "modules": [
     "Shatter.lua",
-    "Disenchant.lua",
     "Polymorph.lua",
     "Supplies.lua"
   ],

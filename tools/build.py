@@ -29,7 +29,7 @@ ORDER = [
     "Locale.lua", "LocaleClass.lua", "Data.lua", "TrainData.lua", "ProfData.lua",
     "Core.lua", "Rows.lua", "Plans.lua", "Ranks.lua", "Talents.lua", "Trainer.lua", "Helper.lua",
     "CLASS_MODULES",
-    "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "QuestReward.lua",
+    "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "QuestReward.lua", "Bags.lua",
     "Drink.lua", "Buffs.lua", "Glide.lua", "Minimap.lua", "DungeonData.lua", "Arrow.lua", "Dungeons.lua",
     "Config.lua", "Profiles.lua", "Emotes.lua",
 ]
@@ -73,8 +73,7 @@ def toc(m, version, files):
         "## SavedVariables: %sGlobal" % m["name"],
         "## SavedVariablesPerCharacter: %sDB" % m["name"],
     ]
-    if m.get("optionalDeps"):
-        lines.append("## OptionalDeps: " + m["optionalDeps"])
+    lines.append("## OptionalDeps: " + m.get("optionalDeps", "Auctionator"))
     if m.get("curseId"):  # no ID yet: the release goes to GitHub only
         lines.append("## X-Curse-Project-ID: %d" % m["curseId"])
     lines += ["## X-License: GPL-3.0", ""]

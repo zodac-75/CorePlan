@@ -199,11 +199,9 @@ function ns.PlanDoneExtra()
   if ns.PlanKey() ~= "arcane" then return ns.T("PLAN_DONE2") end
 end
 
--- Settings window: the combat helper's command, extra checkboxes and tools, logo layout.
+-- Settings window: the combat helper's command, extra checkboxes and logo layout.
 ns.COMBAT_CMD = "shatter"
 ns.EXTRA_FEATURES = {
-  { group = "CAT_ITEMS", key = "MM_TT", on = function() return not ns.db.tooltipOff end, cmd = "tooltip" },
   { key = "MM_POLY", on = function() return not ns.db.polyOff end, cmd = "poly" },
 }
-ns.EXTRA_TOOLS = { { key = "MM_DE", cmd = "de" } }
 ns.LOGO = { h = 407 / 512, size = 250, y = 64, panel = 300 }

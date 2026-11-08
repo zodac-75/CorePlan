@@ -759,6 +759,51 @@ do
   end
   print("visas: " .. table.concat(shown, ", "))
 end
+print("--- Väskgenomgång ---")
+do
+  methods.SetAttribute = methods.SetAttribute or function(self, k, v) rawset(self, "__attr_" .. k, v) end
+  methods.GetAttribute = methods.GetAttribute or function(self, k) return rawget(self, "__attr_" .. k) end
+  items[9990] = { "Broken Fang", 0, 5, "", 25, 15 }
+  bag[4] = 9990
+  local ok, err = pcall(function()
+    ns.db.bagAutoOff = nil
+    fire("MERCHANT_SHOW")
+    local w = rawget(_G, "DruidPlanBags")
+    if not (w and w.__shown) then table.insert(errors, "väskgenomgången öppnades inte hos försäljaren") return end
+    local junk, sell
+    for i = 1, 40 do
+      local b = rawget(_G, "DruidPlanBagLine" .. i)
+      if b and b.__shown and b.entry and b.entry.key == "junk" then junk = b end
+    end
+    if not junk then table.insert(errors, "skräpet syntes inte i väskgenomgången")
+    elseif junk:GetAttribute("macrotext1") ~= "/use 0 4" then table.insert(errors, "skräpraden säljer inte: " .. tostring(junk:GetAttribute("macrotext1"))) end
+    local sa = rawget(_G, "DruidPlanBagSellAll")
+    if not (sa and sa.__shown and tostring(sa:GetAttribute("macrotext1")):find("/use 0 4", 1, true)) then table.insert(errors, "sälj-allt-knappen saknas") end
+    if junk and junk.__scripts.OnEnter then junk.__scripts.OnEnter(junk) end
+    -- Högerklick sparar föremålet: då säljs det inte.
+    if junk then junk.__scripts.OnMouseUp(junk, "RightButton") end
+    if not (ns.db.bagKeep and ns.db.bagKeep[9990]) then table.insert(errors, "högerklick sparade inte föremålet") end
+    if junk and junk:GetAttribute("macrotext1") then table.insert(errors, "sparat föremål kan fortfarande säljas") end
+    ns.db.bagKeep = nil
+    fire("MERCHANT_CLOSED")
+    if w.__shown then table.insert(errors, "väskgenomgången stängdes inte med försäljaren") end
+    slash("de")
+    if not w.__shown then table.insert(errors, "/de öppnade inte väskgenomgången") end
+    for i = 1, 40 do
+      local b = rawget(_G, "DruidPlanBagLine" .. i)
+      if b and b.__shown and b.entry and (b.entry.key == "junk" or b.entry.key == "vendor") and b:GetAttribute("macrotext1") then
+        table.insert(errors, "utan försäljare får en rad inte sälja (då tas den på i stället)")
+      end
+    end
+    fire("PLAYER_REGEN_DISABLED")
+    if w.__shown then table.insert(errors, "väskgenomgången stängdes inte inför strid") end
+    fire("PLAYER_REGEN_ENABLED")
+    slash("de")
+    print("  rader: " .. (function() local n = 0; for i = 1, 40 do local b = rawget(_G, "DruidPlanBagLine" .. i); if b and b.__shown then n = n + 1 end end; return n end)())
+  end)
+  if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
+  bag[4] = nil
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end
