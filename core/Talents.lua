@@ -157,11 +157,10 @@ function ns.TalentInfo(name)
   return TalentMap()[name]
 end
 
+-- We don't open Blizzard's talent window ourselves: doing that from addon code taints
+-- the game's window layout, which can then break action bars in combat.
 local function OpenTalents()
-  if InCombatLockdown and InCombatLockdown() then return end
-  if PlayerSpellsUtil and PlayerSpellsUtil.ToggleClassTalentFrame then pcall(PlayerSpellsUtil.ToggleClassTalentFrame)
-  elseif ToggleTalentFrame then pcall(ToggleTalentFrame)
-  elseif TalentFrame_LoadUI then pcall(TalentFrame_LoadUI); if PlayerTalentFrame then PlayerTalentFrame:Show() end end
+  ns.Print(ns.T("PW_OPEN_TALENTS"))
 end
 
 local function Unspent()
@@ -345,11 +344,10 @@ local function UpdateGlow()
 
   local line = NextText()
   if hint and line then
-    hint:SetParent(root)
+    -- Never parented to Blizzard's window (that taints it): our own frame, anchored to it.
     hint:ClearAllPoints()
     -- Inside the window at the bottom, so it can't end up above the top of the screen.
     hint:SetPoint("BOTTOMLEFT", root, "BOTTOMLEFT", 24, 14)
-    hint:SetDrawLayer("OVERLAY", 7)
     hint:SetText("@ADDON@: " .. line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
     hint:Show()
   end
@@ -370,12 +368,10 @@ local function UpdateGlow()
   if not btn or not btn:IsVisible() then HideGlow(); return end
   if glow.btn == btn and glow:IsShown() then return end -- already there: don't restart the animation
   glow.btn = btn
-  glow:SetParent(btn)
+  -- Our own frame on top of the window, only anchored to the button (not parented).
   glow:ClearAllPoints()
   glow:SetPoint("TOPLEFT", btn, "TOPLEFT", -5, 5)
   glow:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 5, -5)
-  glow:SetFrameStrata("DIALOG")
-  glow:SetFrameLevel(btn:GetFrameLevel() + 5)
   glow:Show()
 end
 
@@ -396,6 +392,12 @@ local function SetupTalentUI()
   -- The marker: a thick green frame around the talent that pulses, and a big green
   -- arrow above it that bobs up and down.
   glow = CreateFrame("Frame", nil, UIParent)
+  glow:SetFrameStrata("FULLSCREEN_DIALOG")
+  -- Hide right away when the button scrolls away or the window closes.
+  glow:SetScript("OnUpdate", function(self)
+    local b = self.btn
+    if not b or not b:IsVisible() then HideGlow() end
+  end)
   local G = { 0.25, 1, 0.35 }
   local border = CreateFrame("Frame", nil, glow)
   border:SetAllPoints()
@@ -437,7 +439,10 @@ local function SetupTalentUI()
   glow:SetScript("OnShow", function() bob:Play(); pulse:Play() end)
   glow:Hide()
 
-  hint = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  local hintFrame = CreateFrame("Frame", nil, UIParent)
+  hintFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+  hintFrame:SetAllPoints(UIParent)
+  hint = hintFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   hint:Hide()
 
   if PlayerTalentFrame_Update then hooksecurefunc("PlayerTalentFrame_Update", function() pcall(UpdateGlow) end) end

@@ -136,19 +136,27 @@ local function UpdatePin()
   end
   local canvas = wm.GetCanvas and wm:GetCanvas()
   if not canvas then pin:Hide() return end
-  if pin:GetParent() ~= canvas then pin:SetParent(canvas) end
-  local w, h = canvas:GetWidth(), canvas:GetHeight()
-  local scale = (wm.ScrollContainer and wm.ScrollContainer.GetCanvasScale and wm.ScrollContainer:GetCanvasScale()) or 1
-  pin:SetScale(1 / scale)
+  -- The pin is our own frame (never parented to the map, that can taint it): put it
+  -- over the right spot of the canvas, and hide it when that spot is scrolled out of view.
+  local cx, cy = (target.x / 100) * canvas:GetWidth(), (target.y / 100) * canvas:GetHeight()
+  local ratio = canvas:GetEffectiveScale() / pin:GetEffectiveScale()
+  local view = wm.ScrollContainer or wm
+  local l, t = canvas:GetLeft(), canvas:GetTop()
+  local vl, vr, vt, vb = view:GetLeft(), view:GetRight(), view:GetTop(), view:GetBottom()
+  if not (l and t and vl and vr and vt and vb) then pin:Hide() return end
+  local s = canvas:GetEffectiveScale() / view:GetEffectiveScale()
+  local px, py = l * s + cx * s, t * s - cy * s
+  if px < vl or px > vr or py > vt or py < vb then pin:Hide() return end
   pin:ClearAllPoints()
-  pin:SetPoint("CENTER", canvas, "TOPLEFT", (target.x / 100) * w * scale, -(target.y / 100) * h * scale)
-  pin:SetFrameLevel(canvas:GetFrameLevel() + 2000)
+  pin:SetPoint("CENTER", canvas, "TOPLEFT", cx * ratio, -cy * ratio)
+  pin:SetFrameLevel((wm:GetFrameLevel() or 1) + 500)
   pin:Show()
 end
 
 local function CreatePin()
   if not WorldMapFrame then return end
-  pin = CreateFrame("Frame", "@ADDON@MapPin", WorldMapFrame)
+  pin = CreateFrame("Frame", "@ADDON@MapPin", UIParent)
+  pin:SetFrameStrata(WorldMapFrame:GetFrameStrata() or "HIGH")
   pin:SetSize(28, 28)
   local tex = pin:CreateTexture(nil, "OVERLAY")
   tex:SetTexture(ns.MEDIA .. "Icon")
@@ -163,7 +171,7 @@ local function CreatePin()
   pin:SetScript("OnLeave", function() GameTooltip:Hide() end)
   pin:Hide()
   -- Follow the map while it is open.
-  local driver = CreateFrame("Frame", nil, WorldMapFrame)
+  local driver = CreateFrame("Frame", nil, UIParent)
   driver:SetScript("OnUpdate", function(self, e)
     self.t = (self.t or 0) + e
     if self.t > 0.1 then self.t = 0; UpdatePin() end

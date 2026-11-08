@@ -584,9 +584,13 @@ local function RegisterBlizzardPanel()
   b:SetPoint("TOP", logo, "BOTTOM", 0, -12)
   b:SetText(ns.T("CFG_OPEN"))
   b:SetScript("OnClick", function()
-    if SettingsPanel and SettingsPanel:IsShown() then HideUIPanel(SettingsPanel) end
-    if InterfaceOptionsFrame and InterfaceOptionsFrame:IsShown() then HideUIPanel(InterfaceOptionsFrame) end
-    if win and not win:IsShown() then win:Show() end
+    -- We don't close Blizzard's settings window from here (that taints its layout code);
+    -- our window opens on top of it instead.
+    if win then
+      win:SetFrameStrata("FULLSCREEN_DIALOG")
+      win:Show()
+      win:Raise()
+    end
   end)
   panel:SetScript("OnShow", function() b:SetText(ns.T("CFG_OPEN")) end)
 
