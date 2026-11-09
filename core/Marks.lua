@@ -18,21 +18,24 @@ local function Marks()
   return ns.db.marks
 end
 
--- Who you can pick: nobody, you, your party, and whoever is already picked.
+-- Who you can pick: nobody, you, or a party slot (party member 2-5 in the party frames).
+-- Slots stay put when people come and go, so the marks follow the slot, not the name.
+local SLOTS = { false, ME, "party1", "party2", "party3", "party4" }
 local function Choices(idx)
-  local list, seen = { false, ME }, {}
-  for i = 1, 4 do
-    local u = "party" .. i
-    local n = UnitExists(u) and Name(u)
-    if n and not seen[n] then seen[n] = true; list[#list + 1] = n end
-  end
+  local list = {}
+  for i, v in ipairs(SLOTS) do list[i] = v end
   local cur = Marks()[idx]
-  if cur and cur ~= ME and not seen[cur] then list[#list + 1] = cur end
+  local known = false
+  for _, v in ipairs(list) do if v == cur then known = true end end
+  if cur and not known then list[#list + 1] = cur end -- a name picked with an older version
   return list
 end
 
 local function UnitFor(who)
   if who == ME then return "player" end
+  if type(who) == "string" and who:match("^party%d$") then
+    return UnitExists(who) and who or nil
+  end
   for i = 1, 4 do
     local u = "party" .. i
     if UnitExists(u) and Name(u) == who then return u end
@@ -51,6 +54,7 @@ end
 -- target. Only marks that are missing go in, since setting a mark a player has takes it off.
 -- Returns { name, icon, macro, who } or nil.
 function ns.PartyMarkMacro()
+  if ns.db.marksOff then return nil end
   if not (IsInGroup and IsInGroup()) or (IsInRaid and IsInRaid()) then return nil end
   if InCombatLockdown and InCombatLockdown() then return nil end
   local lines, first, who = {}, nil, {}
@@ -112,6 +116,8 @@ for _, idx in ipairs(ns.PARTY_MARKS) do
       local who = Marks()[idx]
       if not who then return ns.T("CFG_OFF") end
       if who == ME then return ns.T("MK_ME") end
+      local slot = type(who) == "string" and who:match("^party(%d)$")
+      if slot then return ns.T("MK_SLOT", tonumber(slot) + 1) end
       return who
     end,
     step = function(dir) Step(idx, dir) end })
@@ -127,4 +133,10 @@ ns.RegisterModule(function()
     if event == "GROUP_ROSTER_UPDATE" and ns.RefreshMenu then ns.RefreshMenu() end
     if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
   end)
+end)
+
+ns.RegisterCommand("marks", true, function()
+  ns.db.marksOff = not ns.db.marksOff
+  ns.Print(ns.db.marksOff and ns.T("MARKS_OFF") or ns.T("MARKS_ON"))
+  if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
 end)

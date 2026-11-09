@@ -1040,14 +1040,21 @@ do
   local sel = ns.MARK_SELECTORS
   if not sel or #sel ~= 5 then table.insert(errors, "fem markeringar saknas i menyn") else
     sel[1].step(1)                 -- Star: Off -> Me
-    sel[2].step(1)                 -- Circle: Off -> Jennie (Me has Star)
-    sel[5].step(-1)                -- Moon: Off -> (last) Tank
+    sel[2].step(1)                 -- Circle: Off -> party slot 2 (Me has Star)
+    sel[5].step(-1); sel[5].step(-1); sel[5].step(-1) -- Moon: Off -> slot 5 -> 4 -> 3
     print("  " .. sel[1].value() .. " / " .. sel[2].value() .. " / " .. sel[5].value())
+    if sel[2].value() ~= ns.T("MK_SLOT", 2) or sel[5].value() ~= ns.T("MK_SLOT", 3) then
+      table.insert(errors, "markeringar ska följa gruppplatser: " .. sel[2].value() .. " / " .. sel[5].value())
+    end
     -- The addon may never set marks itself (protected): only the macro on a click.
     if #calls > 0 then table.insert(errors, "addon anropade SetRaidTarget: " .. table.concat(calls, " ")) end
     local m = ns.PartyMarkMacro()
     print("  makro: " .. (m and m.macro:gsub("\n", " | ") or "nil"))
     if not m or m.macro ~= "/tm [@player] 1\n/tm [@party1] 2\n/tm [@party2] 5" then table.insert(errors, "fel markeringsmakro") end
+    -- The toggle turns the icon off.
+    ns.db.marksOff = true
+    if ns.PartyMarkMacro() then table.insert(errors, "markeringsikon trots att den är avslagen") end
+    ns.db.marksOff = nil
     -- The buff row shows it as a clickable macro icon.
     ns.RefreshBuffWatch()
     local found
@@ -1071,8 +1078,8 @@ do
     UnitInRange = nil
     local m2 = ns.PartyMarkMacro()
     if not m2 or m2.macro ~= "/tm [@party1] 2" then table.insert(errors, "bara den saknade markeringen ska med: " .. tostring(m2 and m2.macro)) end
-    sel[3].step(1)                  -- Diamond: everyone has a mark, stays Off
-    if sel[3].value() ~= ns.T("CFG_OFF") then table.insert(errors, "en spelare fick två markeringar: " .. sel[3].value()) end
+    sel[3].step(1)                  -- Diamond: skips taken ones (me, slot 2, slot 3) -> slot 4
+    if sel[3].value() ~= ns.T("MK_SLOT", 4) then table.insert(errors, "en spelare fick två markeringar: " .. sel[3].value()) end
     for k = 1, 5 do while sel[k].value() ~= ns.T("CFG_OFF") do sel[k].step(1) end end
     InCombatLockdown = function() return true end
     sel[4].step(1)

@@ -1,3 +1,7 @@
+# WarriorPlan 1.4.2
+
+- **Party marks follow party slots:** you pick you or party member 2-5 (the order in the party frames) for each mark, so the marks stay set when people leave or join. A new "Party marks icon" tick box (or /@SLASH@ marks) turns the feature on or off.
+
 # WarriorPlan 1.4.1
 
 - **Party marks only for players in range:** party members out of range get no mark icon until they come closer.
