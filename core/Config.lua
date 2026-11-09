@@ -240,6 +240,7 @@ end
 ---------------------------------------------------------------------------
 -- Refresh: texts follow the language, checkboxes follow the saved settings.
 ---------------------------------------------------------------------------
+local markCells = {} -- party mark icons (built with the window)
 local function Refresh()
   if not win then return end
   for _, fs in ipairs(labels) do fs:SetText(ns.T(fs.key)) end
@@ -254,6 +255,11 @@ local function Refresh()
     s.value:SetText(Val(ok and v or "?"))
   end
   for _, b in ipairs(win.tools) do b:SetText(ns.T(b.key)) end
+  for _, b in ipairs(markCells) do
+    local ok, v = pcall(b.item.value)
+    local off = not ok or v == ns.T("CFG_OFF")
+    b.name:SetText(off and ("|cff808080" .. ns.T("CFG_OFF") .. "|r") or Val(v))
+  end
 end
 ns.RefreshMenu = function() if win and win:IsShown() then Refresh() end end
 
@@ -334,6 +340,47 @@ local function Version()
   local v = get and get("@ADDON@", "Version")
   if v and not v:find("@") then return "v" .. v end
   return ""
+end
+
+-- Party marks: an icon per mark; click or scroll it to pick who gets it.
+local function MarkRow(x, y)
+  local cellW = 236 / #(ns.MARK_SELECTORS or {})
+  for i, item in ipairs(ns.MARK_SELECTORS or {}) do
+    local b = CreateFrame("Button", nil, win)
+    b:SetSize(cellW, 36)
+    b:SetPoint("TOPLEFT", x + (i - 1) * cellW, y)
+    b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    b:EnableMouseWheel(true)
+    local icon = b:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(20, 20)
+    icon:SetPoint("TOP", 0, 0)
+    icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. ns.PARTY_MARKS[i])
+    b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    b.name = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    b.name:SetPoint("TOP", icon, "BOTTOM", 0, -2)
+    b.name:SetWidth(cellW - 2)
+    b.name:SetWordWrap(false)
+    b.item = item
+    local function Go(dir)
+      local ok, err = pcall(item.step, dir)
+      if not ok then ns.Print(ns.T("ERROR", tostring(err))) end
+      Refresh()
+      if GameTooltip.IsOwned and GameTooltip:IsOwned(b) and b:GetScript("OnEnter") then b:GetScript("OnEnter")(b) end
+    end
+    b:SetScript("OnClick", function(_, button) Go(button == "RightButton" and -1 or 1) end)
+    b:SetScript("OnMouseWheel", function(_, delta) Go(delta > 0 and -1 or 1) end)
+    b:SetScript("OnEnter", function(self)
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      local ok, v = pcall(item.value)
+      GameTooltip:AddLine(ns.T(item.key) .. ": " .. Val(ok and v or "?"))
+      GameTooltip:AddLine(ns.T("MK_TIP"), 1, 1, 1, true)
+      GameTooltip:AddLine(ns.T("MK_HINT"), 0.6, 0.6, 0.6, true)
+      GameTooltip:Show()
+    end)
+    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    table.insert(markCells, b)
+  end
+  return y - 38
 end
 
 ---------------------------------------------------------------------------
@@ -444,6 +491,8 @@ local function CreateConfig()
   Column(COL[3], {
     { head = "CAT_ALERTS", sels = ALERT_SELECTORS },
     { head = "CAT_BUFFS", checks = Group(FEATURES, "CAT_BUFFS") },
+    -- Party marks: the five marks in a row, the player's name under each.
+    { head = "CAT_MARKS", after = function(x, y) return MarkRow(x, y) end },
   })
 
   -- Bottom: tools, four columns of buttons

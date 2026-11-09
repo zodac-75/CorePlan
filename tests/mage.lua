@@ -994,6 +994,60 @@ do
   IsInGroup, UnitExists, C_UnitAuras, UnitAura = oldIG, oldUE, oldC, oldU
   ns.RefreshBuffWatch()
 end
+print("--- Gruppmarkeringar ---")
+do
+  local oldIG, oldUE = IsInGroup, UnitExists
+  IsInGroup = function() return true end
+  IsInRaid = function() return false end
+  UnitExists = function(u) return u == "player" or u == "party1" or u == "party2" end
+  UnitName = function(u) if u == "party1" then return "Jennie" elseif u == "party2" then return "Tank" end return "Me" end
+  local marks, calls = {}, {}
+  GetRaidTargetIndex = function(u) return marks[u] end
+  SetRaidTarget = function(u, i)
+    table.insert(calls, u .. "=" .. i)
+    if marks[u] == i then marks[u] = nil else marks[u] = (i ~= 0) and i or nil end
+  end
+  ns.db.marks = {}
+  local sel = ns.MARK_SELECTORS
+  if not sel or #sel ~= 5 then table.insert(errors, "fem markeringar saknas i menyn") else
+    sel[1].step(1)                 -- Star: Off -> Me
+    sel[2].step(1)                 -- Circle: Off -> Jennie (Me has Star)
+    sel[5].step(-1)                -- Moon: Off -> (last) Tank
+    print("  " .. sel[1].value() .. " / " .. sel[2].value() .. " / " .. sel[5].value() .. "  anrop: " .. table.concat(calls, " "))
+    if marks.player ~= 1 or marks.party1 ~= 2 or marks.party2 ~= 5 then table.insert(errors, "markeringar fel: " .. table.concat(calls, " ")) end
+    local n = #calls
+    ns.ApplyPartyMarks()
+    if #calls ~= n then table.insert(errors, "satte om markeringar som redan satt (togglar av dem)") end
+    sel[3].step(1)                  -- Diamond: everyone has a mark, stays Off
+    if sel[3].value() ~= ns.T("CFG_OFF") then table.insert(errors, "en spelare fick två markeringar: " .. sel[3].value()) end
+    sel[2].step(1)                  -- Circle: Jennie -> Off (Tank has Moon)
+    if sel[2].value() ~= ns.T("CFG_OFF") or marks.party1 then table.insert(errors, "Circle togs inte bort från Jennie") end
+    for i = 1, 5 do while sel[i].value() ~= ns.T("CFG_OFF") do sel[i].step(1) end end
+    if next(marks) then table.insert(errors, "markeringar togs inte bort") end
+    InCombatLockdown = function() return true end
+    local before = #calls
+    sel[4].step(1)
+    if #calls ~= before then table.insert(errors, "markerade i strid") end
+    InCombatLockdown = function() return false end
+    sel[4].step(-1)
+    -- The icons in the settings window: click, right-click, scroll, tooltip.
+    local cells = {}
+    for _, w in ipairs(allFrames) do if w.item and w.name and tostring(w.item.key):find("^MK_") then cells[#cells + 1] = w end end
+    if #cells ~= 5 then table.insert(errors, "settings: " .. #cells .. " markeringsikoner, inte 5") else
+      local c = cells[2]
+      for _, f in ipairs({ function() c.__scripts.OnClick(c, "LeftButton") end, function() c.__scripts.OnClick(c, "RightButton") end,
+        function() c.__scripts.OnMouseWheel(c, -1) end, function() c.__scripts.OnEnter(c) end }) do
+        local ok, err = pcall(f); if not ok then table.insert(errors, "markeringsikon: " .. err) end
+      end
+      print("  ikon Circle: " .. tostring(c.name.__text))
+      -- Off -> click: me -> right-click: off -> scroll down: me
+      if not tostring(c.name.__text):find(ns.T("MK_ME"), 1, true) then table.insert(errors, "scroll gav fel spelare: " .. tostring(c.name.__text)) end
+      c.__scripts.OnClick(c, "RightButton")
+    end
+  end
+  IsInGroup, UnitExists, IsInRaid, SetRaidTarget, GetRaidTargetIndex = oldIG, oldUE, nil, nil, nil
+  ns.db.marks = nil
+end
 print("--- Walk on Air ---")
 do
   local oldC, oldU = C_UnitAuras, UnitAura

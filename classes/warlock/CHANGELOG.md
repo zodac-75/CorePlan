@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta28
+
+- **Party marks:** a new "Party marks" row in the settings window with the five usual marks (Star, Circle, Diamond, Triangle, Moon). Click or scroll a mark to pick who gets it: you or one of your party members. The addon puts them on while you're in a party, out of combat, and never twice on the same player.
+
 # WarlockPlan 1.0.0-beta27
 
 - **Party buffs only for players near you:** a party member in another zone or out of range of your buff no longer gets an icon. It shows up again as soon as they're in range.
