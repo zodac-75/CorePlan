@@ -1,3 +1,7 @@
+# DruidPlan 1.0.0-beta51
+
+- **Fix: Omen of Clarity no longer shows in the buff watcher.** It's passive in WoW Forever, so there was nothing to click and the icon kept flashing red.
+
 # DruidPlan 1.0.0-beta50
 
 - **Rank check can be quiet:** untick "Rank check messages in chat" under Leveling in the settings (or `/dp rankchat`). `/dp ranks` still checks your bars when you ask.

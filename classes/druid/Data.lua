@@ -130,8 +130,8 @@ ns.STATS.weapon = { [4] = true, [5] = true, [6] = true, [10] = true, [13] = true
 ns.BUFF_WATCH = {
   { spells = { "Mark of the Wild" }, buffs = { "Mark of the Wild", "Gift of the Wild" } },
   { spells = { "Thorns" }, buffs = { "Thorns" } },
-  { spells = { "Omen of Clarity" }, buffs = { "Omen of Clarity" } },
 }
+-- Omen of Clarity is passive in WoW Forever (nothing to cast), so it isn't watched.
 
 -- Party buffs: Mark of the Wild on everyone in your party.
 ns.PARTY_BUFFS = {
