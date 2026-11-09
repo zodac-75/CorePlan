@@ -1062,6 +1062,10 @@ do
     marks.player, marks.party1, marks.party2 = 1, 2, 5
     if ns.PartyMarkMacro() then table.insert(errors, "markeringsikon trots att alla har sin markering") end
     marks.party1 = nil
+    -- Too far away (not visible): left out until they're near.
+    UnitIsVisible = function(u) return u ~= "party1" end
+    if ns.PartyMarkMacro() then table.insert(errors, "markerar spelare långt bort") end
+    UnitIsVisible = nil
     local m2 = ns.PartyMarkMacro()
     if not m2 or m2.macro ~= "/tm [@party1] 2" then table.insert(errors, "bara den saknade markeringen ska med: " .. tostring(m2 and m2.macro)) end
     sel[3].step(1)                  -- Diamond: everyone has a mark, stays Off

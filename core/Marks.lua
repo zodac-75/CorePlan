@@ -57,6 +57,11 @@ function ns.PartyMarkMacro()
   for _, idx in ipairs(ns.PARTY_MARKS) do
     local name = Marks()[idx]
     local unit = name and UnitFor(name)
+    -- A mark only sticks on someone near you: far away players wait until they're close.
+    if unit and unit ~= "player" then
+      local ok, vis = pcall(UnitIsVisible, unit)
+      if ok and not (issecretvalue and issecretvalue(vis)) and not vis then unit = nil end
+    end
     if unit then
       local cur, known = CurrentMark(unit)
       if known and cur ~= idx then
