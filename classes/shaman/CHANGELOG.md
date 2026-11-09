@@ -1,3 +1,7 @@
+# ShamanPlan 1.1.0
+
+- **Stormstrike call-out (Enhancement):** the combat helper shouts "STORMSTRIKE!" the moment Stormstrike is ready. With Improved Stormstrike every dodge and parry resets its cooldown, so you never miss a free Stormstrike.
+
 # ShamanPlan 1.0.0
 
 - **First stable release.** Thanks to everyone who played the betas and reported bugs. Same features as the last beta.

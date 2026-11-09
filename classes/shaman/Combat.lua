@@ -1,5 +1,5 @@
 -- @ADDON@: combat helper. Calls out Maelstrom Weapon at 5 stacks (instant Lightning
--- Bolt), and reminds you of a missing Lightning Shield, weapon imbue or Flame Shock.
+-- Bolt) and Stormstrike when it is ready (Enhancement: dodges and parries reset it), and reminds you of a missing Lightning Shield, weapon imbue or Flame Shock.
 -- (The frame and settings keep their old "shatter" names so profiles stay compatible.)
 local _, ns = ...
 
@@ -68,6 +68,13 @@ local function Update()
     elseif n and n >= 3 and hasTarget then
       main = ns.Alert("|cff88bbff", ns.T("SH_STACKS", n), "Lightning Bolt")
     end
+  end
+
+  -- Stormstrike: with Improved Stormstrike every dodge or parry resets its cooldown, so
+  -- call it out the moment it's ready again.
+  if not main and inCombat and hasTarget and ns.PlanKey() == "enhancement" and ns.SpellUsable("Stormstrike") then
+    state = "go"
+    main = ns.AlertMain("|cff@COLOR@", "STORMSTRIKE!", ns.T("SH_STORMSTRIKE"), "Stormstrike")
   end
 
   -- Reminders, most important first.

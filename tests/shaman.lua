@@ -731,6 +731,22 @@ do
   SIM_SHIELD = "Lightning Shield"; dump("shield on")
   issecretvalue = function(v) return v == SIM_SECRET end
   SIM_SHIELD = SIM_SECRET; dump("shield name hidden")
+  do
+    local cs = rawget(_G, "C_Spell")
+    local oldCD, oldU = cs and cs.GetSpellCooldown, cs and cs.IsSpellUsable
+    local oldGCD, oldGU = rawget(_G, "GetSpellCooldown"), rawget(_G, "IsUsableSpell")
+    if cs then
+      cs.GetSpellCooldown = function() return { startTime = 0, duration = 0 } end
+      cs.IsSpellUsable = function() return true, false end
+    end
+    GetSpellCooldown = function() return 0, 0, 1 end
+    IsUsableSpell = function() return true, false end
+    local oldMW = SIM_MAELSTROM; SIM_MAELSTROM = 0
+    dump("stormstrike ready (reset by dodge/parry)")
+    SIM_MAELSTROM = oldMW
+    if cs then cs.GetSpellCooldown, cs.IsSpellUsable = oldCD, oldU end
+    GetSpellCooldown, IsUsableSpell = oldGCD, oldGU
+  end
   issecretvalue = nil; SIM_SHIELD = nil
   print("--- Ljud vid varningar: " .. SIM_SOUNDS .. " ---")
   if SIM_SOUNDS == 0 then table.insert(errors, "inget ljud trots alertSound = all") end
