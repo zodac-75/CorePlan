@@ -324,6 +324,10 @@ function PlayerTalentFrame_Update() end
 function wipe(t) for k in pairs(t) do t[k] = nil end return t end
 function UnitRace() return "Skyborne", "Skyborne", 30 end
 function UnitFactionGroup() return "Alliance", "Alliance" end
+C_EncounterJournal = { GetDungeonEntrancesForMap = function(map)
+  if map == 1434 then return { { name = "Zul'Gurub", position = { x = 0.5, y = 0.2 } }, { name = "The Drowned City", position = { x = 0.2, y = 0.3 } } } end
+  return {}
+end }
 SIM_INST = { "Westfall", "none", 0 }
 function GetInstanceInfo() return SIM_INST[1], SIM_INST[2], 0, "", 5, 0, false, SIM_INST[3] end
 SIM_FACING, SIM_PMAP, SIM_PX, SIM_PY = 0, 1436, 0.5, 0.5
@@ -504,6 +508,18 @@ do
     end
   end
   table.insert(chat, "[sim] dungeons i listan: " .. #listed)
+  local names = {}
+  for _, b in ipairs(listed) do names[b.dungeon.name] = true end
+  if names["Ragefire Chasm"] then table.insert(errors, "Alliance ser Ragefire Chasm") end
+  if not (names["Hall of Thanes"] and names["City of Dalaran"] and names["Shaper's Terrace"]) then table.insert(errors, "nya dungeons saknas i listan") end
+  for _, d in ipairs(ns.DUNGEONS) do
+    if d.name == "The Drowned City" and not (d.ent[1] and d.ent[1][1] == 1434 and math.abs(d.ent[1][2] - 20) < 0.01) then
+      table.insert(errors, "Drowned City fick ingen ingång från dungeon journal") end
+    if d.name == "Alcaz Prison" and #d.ent > 0 then table.insert(errors, "Alcaz Prison fick en påhittad ingång") end
+  end
+  local hq = 0
+  for _, q in pairs(ns.DQUESTS) do if q.races and q.races:find("O", 1, true) then hq = hq + 1 end end
+  if hq < 50 then table.insert(errors, "för få Horde-quests: " .. hq) end
   -- Arrow: point, turn, arrive, disappear
   ns.SetWaypoint(1436, 56.33, 47.52, "Gryan Stoutmantle")
   local ar = rawget(_G, "MagePlanArrow")

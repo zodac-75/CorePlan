@@ -36,10 +36,40 @@ local function ScanLog()
   end
 end
 
-local RACE_CODE = { [1] = "H", [3] = "D", [4] = "N", [7] = "G" }
+-- Race codes used in DQUESTS.races. Forever's new races (Skyborne on each side) get S or K.
+local RACE_CODE = { [1] = "H", [3] = "D", [4] = "N", [7] = "G", [2] = "O", [5] = "U", [6] = "T", [8] = "R" }
 local function PlayerRaceCode()
   local _, _, raceID = UnitRace("player")
-  return RACE_CODE[raceID] or "S"
+  return RACE_CODE[raceID] or (ns.IsHorde() and "K" or "S")
+end
+
+-- The quest giver for your faction.
+local function Giver(q)
+  if not q then return nil end
+  return (ns.IsHorde() and q.gh) or q.g
+end
+
+-- Dungeons in the other faction's capital are left out.
+local function Visible(d)
+  return not d.fac or d.fac == (ns.IsHorde() and "H" or "A")
+end
+
+-- New dungeons without entrance data: ask the game's dungeon journal for the entrance on the zone map.
+local function Simple(name) return (name or ""):lower():gsub("^the ", ""):gsub("[^%a]", "") end
+local function FindEntrance(d)
+  if #d.ent > 0 or not d.zone or d.ejTried then return end
+  d.ejTried = true
+  if not (C_EncounterJournal and C_EncounterJournal.GetDungeonEntrancesForMap) then return end
+  local ok, list = pcall(C_EncounterJournal.GetDungeonEntrancesForMap, d.zone)
+  if not ok or type(list) ~= "table" then return end
+  local want = Simple(d.name)
+  for _, e in ipairs(list) do
+    local n = Simple(e.name)
+    if n ~= "" and (n == want or n:find(want, 1, true) or want:find(n, 1, true)) and e.position then
+      local x, y = e.position.x, e.position.y
+      if x and y then d.ent[1] = { d.zone, x * 100, y * 100 } return end
+    end
+  end
 end
 
 local function QuestName(id)
@@ -108,8 +138,7 @@ local function Status(id)
 end
 
 local function GiverText(id)
-  local q = ns.DQUESTS[id]
-  local g = q and q.g
+  local g = Giver(ns.DQUESTS[id])
   if not g then return ns.T("DG_UNKNOWN") end
   if g.inside then return ns.T("DG_INSIDE", g[1]) end
   if g.item then return ns.T("DG_ITEM", ns.ItemName(g.item, g[1])) end
@@ -117,8 +146,7 @@ local function GiverText(id)
 end
 
 local function WayTo(id)
-  local q = ns.DQUESTS[id]
-  local g = q and q.g
+  local g = Giver(ns.DQUESTS[id])
   if g and g[2] then
     ns.SetWaypoint(g[2], g[3], g[4], g[1] .. " – " .. QuestName(id))
   elseif g and g.inside then
@@ -248,7 +276,19 @@ local function ShowDetail()
   t.right:SetText(ns.T("DG_LEVELS", d.lo, d.hi))
   y = y - 28
 
-  -- Entrances
+  -- Entrances (the newest dungeons: from the game's dungeon journal, or the zone and a hint)
+  FindEntrance(d)
+  if #d.ent == 0 and d.zone then
+    local r = GetRow()
+    r:SetHeight(ROW_H)
+    r:SetPoint("TOPLEFT", 4, y)
+    r.text:SetFontObject(GameFontHighlightSmall)
+    r.icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
+    r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    r.text:SetText(ns.T("DG_ENTRANCE"))
+    r.sub:SetText(ns.MapName(d.zone) .. (d.where and (" – " .. ns.Tx(d.where)) or ""))
+    y = y - ROW_H
+  end
   for i, e in ipairs(d.ent) do
     local r = GetRow()
     r:SetHeight(ROW_H)
@@ -271,7 +311,7 @@ local function ShowDetail()
     if ForMe(id) then
       local st, label, detail, way = Status(id)
       local q = ns.DQUESTS[id]
-      local key = q.n .. "|" .. ((q.g and q.g[1]) or "")
+      local key = q.n .. "|" .. ((Giver(q) and Giver(q)[1]) or "")
       local prev = seen[key]
       if not prev or order[st] < order[prev.st] then
         local entry = { id = id, st = st, label = label, detail = detail, way = way }
@@ -341,7 +381,7 @@ local function ShowDetail()
     y = y - ROW_H
     shown = shown + 1
   end
-  if shown == 0 then y = SmallText(y, ns.T("DG_NOQUESTS")) end
+  if shown == 0 then y = SmallText(y, ns.T(d.id == 0 and "DG_NEW" or "DG_NOQUESTS")) end
 
   -- Loot for your class
   y = Header(y - 6, ns.T("DG_LOOT"))
@@ -382,7 +422,7 @@ local function ShowDetail()
   if waiting then
     y = SmallText(y, ns.T("DG_LOADING"))
   elseif lootShown == 0 then
-    y = SmallText(y, ns.T("DG_NOLOOT"))
+    y = SmallText(y, ns.T(d.id == 0 and "DG_NEW_LOOT" or "DG_NOLOOT"))
   end
 
   content:SetHeight(-y + 8)
@@ -432,9 +472,9 @@ local function DefaultDungeon()
   end
   local level = UnitLevel("player") or 1
   for _, d in ipairs(ns.DUNGEONS) do
-    if level >= d.lo - 2 and level <= d.hi then return d end
+    if Visible(d) and level >= d.lo - 2 and level <= d.hi then return d end
   end
-  return ns.DUNGEONS[1]
+  for _, d in ipairs(ns.DUNGEONS) do if Visible(d) then return d end end
 end
 
 local function CreateWindow()
@@ -469,18 +509,26 @@ local function CreateWindow()
   local close = CreateFrame("Button", nil, win, "UIPanelCloseButton")
   close:SetPoint("TOPRIGHT", -2, -2)
 
-  -- Left: dungeons
-  for i, d in ipairs(ns.DUNGEONS) do
-    local b = CreateFrame("Button", nil, win)
-    b:SetSize(LIST_W - 8, 20)
-    b:SetPoint("TOPLEFT", 10, -42 - (i - 1) * 21)
+  -- Left: dungeons for your faction, in a scrollable list
+  local listScroll = CreateFrame("ScrollFrame", "@ADDON@DungeonList", win, "UIPanelScrollFrameTemplate")
+  listScroll:SetPoint("TOPLEFT", 10, -42)
+  listScroll:SetPoint("BOTTOMLEFT", 10, 40)
+  listScroll:SetWidth(LIST_W - 30)
+  local list = CreateFrame("Frame", nil, listScroll)
+  listScroll:SetScrollChild(list)
+  local i = 0
+  for _, d in ipairs(ns.DUNGEONS) do if Visible(d) then
+    i = i + 1
+    local b = CreateFrame("Button", nil, list)
+    b:SetSize(LIST_W - 30, 20)
+    b:SetPoint("TOPLEFT", 0, -(i - 1) * 21)
     b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     b.sel = b:CreateTexture(nil, "BACKGROUND")
     b.sel:SetAllPoints()
     b.sel:SetColorTexture(0.41, 0.8, 0.94, 0.2)
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     b.text:SetPoint("LEFT", 4, 0)
-    b.text:SetWidth(118)
+    b.text:SetWidth(100)
     b.text:SetJustifyH("LEFT")
     b.text:SetWordWrap(false)
     b.count = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -490,7 +538,8 @@ local function CreateWindow()
     b.dungeon = d
     b:SetScript("OnClick", function() Select(d) end)
     listButtons[i] = b
-  end
+  end end
+  list:SetSize(LIST_W - 30, i * 21)
 
   local divider = win:CreateTexture(nil, "ARTWORK")
   divider:SetColorTexture(0.41, 0.8, 0.94, 0.3)
@@ -528,7 +577,7 @@ function ns.ToggleDungeons(name)
   if name and name ~= "" then
     name = name:lower()
     for _, d in ipairs(ns.DUNGEONS) do
-      if d.name:lower():find(name, 1, true) then
+      if Visible(d) and d.name:lower():find(name, 1, true) then
         win:Show()
         Select(d)
         return

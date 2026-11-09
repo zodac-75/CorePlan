@@ -20,16 +20,29 @@ for id, name, ent in src:gmatch("%[(%d+)%] = {\"([^\"]+)\",nil,%d+,(%b{})") do
   DUN[tonumber(id)] = { name = name, ent = ent }
 end
 
--- Alliance leveling dungeons, in level order, with the usual level ranges.
--- {areaID, low, high, instanceID}
+-- Leveling dungeons, in level order, with the usual level ranges.
+-- {areaID, low, high, instanceID, faction}: faction "A"/"H" hides it from the other side
+-- (it sits in the other faction's capital).
 local LIST = {
-  {1581, 17, 26, 36}, {718, 17, 24, 43}, {209, 22, 30, 33}, {719, 24, 32, 48}, {717, 24, 32, 34},
-  {721, 29, 38, 90}, {491, 30, 40, 47}, {796, 30, 45, 189}, {722, 40, 50, 129}, {1337, 41, 51, 70},
+  {2437, 13, 18, 389, "H"}, {16919, 13, 18, 3065, "A"}, {16611, 15, 20, 2999},
+  {718, 15, 24, 43}, {1581, 17, 26, 36}, {209, 20, 30, 33}, {719, 24, 32, 48}, {717, 24, 32, 34, "A"},
+  {16732, 26, 31, 2998}, {16544, 28, 33, 2959},
+  {721, 29, 38, 90}, {491, 29, 38, 47}, {796, 30, 45, 189}, {722, 37, 46, 129}, {1337, 41, 51, 70},
   {1176, 44, 54, 209}, {2100, 46, 55, 349}, {1477, 50, 60, 109}, {1584, 52, 60, 230}, {1583, 55, 60, 229},
   {2557, 56, 60, 429}, {2057, 58, 60, 289}, {2017, 58, 60, 329},
 }
+-- New WoW Forever dungeons that QuestieDB has no data for yet: name, levels and the zone they're in.
+-- {name, low, high, uiMapID, where (English, Swedish)}
+local NEWER = {
+  {"The Drowned City", 35, 40, 1434, "Underwater off the coast west of Grom'gol", "Under vattnet utanför kusten väster om Grom'gol"},
+  {"Krol'dok Stronghold", 40, 45, 2548, "Riverglades", "Riverglades"},
+  {"Alcaz Prison", 48, 53, 1445, "Alcaz Island", "Alcaz Island"},
+  {"Blackmaw Hold", 55, 60, 1447, "Azshara", "Azshara"},
+  {"Shaper's Terrace", 58, 60, 1449, "The hills in northern Un'Goro Crater", "Kullarna i norra Un'Goro Crater"},
+}
 
 local ALLY, SKY = 4294967373, 4294967296
+local HORDE, SKYH = 8589934770, 8589934592
 -- Per class: class mask bit and the item classes worth listing as loot
 -- (2 = weapon subclasses, 4 = armor subclasses).
 local CLASSES = {
@@ -45,11 +58,11 @@ local CLASSES = {
 }
 local CLASS = assert(CLASSES[arg[1]], "usage: gendungeons.lua <mage|shaman|druid|warrior|paladin|warlock|priest|hunter|rogue> <out>")
 local SHAMAN = CLASS.mask
-local RACECODE = { [1] = "H", [4] = "D", [8] = "N", [64] = "G", [SKY] = "S" }
+local RACECODE = { [1] = "H", [4] = "D", [8] = "N", [64] = "G", [SKY] = "S",
+  [2] = "O", [16] = "U", [32] = "T", [128] = "R", [SKYH] = "K" }
 
+-- Quests for either faction; ForMe() in the addon filters by your race.
 local function allianceOK(q)
-  local r = q[6]
-  if r and r ~= 0 and (r & ALLY) == 0 then return false end
   local c = q[7]
   if c and c ~= 0 and (c & SHAMAN) == 0 then return false end
   if q[18] or q[31] or q[35] then return false end -- profession quests
@@ -57,7 +70,7 @@ local function allianceOK(q)
 end
 local function raceCodes(q)
   local r = q[6]
-  if not r or r == 0 or (r & ALLY) == ALLY then return nil end
+  if not r or r == 0 or ((r & ALLY) == ALLY and (r & HORDE) == HORDE) then return nil end
   local s = ""
   for bit, code in pairs(RACECODE) do if (r & bit) ~= 0 then s = s .. code end end
   return s
@@ -83,12 +96,12 @@ local function spot(spawns, ids)
   return inside and "inside" or nil
 end
 
-local function giver(q, ids)
+local function giver(q, ids, fac)
   local sb = q[2]
   if not sb then return nil end
   for _, npc in ipairs(sb[1] or {}) do
     local n = N[npc]
-    if n and (not n[13] or n[13]:find("A")) then
+    if n and (not n[13] or n[13]:find(fac)) then
       local s = spot(n[7], ids)
       if s then return { name = n[1], at = s } end
     end
@@ -112,7 +125,18 @@ local function addQuest(id, ids, depth)
   if quests[id] or depth > 12 then return end
   local q = Q[id]
   if not q or not allianceOK(q) then return end
-  local e = { name = q[1], req = q[4] or 1, lvl = q[5] or q[4] or 1, races = raceCodes(q), g = giver(q, ids) }
+  local r = q[6] or 0
+  local forA = r == 0 or (r & ALLY) ~= 0
+  local forH = r == 0 or (r & HORDE) ~= 0
+  local gA = forA and giver(q, ids, "A") or nil
+  local gH = forH and giver(q, ids, "H") or nil
+  local function same(a, b)
+    if not a or not b then return a == b end
+    return a.name == b.name and a.item == b.item and (a.at == b.at or (type(a.at) == "table" and type(b.at) == "table"
+      and a.at[1] == b.at[1] and a.at[2] == b.at[2] and a.at[3] == b.at[3]))
+  end
+  local e = { name = q[1], req = q[4] or 1, lvl = q[5] or q[4] or 1, races = raceCodes(q), g = gA or gH }
+  if gA and gH and not same(gA, gH) then e.gh = gH end
   quests[id] = e
   local function filt(list)
     if not list then return nil end
@@ -177,7 +201,7 @@ for _, d in ipairs(LIST) do
     end
   end
   table.sort(loot, function(a, b) if a[3] ~= b[3] then return a[3] < b[3] end return a[1] < b[1] end)
-  dungeons[#dungeons + 1] = { inst = d[4], id = id, name = D.name, lo = lo, hi = hi, ent = ent, quests = qlist, loot = loot }
+  dungeons[#dungeons + 1] = { inst = d[4], id = id, name = D.name:gsub("^The Hall", "Hall"), lo = lo, hi = hi, fac = d[5], ent = ent, quests = qlist, loot = loot }
   io.stderr:write(string.format("%-28s quests %2d  loot %2d  entrances %d\n", D.name, #qlist, #loot, #ent))
 end
 
@@ -185,24 +209,30 @@ end
 local function s(v) return string.format("%q", v) end
 local function f(v) return (string.format("%.2f", v):gsub("0+$", ""):gsub("%.$", "")) end
 local L = {}
-L[#L + 1] = "-- @ADDON@: dungeon quests and loot for WoW Forever (Alliance)."
+L[#L + 1] = "-- @ADDON@: dungeon quests and loot for WoW Forever (Alliance and Horde)."
 L[#L + 1] = "-- Generated from QuestieDB's Forever data (https://github.com/Questie/QuestieDB, GPL-3.0). Do not edit by hand."
 L[#L + 1] = "local _, ns = ..."
 L[#L + 1] = ""
-L[#L + 1] = "-- q = quest IDs; ent = entrances {uiMapID, x, y}; loot = {itemID, boss, required level}"
+L[#L + 1] = "-- q = quest IDs; ent = entrances {uiMapID, x, y}; loot = {itemID, boss, required level};"
+L[#L + 1] = "-- fac = only shown to that faction; zone/where = no entrance data yet, the zone and a hint instead"
 L[#L + 1] = "ns.DUNGEONS = {"
 for _, d in ipairs(dungeons) do
   local e = {}
   for _, p in ipairs(d.ent) do e[#e + 1] = string.format("{%d,%s,%s}", p[1], f(p[2]), f(p[3])) end
   local lt = {}
   for _, l in ipairs(d.loot) do lt[#lt + 1] = string.format("{%d,%s,%d}", l[1], s(l[2]), l[3]) end
-  L[#L + 1] = string.format("  { id = %d, inst = %d, name = %s, lo = %d, hi = %d,\n    ent = {%s},\n    q = {%s},\n    loot = {%s} },",
-    d.id, d.inst, s(d.name), d.lo, d.hi, table.concat(e, ","), table.concat(d.quests, ","), table.concat(lt, ","))
+  L[#L + 1] = string.format("  { id = %d, inst = %d, name = %s, lo = %d, hi = %d,%s\n    ent = {%s},\n    q = {%s},\n    loot = {%s} },",
+    d.id, d.inst, s(d.name), d.lo, d.hi, d.fac and (" fac = " .. s(d.fac) .. ",") or "", table.concat(e, ","), table.concat(d.quests, ","), table.concat(lt, ","))
+end
+for _, n in ipairs(NEWER) do
+  L[#L + 1] = string.format("  { id = 0, inst = 0, name = %s, lo = %d, hi = %d, zone = %d, where = { %s, %s },\n    ent = {}, q = {}, loot = {} },",
+    s(n[1]), n[2], n[3], n[4], s(n[5]), s(n[6]))
 end
 L[#L + 1] = "}"
 L[#L + 1] = ""
 L[#L + 1] = "-- n = name, req = required level, lvl = quest level, any/all = pre-quests, excl = exclusive with,"
-L[#L + 1] = "-- races = allowed races (H D N G S) when restricted, g = giver {name, map, x, y} / {name, inside} / {name, item}"
+L[#L + 1] = "-- races = allowed races when restricted (Alliance H D N G S, Horde O U T R K),"
+L[#L + 1] = "-- g = giver {name, map, x, y} / {name, inside} / {name, item}; gh = the Horde giver when it differs"
 L[#L + 1] = "ns.DQUESTS = {"
 local ids = {}
 for id in pairs(quests) do ids[#ids + 1] = id end
@@ -214,10 +244,13 @@ for _, id in ipairs(ids) do
   if e.all then parts[#parts + 1] = "all={" .. table.concat(e.all, ",") .. "}" end
   if e.excl then parts[#parts + 1] = "excl={" .. table.concat(e.excl, ",") .. "}" end
   if e.races then parts[#parts + 1] = "races=" .. s(e.races) end
-  if e.g then
-    if e.g.item then parts[#parts + 1] = string.format("g={%s,item=%d}", s(e.g.name), e.g.item)
-    elseif e.g.at == "inside" then parts[#parts + 1] = string.format("g={%s,inside=true}", s(e.g.name))
-    else parts[#parts + 1] = string.format("g={%s,%d,%s,%s}", s(e.g.name), e.g.at[1], f(e.g.at[2]), f(e.g.at[3])) end
+  for _, k in ipairs({ "g", "gh" }) do
+    local g = e[k]
+    if g then
+      if g.item then parts[#parts + 1] = string.format("%s={%s,item=%d}", k, s(g.name), g.item)
+      elseif g.at == "inside" then parts[#parts + 1] = string.format("%s={%s,inside=true}", k, s(g.name))
+      else parts[#parts + 1] = string.format("%s={%s,%d,%s,%s}", k, s(g.name), g.at[1], f(g.at[2]), f(g.at[3])) end
+    end
   end
   L[#L + 1] = string.format("  [%d] = {%s},", id, table.concat(parts, ","))
 end
