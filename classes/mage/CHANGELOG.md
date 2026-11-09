@@ -1,3 +1,7 @@
+# MagePlan 1.27.1
+
+- **Party marks only for players in range:** party members out of range get no mark icon until they come closer.
+
 # MagePlan 1.27.0
 
 - **Party marks:** pick who gets Star, Circle, Diamond, Triangle and Moon in the settings window (click or scroll a mark to go through your party). When you're in a party and someone near you is missing their mark, a mark icon shows in the buff row: one click marks them all, without changing your target.

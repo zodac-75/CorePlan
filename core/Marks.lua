@@ -57,10 +57,16 @@ function ns.PartyMarkMacro()
   for _, idx in ipairs(ns.PARTY_MARKS) do
     local name = Marks()[idx]
     local unit = name and UnitFor(name)
-    -- A mark only sticks on someone near you: far away players wait until they're close.
+    -- A mark only sticks on someone near you: players out of range (the party frames'
+    -- ~40 yards) wait until they're close. The buff row checks again every second.
     if unit and unit ~= "player" then
+      local readable = function(v) return not (issecretvalue and issecretvalue(v)) end
       local ok, vis = pcall(UnitIsVisible, unit)
-      if ok and not (issecretvalue and issecretvalue(vis)) and not vis then unit = nil end
+      if ok and readable(vis) and not vis then unit = nil end
+      if unit and UnitInRange then
+        local ok2, inRange, checked = pcall(UnitInRange, unit)
+        if ok2 and readable(inRange) and readable(checked) and checked and not inRange then unit = nil end
+      end
     end
     if unit then
       local cur, known = CurrentMark(unit)

@@ -1066,6 +1066,9 @@ do
     UnitIsVisible = function(u) return u ~= "party1" end
     if ns.PartyMarkMacro() then table.insert(errors, "markerar spelare långt bort") end
     UnitIsVisible = nil
+    UnitInRange = function(u) return u ~= "party1", true end
+    if ns.PartyMarkMacro() then table.insert(errors, "markerar spelare utom räckhåll") end
+    UnitInRange = nil
     local m2 = ns.PartyMarkMacro()
     if not m2 or m2.macro ~= "/tm [@party1] 2" then table.insert(errors, "bara den saknade markeringen ska med: " .. tostring(m2 and m2.macro)) end
     sel[3].step(1)                  -- Diamond: everyone has a mark, stays Off
