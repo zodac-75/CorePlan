@@ -3,6 +3,7 @@
   "color": "abd473",
   "slash": "hp",
   "class": "HUNTER",
+  "curseId": 1793633,
   "modules": [
     "Combat.lua",
     "Ammo.lua"
