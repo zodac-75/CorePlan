@@ -1,0 +1,10 @@
+{
+  "name": "RoguePlan",
+  "color": "fff569",
+  "slash": "rp",
+  "class": "ROGUE",
+  "modules": [
+    "Combat.lua"
+  ],
+  "notes": "Rogue leveling companion with Combat, Assassination and Subtlety plans: talent plan, upgrade check, rank check, poison watcher, combo point call-outs, dungeon guide, profession assistant, XP tracker."
+}

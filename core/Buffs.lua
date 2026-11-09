@@ -5,8 +5,10 @@
 --
 -- An entry: { spells = { "Arcane Intellect" } or function(plan) -> list,
 --             buffs = { names that count }, match = function(name) -> bool,
---             imbue = true (weapon buff), only = function() -> bool, warn = seconds }
--- The icon casts the first spell in the list you know.
+--             imbue = true (weapon buff, or "off" for the off-hand), only = function() -> bool,
+--             warn = seconds, use = function() -> { name, macro, icon } or nil }
+-- The icon casts the first spell in the list you know. With use (poisons and other items),
+-- the icon runs that macro instead, and the entry only shows while use() returns something.
 --
 -- Party buffs (ns.PARTY_BUFFS, same fields plus mana = true for mana users only, or
 -- spells = function(unit) -> list): one icon per party member who is missing it, with
@@ -22,7 +24,17 @@ local warned = {} -- spells already announced as running out (sound + message on
 ns.REBUFF_TIMES = { 0, 1, 2, 3, 5, 10 }
 local function RebuffSec() return (ns.db.rebuffMin or 3) * 60 end
 
+local function Use(e)
+  if not e.use then return nil end
+  local ok, u = pcall(e.use)
+  if ok and type(u) == "table" and u.name then return u end
+end
+
 local function Spells(e)
+  if e.use then
+    local u = Use(e)
+    return u and u.name or nil
+  end
   local list = type(e.spells) == "function" and e.spells(ns.PlanKey()) or e.spells or {}
   for _, s in ipairs(list) do
     if ns.SpellInfo(s) then return s end
@@ -124,10 +136,11 @@ local function LookupByName(unit, names)
 end
 
 -- Seconds left on the weapon buff, 0 for none, nil when unknown.
-local function ImbueLeft()
+local function ImbueLeft(offHand)
   if not GetWeaponEnchantInfo then return nil end
-  local ok, has, ms = pcall(GetWeaponEnchantInfo)
+  local ok, has, ms, _, _, hasOff, msOff = pcall(GetWeaponEnchantInfo)
   if not ok then return nil end
+  if offHand then has, ms = hasOff, msOff end
   if not has then return 0 end
   return (ms or 0) / 1000
 end
@@ -142,7 +155,7 @@ local function Needed()
     if spell and not Hidden(EntryKey(e, idx, false)) and (not e.only or e.only()) then
       local left, dur
       if e.imbue then
-        local l = ImbueLeft()
+        local l = ImbueLeft(e.imbue == "off")
         left = l and (l == 0 and 0 or l) or nil
       else
         local best
@@ -346,7 +359,12 @@ local function Update()
     b.spell, b.key, b.whoName, b.entry, b.unit = n.spell, n.key, n.who, n.entry, n.unit
     local reach = InRange(n.unit, n.spell)
     b.outOfRange = not reach
-    if n.unit then
+    local use = not n.unit and n.entry and Use(n.entry)
+    if use then
+      -- An item (a poison): the macro uses it and puts it on the weapon.
+      b:SetAttribute("spell1", nil)
+      b:SetAttribute("macrotext1", use.macro)
+    elseif n.unit then
       -- Party: a /cast that names its target, so the game can never put it on you instead
       -- (auto self-cast); out of range, the click does nothing at all.
       b:SetAttribute("spell1", nil)
@@ -358,9 +376,9 @@ local function Update()
     b:SetAttribute("unit", n.unit or "player")
     b.who:SetText(n.who and n.who:sub(1, 7) or "")
     -- No casting while you're moving it.
-    local castType = n.unit and "macro" or "spell"
+    local castType = (n.unit or use) and "macro" or "spell"
     b:SetAttribute("type1", (not unlocked and reach) and castType or nil)
-    b.icon:SetTexture(ns.SpellIcon(n.spell))
+    b.icon:SetTexture(use and use.icon or ns.SpellIcon(n.spell))
     -- Red frame: missing. Yellow frame: running out.
     if n.left == 0 then b.border:SetColorTexture(1, 0.25, 0.25, 0.9)
     elseif n.left < 0 then b.border:SetColorTexture(0.5, 0.5, 0.5, 0.6)
