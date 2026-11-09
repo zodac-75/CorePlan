@@ -114,7 +114,8 @@ local function SpellsOnBars()
     onBar[name] = onBar[name] or {}
     table.insert(onBar[name], entry)
   end
-  for slot = 1, 120 do
+  -- 1-180: the normal bars plus the extra pages some bar and controller addons use.
+  for slot = 1, 180 do
     local ok, kind, id = pcall(GetActionInfo, slot)
     if ok and kind == "spell" and id then
       local name = ns.SpellInfo(id)
@@ -138,8 +139,19 @@ local function SpellsOnBars()
       end
     end
   end
+  -- Spells bound straight to a key or a controller button ("SPELL Frostbolt") count too.
+  if GetBindingKey then
+    for _, name in pairs(wanted) do
+      if not onBar[name] then
+        local ok, key = pcall(GetBindingKey, "SPELL " .. name)
+        if ok and key then Add(name, { slot = 0, bound = key }) end
+      end
+    end
+  end
   return onBar
 end
+
+local lastPrinted = ""
 
 local function Scan(force)
   if InCombatLockdown and InCombatLockdown() then
@@ -165,7 +177,9 @@ local function Scan(force)
       else
         local bestRank = RankNumber(bestId)
         for _, s in ipairs(slots) do
-          if s.macro then
+          if s.bound then
+            -- Bound to a key: nothing to check, the game casts the best rank.
+          elseif s.macro then
             -- A macro is only outdated when it names a lower rank.
             if s.macroRank and bestRank and s.macroRank < bestRank then
               table.insert(newOutdated, ns.T("RANKS_OLD_MACRO", name, s.macroRank, s.macro, bestRank))
@@ -194,6 +208,14 @@ local function Scan(force)
   outdated = newOutdated
   for _, n in ipairs(newMissing) do table.insert(missing, n) end
 
+  -- Automatic checks are quiet when turned off, and never repeat the same list.
+  local key = table.concat(newOutdated, "|")
+  local quiet = not force and (ns.db.rankChatOff or key == lastPrinted)
+  lastPrinted = key
+  if quiet then
+    newOutdated = {}
+    if ns.db.rankChatOff then newMissing = {} end
+  end
   if #newOutdated > 0 then
     ns.Print("|cffff9900" .. ns.T("RANKS_OLD_HDR") .. "|r")
     for _, l in ipairs(newOutdated) do ns.Print("  " .. l) end
@@ -227,6 +249,11 @@ ns.RegisterModule(function()
         click = function() missing = {}; Scan(true) end, tip = ns.T("PW_CLICK_RANKS") }
     end
   end)
+end)
+
+ns.RegisterCommand("rankchat", true, function()
+  ns.db.rankChatOff = not ns.db.rankChatOff
+  ns.Print(ns.db.rankChatOff and ns.T("RANKCHAT_OFF") or ns.T("RANKCHAT_ON"))
 end)
 
 ns.RegisterCommand("ranks", true, function(arg)

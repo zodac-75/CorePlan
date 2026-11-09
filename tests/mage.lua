@@ -1013,6 +1013,27 @@ do
   end
   GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
 end
+print("--- Rank-koll med handkontroll (spells bundna direkt) ---")
+do
+  local printed = {}
+  local oldPrint = ns.Print
+  ns.Print = function(m) table.insert(printed, tostring(m)) end
+  GetBindingKey = function(cmd) if cmd:find("^SPELL ") then return "PADRSHOULDER" end end
+  ns.RunCommand("ranks", "")
+  local all = table.concat(printed, " | ")
+  print("  " .. all)
+  if all:find("isn't on any button", 1, true) or all:find("inte ligger på någon knapp", 1, true) then
+    table.insert(errors, "bundna spells räknas som saknade: " .. all)
+  end
+  GetBindingKey = nil
+  printed = {}
+  ns.RunCommand("rankchat", "")
+  if not ns.db.rankChatOff then table.insert(errors, "rankchat stängde inte av") end
+  fire("ACTIONBAR_SLOT_CHANGED")
+  ns.RunCommand("rankchat", "")
+  ns.Print = oldPrint
+  print("  " .. table.concat(printed, " | "))
+end
 print("--- Väskgenomgång ---")
 do
   methods.SetAttribute = methods.SetAttribute or function(self, k, v) rawset(self, "__attr_" .. k, v) end

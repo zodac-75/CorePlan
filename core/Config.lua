@@ -48,6 +48,7 @@ local FEATURES = {
   { group = "CAT_ITEMS", key = "MM_TT", on = function() return not ns.db.tooltipOff end, cmd = "tooltip" },
   { group = "CAT_ITEMS", key = "MM_BAGBTN", on = function() return not ns.db.bagBtnOff end, cmd = "bagbutton" },
   { group = "CAT_ITEMS", key = "MM_BAGAUTO", on = function() return not ns.db.bagAutoOff end, cmd = "bagauto" },
+  { group = "CAT_LEVEL", key = "MM_RANKCHAT", on = function() return not ns.db.rankChatOff end, cmd = "rankchat" },
   { group = "CAT_LEVEL", key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
   { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
   { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },

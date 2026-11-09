@@ -1,3 +1,9 @@
+# DruidPlan 1.0.0-beta50
+
+- **Rank check can be quiet:** untick "Rank check messages in chat" under Leveling in the settings (or `/dp rankchat`). `/dp ranks` still checks your bars when you ask.
+- The rank check no longer repeats the same list in chat every time your bars change.
+- **Controllers:** spells bound straight to a key or a controller button now count as "on a button", and the check also looks at the extra bar pages (slots 121-180) that controller and bar addons use.
+
 # DruidPlan 1.0.0-beta49
 
 - **Bag check button on your bags:** a small disenchant icon above your open bags opens the bag check. Works with the normal bags and with Baganator, Bagnon, AdiBags, ArkInventory, BetterBags and ElvUI bags. Turn it off with "Bag check button on your bags" in the settings.
