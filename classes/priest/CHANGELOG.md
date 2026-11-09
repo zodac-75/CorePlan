@@ -1,3 +1,7 @@
+# PriestPlan 1.0.0-beta16
+
+- **Dungeon guide stays open after /reload:** if the dungeon window was open, it opens again after a reload or login, on the same dungeon.
+
 # PriestPlan 1.0.0-beta15
 
 - **Dungeon guide window resizes:** Ctrl + mouse wheel now makes the dungeon window bigger or smaller, also over its lists. A plain wheel still scrolls. The size is saved.

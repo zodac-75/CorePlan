@@ -650,6 +650,22 @@ end
 
 ns.RegisterModule(function()
   CreateWindow()
+  -- Open after a /reload (or login) if it was open, on the same dungeon.
+  if ns.db.dungeonOpen then
+    local want
+    for _, d in ipairs(ns.DUNGEONS) do
+      if Visible(d) and d.name == ns.db.dungeonSel then want = d end
+    end
+    selected = want or selected or DefaultDungeon()
+    win:Show()
+    if selected then pcall(Select, selected) end
+  end
+  local save = CreateFrame("Frame")
+  save:RegisterEvent("PLAYER_LOGOUT")
+  save:SetScript("OnEvent", function()
+    ns.db.dungeonOpen = win and win:IsShown() or nil
+    ns.db.dungeonSel = selected and selected.name or nil
+  end)
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("PLAYER_ENTERING_WORLD")
   ev:RegisterEvent("ZONE_CHANGED_NEW_AREA")

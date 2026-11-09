@@ -525,6 +525,12 @@ do
     if math.abs(w:GetScale() - s1) > 0.001 then table.insert(errors, "scroll utan Ctrl ändrade storleken") end
     w:SetScale(s0); ns.db.dungeonScale = nil
     IsControlKeyDown = oldCtrl
+    -- Open at logout/reload is remembered, with the dungeon shown.
+    w:Show()
+    fire("PLAYER_LOGOUT")
+    print("  sparat vid reload: open=" .. tostring(ns.db.dungeonOpen) .. " " .. tostring(ns.db.dungeonSel))
+    if not ns.db.dungeonOpen or not ns.db.dungeonSel then table.insert(errors, "dungeonfönstret sparas inte som öppet") end
+    ns.db.dungeonOpen, ns.db.dungeonSel = nil, nil
   end
   local names = {}
   for _, b in ipairs(listed) do names[b.dungeon.name] = true end

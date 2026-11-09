@@ -1,3 +1,7 @@
+# WarriorPlan 1.3.3
+
+- **Dungeon guide stays open after /reload:** if the dungeon window was open, it opens again after a reload or login, on the same dungeon.
+
 # WarriorPlan 1.3.2
 
 - **Dungeon guide window resizes:** Ctrl + mouse wheel now makes the dungeon window bigger or smaller, also over its lists. A plain wheel still scrolls. The size is saved.

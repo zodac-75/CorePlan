@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta31
+
+- **Dungeon guide stays open after /reload:** if the dungeon window was open, it opens again after a reload or login, on the same dungeon.
+
 # WarlockPlan 1.0.0-beta30
 
 - **Dungeon guide window resizes:** Ctrl + mouse wheel now makes the dungeon window bigger or smaller, also over its lists. A plain wheel still scrolls. The size is saved.
