@@ -968,13 +968,23 @@ do
   local attrs = jb and jb.__attrs or {}
   print("  Jennie: type1=" .. tostring(attrs.type1) .. " macro=" .. tostring(attrs.macrotext1))
   if attrs.type1 ~= "macro" or not tostring(attrs.macrotext1):find("@party1", 1, true) then table.insert(errors, "party buff should cast with an explicit target") end
-  -- Out of spell range: clicking does nothing (no self-buff by auto self-cast).
+  -- Out of spell range or in another zone: no icon for them at all.
+  local function jennieShown()
+    for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown and rawget(b, "whoName") == "Jennie" then return true end end
+    return false
+  end
   IsSpellInRange = function() return 0 end
   ns.RefreshBuffWatch()
-  attrs = jb and jb.__attrs or {}
-  print("  utom räckhåll: type1=" .. tostring(attrs.type1))
-  if attrs.type1 ~= nil then table.insert(errors, "out of range but still clickable") end
+  print("  utom räckhåll: visas=" .. tostring(jennieShown()))
+  if jennieShown() then table.insert(errors, "out of range but still shown") end
   IsSpellInRange = nil
+  ns.RefreshBuffWatch()
+  if not jennieShown() then table.insert(errors, "back in range but not shown") end
+  UnitIsVisible = function(u) return u ~= "party1" end
+  ns.RefreshBuffWatch()
+  if jennieShown() then table.insert(errors, "in another zone but still shown") end
+  UnitIsVisible = nil
+  ns.RefreshBuffWatch()
   ns.RunCommand("partybuffs"); ns.RefreshBuffWatch()
   local after = 0
   for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown then after = after + 1 end end

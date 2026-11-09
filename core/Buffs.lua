@@ -146,6 +146,8 @@ local function ImbueLeft(offHand)
 end
 
 -- What each entry needs now: { spell, left } where left = 0 means missing.
+local InRange -- below: can your buff reach them?
+
 local function Needed()
   local buffs, unsure, durs = PlayerBuffs()
   local out = {}
@@ -189,7 +191,11 @@ local function Needed()
   if not ns.db.partyBuffsOff and ns.PARTY_BUFFS and IsInGroup and IsInGroup() then
     for i = 1, 4 do
       local unit = "party" .. i
-      if UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) then
+      -- Only party members you can see (same zone, nearby): no icons for someone far away.
+      local okV, visible = pcall(UnitIsVisible, unit)
+      if okV and issecretvalue and issecretvalue(visible) then visible = true end
+      if not okV then visible = true end
+      if UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) and visible then
         local theirs, unsureP = PlayerBuffs(unit)
         local isMana
         local okP, pt = pcall(UnitPowerType, unit)
@@ -210,7 +216,8 @@ local function Needed()
             local left = best or (not unsureP and 0 or nil)
             if left == nil and not e.match then left = LookupByName(unit, e.buffs) end
             local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
-            if left and (left == 0 or left < warn) then
+            -- Out of buff range: no icon until they come closer (checked every second).
+            if left and (left == 0 or left < warn) and InRange(unit, spell) then
               local okN, who = pcall(UnitName, unit)
               if not okN or (issecretvalue and issecretvalue(who)) then who = nil end
               table.insert(out, { entry = e, spell = spell, left = left, unit = unit, who = who,
@@ -235,7 +242,7 @@ local function SpellRange(spell, unit)
   return r == true or r == 1
 end
 
-local function InRange(unit, spell)
+function InRange(unit, spell)
   if not unit then return true end
   local r = SpellRange(spell, unit)
   if r ~= nil then return r end
@@ -333,7 +340,8 @@ local function Update()
       if b:IsShown() then
         local still
         for _, n in ipairs(list) do if n.key == b.key then still = n end end
-        b:SetAlpha(still and (InRange(still.unit, still.spell) and 1 or 0.4) or 0.25)
+        -- A party icon whose player went out of range is hidden (alpha only: secure button in combat).
+        b:SetAlpha(still and (InRange(still.unit, still.spell) and 1 or 0.4) or (b.unit and 0 or 0.25))
         b.time:SetText(still and still.left > 0 and Short(still.left) or "")
       end
     end
