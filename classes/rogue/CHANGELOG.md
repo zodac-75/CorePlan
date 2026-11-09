@@ -1,3 +1,7 @@
+# RoguePlan 1.0.0-beta8
+
+- **Dungeon guide window resizes:** Ctrl + mouse wheel now makes the dungeon window bigger or smaller, also over its lists. A plain wheel still scrolls. The size is saved.
+
 # RoguePlan 1.0.0-beta7
 
 - **Party marks removed:** the game only lets a click set raid marks, so the automatic party marks from the last version couldn't work and caused a "blocked action" warning. The feature is gone.

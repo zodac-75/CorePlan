@@ -508,6 +508,24 @@ do
     end
   end
   table.insert(chat, "[sim] dungeons i listan: " .. #listed)
+  -- Ctrl + wheel resizes the window, also over the scroll areas; a plain wheel doesn't.
+  do
+    local w = rawget(_G, "MagePlanDungeons")
+    local sf = rawget(_G, "MagePlanDungeonScroll")
+    local oldCtrl = IsControlKeyDown
+    local s0 = w:GetScale()
+    IsControlKeyDown = function() return true end
+    w.__scripts.OnMouseWheel(w, 1)
+    if sf and sf.__scripts.OnMouseWheel then sf.__scripts.OnMouseWheel(sf, 1) end
+    local s1 = w:GetScale()
+    IsControlKeyDown = function() return false end
+    if sf and sf.__scripts.OnMouseWheel then sf.__scripts.OnMouseWheel(sf, 1) end
+    print("  dungeonfönster skala: " .. s0 .. " -> " .. s1 .. " -> " .. w:GetScale())
+    if math.abs(s1 - (s0 + 0.1)) > 0.001 then table.insert(errors, "Ctrl+scroll ändrar inte dungeonfönstrets storlek") end
+    if math.abs(w:GetScale() - s1) > 0.001 then table.insert(errors, "scroll utan Ctrl ändrade storleken") end
+    w:SetScale(s0); ns.db.dungeonScale = nil
+    IsControlKeyDown = oldCtrl
+  end
   local names = {}
   for _, b in ipairs(listed) do names[b.dungeon.name] = true end
   if names["Ragefire Chasm"] then table.insert(errors, "Alliance ser Ragefire Chasm") end

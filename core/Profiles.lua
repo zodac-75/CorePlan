@@ -14,7 +14,7 @@ local KEYS = {
   "pos", "posW", "posS", "hidden",
   "craftPos", "craftPosW", "craftPosS",
   "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "bagPos", "bagScale", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
-  "arrowPos", "dungeonPos", "configPos",
+  "arrowPos", "dungeonPos", "dungeonScale", "configPos",
   "minimapAngle", "minimapHidden",
   -- look
   "theme", "fontSize",
@@ -91,6 +91,7 @@ local function ApplyAll()
   end
   Place(_G.@ADDON@Arrow, db.arrowPos, { "TOP", "TOP", 0, -120 })
   Place(_G.@ADDON@Dungeons, db.dungeonPos, { "CENTER", "CENTER", 0, 40 })
+  if _G.@ADDON@Dungeons then _G.@ADDON@Dungeons:SetScale(db.dungeonScale or 1) end
   Place(_G.@ADDON@Config, db.configPos, { "CENTER", "CENTER", 0, -30 })
   if ns.UpdateMinimapButton then ns.UpdateMinimapButton() end
   ns.ApplyThemeAll()

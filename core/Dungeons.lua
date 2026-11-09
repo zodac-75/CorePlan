@@ -494,6 +494,29 @@ local function CreateWindow()
   end)
   local p = ns.db.dungeonPos
   if p then win:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else win:SetPoint("CENTER", 0, 40) end
+  -- Ctrl + mouse wheel resizes the window (anywhere on it, also over the lists).
+  win:SetScale(ns.db.dungeonScale or 1)
+  local function Resize(delta)
+    local s = math.max(0.6, math.min(1.8, win:GetScale() + delta * 0.05))
+    win:SetScale(s)
+    ns.db.dungeonScale = s
+  end
+  win:EnableMouseWheel(true)
+  win:SetScript("OnMouseWheel", function(_, delta)
+    if IsControlKeyDown() and not ns.db.locked then Resize(delta) end
+  end)
+  -- The scroll areas take the wheel first: Ctrl resizes, a plain wheel still scrolls.
+  local function CtrlResize(sf)
+    local scrollIt = sf:GetScript("OnMouseWheel")
+    sf:SetScript("OnMouseWheel", function(self, delta)
+      if IsControlKeyDown() then
+        if not ns.db.locked then Resize(delta) end
+      elseif scrollIt then
+        scrollIt(self, delta)
+      end
+    end)
+  end
+  win.CtrlResize = CtrlResize
   table.insert(ns.themedFrames, win)
   ns.ApplyTheme(win)
   table.insert(UISpecialFrames, "@ADDON@Dungeons")
@@ -558,6 +581,8 @@ local function CreateWindow()
   content = CreateFrame("Frame", nil, scroll)
   content:SetSize(DETAIL_W, 400)
   scroll:SetScrollChild(content)
+  CtrlResize(scroll)
+  CtrlResize(listScroll)
 
   win:SetScript("OnShow", Refresh)
   win:Hide()
