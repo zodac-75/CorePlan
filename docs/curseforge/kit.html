@@ -1,0 +1,479 @@
+<title>Plan Addons på CurseForge</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one column of addon sheets, a class-colored tab strip on top, copy buttons beside each field. */
+:root {
+  --bg: #f3f1ec;
+  --panel: #ffffff;
+  --ink: #23201b;
+  --muted: #6b655a;
+  --line: #ddd7cb;
+  --gold: #9a6b12;
+  --ok: #2f7d3a;
+  --cls: #2f6fb0;
+  --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15130f; --panel: #1f1c17; --ink: #ece6da; --muted: #a39b8b; --line: #3a352c;
+    --gold: #e0b252; --ok: #6cc47a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15130f; --panel: #1f1c17; --ink: #ece6da; --muted: #a39b8b; --line: #3a352c;
+  --gold: #e0b252; --ok: #6cc47a; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header h1 { font-family: var(--font-display); font-size: clamp(24px, 4vw, 34px); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 18px 0 22px; padding: 0; list-style: none; counter-reset: step; }
+.how li { counter-increment: step; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 10px 40px; position: relative; font-size: 14px; }
+.how li::before { content: counter(step); position: absolute; left: 12px; top: 9px; font-family: var(--font-display); font-weight: 700; color: var(--gold); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 2px solid var(--line); }
+.tab { font: 600 15px var(--font-body); background: none; border: 0; padding: 8px 14px 9px; cursor: pointer; color: var(--muted);
+  border-bottom: 3px solid transparent; margin-bottom: -2px; display: flex; align-items: center; gap: 8px; }
+.tab .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--c); }
+.tab:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.sheet { background: var(--panel); border: 1px solid var(--line); border-top: 0; border-radius: 0 0 10px 10px; padding: 20px; display: grid; gap: 18px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.label { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.label span { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.label small { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.value { font-family: var(--font-mono); font-size: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; overflow-wrap: anywhere; }
+.copy { font: 600 13px var(--font-body); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 6px; padding: 5px 11px; cursor: pointer; }
+.copy:hover { border-color: var(--cls); }
+.copy.done { color: var(--ok); border-color: var(--ok); }
+.btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.cats { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); }
+.chip.main { border-color: var(--cls); font-weight: 700; }
+.desc { border: 1px solid var(--line); border-radius: 8px; padding: 4px 20px 16px; min-width: 0; overflow-wrap: anywhere; }
+.desc h2 { font-family: var(--font-display); font-size: 22px; margin: 18px 0 4px; color: var(--cls); }
+.desc h3 { font-size: 16px; margin: 18px 0 4px; }
+.desc p { margin: 6px 0; max-width: 72ch; }
+.desc ul { margin: 6px 0; padding-left: 22px; }
+.desc li { margin: 3px 0; }
+.desc code { font-family: var(--font-mono); font-size: 13px; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.note { font-size: 13px; color: var(--muted); }
+.post { white-space: pre-wrap; font-family: var(--font-body); font-size: 14.5px; line-height: 1.55; }
+.md { display: none; }
+@media (prefers-reduced-motion: no-preference) { .copy { transition: color .15s, border-color .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Plan Addons på CurseForge</h1>
+    <p>Namn, sammanfattning, kategorier och beskrivning för alla fem addons. Beskrivningarna är på engelska eftersom de flesta på CurseForge läser engelska.</p>
+  </header>
+  <ol class="how">
+    <li>Öppna projektet på authors.curseforge.com och gå till <b>General</b> för namn och sammanfattning.</li>
+    <li>Gå till <b>Description</b>. Tryck <b>Kopiera beskrivning</b> här och klistra in med Ctrl+V. Rubriker och listor följer med.</li>
+    <li>Står editorn på Markdown i stället, använd <b>Kopiera som Markdown</b>.</li>
+  </ol>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <section class="sheet" id="sheet" role="tabpanel" aria-live="polite"></section>
+</div>
+
+<script>
+const COMMON = {
+  buffs: (slash, list) => [
+    `A movable row of icons that shows up when one of your buffs is missing (red frame) or running out (yellow frame, with time left). <b>Click an icon to cast the buff.</b> Watches ${list}.`,
+    "Rebuff reminder: out of combat it warns you early, by default when a buff has 3 minutes left, with a short message, a pulsing icon and a sound if you want one. Choose 1, 2, 3, 5 or 10 minutes, or off.",
+    `Pick which buffs it watches: every buff has its own tick box under "Buffs and reminders" in the settings.`,
+    `Turn on "Move" to drag it and Ctrl + mouse wheel to resize it. Turn it on or off in the quick menu or with <code>/${slash} buffs</code>.`,
+  ],
+  party: (what) => [
+    `<b>Buff your party:</b> party members who are missing ${what} get their own icon with their name on it. <b>Click it to buff them.</b>`,
+    "It uses the buff's own range: when someone is out of range the icon fades and a click does nothing, so you never buff yourself by accident.",
+    "Turn it on or off with \"Buff my party too\", and pick the party buffs one by one.",
+  ],
+  alerts: [
+    "Alerts show the spell's icon next to the text, or only icons, or only text.",
+    "Choose the alert size and an optional alert sound (call-outs only, or every reminder) from five sounds.",
+  ],
+  plan: (slash) => [
+    "Talent plan for every level from 10 to 60. When you get a point, a green arrow and a glowing frame point at the next talent in WoW Forever's talent window.",
+    `Pick your spec in the settings window or with <code>/${slash} plan</code>. The talent plan, the upgrade check and the combat helper switch with it.`,
+    "Every plan is checked against the live WoW Forever talent tree, so no talent is planned before its row or its prerequisite is open.",
+  ],
+  train: (slash) => [
+    `Trainer list: tells you at login and on level-up which new spells and ranks your class trainer has for you (<code>/${slash} train</code>).`,
+    `Rank check: finds old spell ranks on your action bars, also inside macros, and new spells that aren't on a button yet (<code>/${slash} ranks</code>). Spells bound straight to a key or a controller button count too, and you can turn its chat messages off.`,
+  ],
+  gear: [
+    "Upgrade check in item tooltips: about how much better or worse an item is than what you wear, using weights for your spec.",
+    "Quest reward picker: marks the best upgrade with a green <b>+</b> and the reward that sells for the most with a gold <b>$</b>. Works in the normal quest window and in DialogueUI.",
+    "Gear and consumable notes at the right level.",
+  ],
+  bags: (slash) => [
+    `<b>Bag check window</b> (<code>/${slash} de</code>): lists your junk, the gear to sell to a vendor, the gear to disenchant and the gear worth more on the auction house, with what each is worth (AH prices from Auctionator if you have it).`,
+    "<b>Sell from the window:</b> with a vendor open, click a row to sell it, or one button sells your junk and vendor items, 12 at a time so you can still buy them back.",
+    "<b>Disenchant from the window</b> if you have Enchanting: click a row to disenchant it. Shift-click sells anything to the vendor anyway.",
+    "Right-click an item to keep it: it's never sold or disenchanted from the window.",
+    "Opens by itself when you talk to a vendor and have something to sell. You can also open it with the small disenchant icon above your open bags (also with Baganator and other bag addons) or by middle-clicking the minimap icon.",
+    "Sell, disenchant and AH advice also shows in item tooltips.",
+  ],
+  dungeons: (cls) => [
+    `Dungeon guide: pick a dungeon to see its quests, where to pick them up and the ${cls} loot from its bosses.`,
+    "Waypoint arrow to the quest giver or the dungeon entrance.",
+    "Can open by itself when you enter a dungeon.",
+  ],
+  profs: (def) => [
+    `<b>Pick your own two professions</b> in the settings window, from all nine: Alchemy, Blacksmithing, Enchanting, Engineering, Herbalism, Leatherworking, Mining, Skinning and Tailoring. If you don't pick, the addon uses the professions you have learned, or ${def}.`,
+    "Crafting assistant for Alchemy, Blacksmithing, Enchanting, Engineering, Leatherworking and Tailoring: what to craft for every skill bracket and the materials you need.",
+    "Gathering help for Herbalism, Mining and Skinning: which herbs, ore and leather you can gather now and the best zones for your skill.",
+    "Gear and consumable notes for your professions, and a reminder when it's time to train the next profession rank.",
+    "<b>Cooking, First Aid and Fishing</b> too, without using a profession slot: what to cook or make for every skill range and where to learn or buy the recipe, where to fish and with which lures, and where the Expert books and Artisan quests are. Tick the ones you want in the settings.",
+  ],
+  more: (slash) => [
+    "XP tracker with XP per hour and time to level.",
+    "Drink alert: out of combat with low mana, a big \"Drink!\" with an icon in the middle of the screen (casters and hybrids). It works even though WoW Forever hides your mana from addons.",
+    "Walk on Air timer for Skyborne: a big countdown with a bar so you land before you fall.",
+    `Gold goal, for example <code>/${slash} goal 100 mount</code>.`,
+    "Zone tips when you enter a zone.",
+    "Minimap icon: left-click for a quick menu (spec and on/off switches, sorted into groups), right-click for the full settings window with your class logo, where everything is sorted into clear groups, and middle-click for the bag check.",
+    "Movable, lockable windows and layout profiles shared by all your characters.",
+    "English and Swedish.",
+    "Easter eggs with friends who also run a Plan addon: try /kiss, /dance, /cheer, /hug, /wave, /drink, /chicken, /train, /sleep, /laugh, /salute, /cry and /flex on them. /dance at each other for a dance party, and everyone gets fireworks when one of you levels up. You can turn them off.",
+  ],
+};
+
+const ADDONS = [
+  {
+    key: "mage", name: "MagePlan", color: "#69ccf0", slash: "mp", cls: "mage", id: 1785085,
+    summary: "Mage leveling companion for WoW Forever: Frost, Fire or Arcane talent plans, upgrade check, shatter and polymorph alerts, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Mage", "Professions", "Tooltip", "Combat"],
+    tagline: "Your mage leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Frost leveling</b>: AoE and Shatter, the fastest and safest way to level.", "<b>Fire leveling</b>: big crits and Ignite.", "<b>Arcane</b>: mana and burst for raids and dungeons."],
+    specNote: "The upgrade check follows your spec: Frost counts Frost spell damage, Fire counts Fire spell damage and Arcane counts Arcane spell damage.",
+    classTitle: "Mage tools",
+    classBits: [
+      "Shatter indicator: tells you when your target is frozen or Fingers of Frost procs and Ice Lance hits hard, and when Ice Barrier is missing.",
+      "Polymorph alerts: warns 5 seconds before your sheep breaks, and when it breaks early.",
+      "Conjured food, water and mana gem tracker that warns when you are running low.",
+      "Merchant's Favor goals for Tailoring and Enchanting when you have them.",
+    ],
+    profDefault: "Tailoring and Enchanting",
+    buffs: "Arcane Intellect and your armor (Mage, Ice or Frost Armor)",
+    party: "Arcane Intellect (only those who use mana)",
+  },
+  {
+    key: "shaman", name: "ShamanPlan", color: "#3fa9ff", slash: "sp", cls: "shaman", id: 1787755,
+    summary: "Shaman leveling companion for WoW Forever: Enhancement, Elemental or Restoration talent plans, upgrade check, Maelstrom alerts, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Shaman", "Professions", "Tooltip", "Combat"],
+    tagline: "Your shaman leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Enhancement</b>: Stormstrike, Maelstrom Weapon and a big two-hander.", "<b>Elemental</b>: Lightning Overload and Lightning Mastery.", "<b>Restoration</b>: healer for dungeons, with Riptide at 40."],
+    specNote: "The upgrade check follows your spec: attack power for Enhancement, spell power for Elemental and healing for Restoration.",
+    classTitle: "Combat helper",
+    classBits: [
+      "Calls out Maelstrom Weapon at 5 stacks, so you never miss an instant Lightning Bolt.",
+      "Calls out Stormstrike the moment it's ready. With Improved Stormstrike every dodge and parry resets it, so you never miss a free Stormstrike.",
+      "Reminds you of a missing Lightning Shield, weapon imbue or Flame Shock.",
+      "Movable and resizable, and you can turn it off with <code>/sp combat</code>.",
+    ],
+    profDefault: "Alchemy and Herbalism",
+    buffs: "Lightning or Water Shield and the best weapon imbue for your spec",
+  },
+  {
+    key: "druid", name: "DruidPlan", color: "#ff9a3c", slash: "dp", cls: "druid", id: 1787775,
+    summary: "Druid leveling companion for WoW Forever: Feral, Balance or Restoration talent plans, upgrade check, combo point alerts, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Druid", "Professions", "Tooltip", "Combat"],
+    tagline: "Your druid leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Feral</b>: Cat Form leveling with Leader of the Pack and Primal Bite.", "<b>Balance</b>: Moonkin Form, Eclipse and Moonfury.", "<b>Restoration</b>: healer for dungeons, with Wild Growth at 40."],
+    specNote: "The upgrade check follows your spec: attack power for Feral, spell power for Balance and healing for Restoration.",
+    classTitle: "Combat helper",
+    classBits: [
+      "In Cat Form it calls out Clearcasting (a free attack) and 5 combo points (Rip or Ferocious Bite).",
+      "Reminds you of a missing Mark of the Wild or Thorns, and Rake on your target.",
+      "Movable and resizable, and you can turn it off with <code>/dp combat</code>.",
+    ],
+    profDefault: "Alchemy and Herbalism",
+    buffs: "Mark of the Wild and Thorns",
+    party: "Mark of the Wild",
+  },
+  {
+    key: "warrior", name: "WarriorPlan", color: "#c79c6e", slash: "war", cls: "warrior", id: 1787968,
+    summary: "Warrior leveling companion for WoW Forever: Arms, Fury or Protection talent plans, upgrade check, Overpower and Execute alerts, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Warrior", "Professions", "Tooltip", "Combat"],
+    tagline: "Your warrior leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Arms</b>: a big two-hander, Deep Wounds and Mortal Strike.", "<b>Fury</b>: two weapons, Flurry and Bloodthirst.", "<b>Protection</b>: sword and board, Shield Slam at 40."],
+    specNote: "The upgrade check follows your spec: weapon damage, strength and crit for Arms and Fury, and stamina, defense, avoidance and block for Protection.",
+    classTitle: "Combat helper",
+    classBits: [
+      "Calls out Overpower (Arms and Fury) and Revenge (Protection) when they light up.",
+      "Calls out Execute when your target drops below 20% and Victory Rush after a kill.",
+      "Reminds you of a missing Battle Shout, Rend on your target (Arms) or Demoralizing Shout (Protection).",
+      "Movable and resizable, and you can turn it off with <code>/war combat</code>.",
+    ],
+    profDefault: "Blacksmithing and Mining",
+    buffs: "Battle Shout, when you have an enemy targeted",
+  },
+  {
+    key: "paladin", name: "PaladinPlan", color: "#f58cba", slash: "pal", cls: "paladin", id: 1787977,
+    summary: "Paladin leveling companion for WoW Forever: Protection, Retribution or Holy talent plans, upgrade check, seal and blessing alerts, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Paladin", "Professions", "Tooltip", "Combat"],
+    tagline: "Your paladin leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Protection</b>: tank with Holy Shield at 30 and Shieldsworn at 40.", "<b>Retribution</b>: a big two-hander, Vengeance and Unsealed Wrath.", "<b>Holy</b>: healer for dungeons, with Holy Shock and Light's Vigil."],
+    specNote: "The upgrade check follows your spec: tank stats for Protection, strength and weapon damage for Retribution, and healing for Holy.",
+    classTitle: "Combat helper",
+    classBits: [
+      "Calls out Hammer of Wrath when your target drops below 20%, and Exorcism against undead and demons.",
+      "Reminds you of a missing aura (pick which one in the settings, or Auto), Righteous Fury (Protection), seal or blessing, and when Holy Shield is ready.",
+      "Movable and resizable, and you can turn it off with <code>/pal combat</code>.",
+    ],
+    profDefault: "Blacksmithing and Mining",
+    buffs: "your aura, a blessing and Righteous Fury (Protection)",
+    party: "a blessing (Wisdom for mana users and Might for the rest, or <b>right-click the icon to pick the blessing for each player</b>, remembered by name)",
+  },
+  {
+    key: "warlock", name: "WarlockPlan", color: "#9482c9", slash: "wl", cls: "warlock", id: 1792150,
+    summary: "Warlock leveling companion for WoW Forever: Affliction, Demonology or Destruction talent plans, upgrade check, Shadow Trance and DoT alerts, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Warlock", "Professions", "Tooltip", "Combat"],
+    tagline: "Your warlock leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Affliction</b>: DoTs and drains, Nightfall, Siphon Life at 30 and Wrack at 40.", "<b>Demonology</b>: a strong pet, Soul Link at 30, Master Demonologist and Demonic Pact at 40.", "<b>Destruction</b>: fast Shadow Bolts, Ruin, Conflagrate, Shadow and Flame and Incinerate."],
+    specNote: "The upgrade check follows your spec: Shadow damage for Affliction and Demonology, and Shadow and Fire damage for Destruction.",
+    classTitle: "Combat helper",
+    classBits: [
+      "Calls out Shadow Trance (an instant Shadow Bolt from Nightfall), Shadowburn when your target is low, Decimation (a fast Soul Fire) and Conflagrate.",
+      "Reminds you of a missing Corruption, Bane of Agony, Siphon Life or Immolate on your target.",
+      "Tells you to Life Tap when your mana is low and your health is high, to summon your demon, and when you are out of Soul Shards.",
+      "Movable and resizable, and you can turn it off with <code>/wl combat</code>.",
+    ],
+    profDefault: "Tailoring and Enchanting",
+    buffs: "Demon Skin or Demon Armor, and Soul Link while your demon is out",
+  },
+  {
+    key: "priest", name: "PriestPlan", color: "#ffffff", slash: "pp", cls: "priest", id: 1792569,
+    summary: "Priest leveling companion for WoW Forever: Shadow, Holy or Discipline talent plans, upgrade check, Mind Blast and DoT alerts, Fortitude for your party, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Priest", "Professions", "Tooltip", "Combat"],
+    tagline: "Your priest leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Shadow</b>: Spirit Tap, Mind Flay, Vampiric Embrace and Shadowform at 40, the fastest way to level.", "<b>Holy</b>: healer for dungeons, with Spirit of Redemption and Prayer of Mending at 40.", "<b>Discipline</b>: shields and Penance, with Power Infusion at 40."],
+    specNote: "The upgrade check follows your spec: Shadow damage for Shadow, and healing for Holy and Discipline.",
+    classTitle: "Combat helper",
+    classBits: [
+      "Calls out Mind Blast (Shadow) and Penance (Discipline) when they are ready.",
+      "Reminds you of a missing Shadow Word: Pain or Vampiric Embrace on your target, and a missing Inner Fire.",
+      "Movable and resizable, and you can turn it off with <code>/pp combat</code>.",
+    ],
+    profDefault: "Tailoring and Enchanting",
+    buffs: "Power Word: Fortitude, Inner Fire and Shadowform (Shadow)",
+    party: "Power Word: Fortitude",
+  },
+  {
+    key: "hunter", name: "HunterPlan", color: "#abd473", slash: "hp", cls: "hunter", id: 1793633,
+    summary: "Hunter leveling companion for WoW Forever: Beast Mastery, Marksmanship or Survival talent plans, upgrade check with agility and ranged weights, aspect watcher, ammo alert, pet reminders, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Hunter", "Professions", "Tooltip", "Combat"],
+    tagline: "Your hunter leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Beast Mastery</b>: a strong pet with Deadly Aspects, Unleashed Fury, Ferocity and Frenzy.", "<b>Marksmanship</b>: big ranged crits with Mortal Shots, Trueshot Aura and Sniper Shot at 40.", "<b>Survival</b>: melee and agility with Predator's Edge, Lightning Reflexes and Lacerating Strikes."],
+    specNote: "The upgrade check follows your spec: ranged attack power and agility for Beast Mastery and Marksmanship, melee attack power and agility for Survival. Intellect counts too, since every plan takes Careful Aim.",
+    classTitle: "Hunter tools",
+    classBits: [
+      "<b>Ammo alert:</b> counts the arrows or bullets in your bags and quiver and warns you out of combat, in the middle of the screen, before you run dry (below 200 by default, <code>/hp ammo 300</code> to change it).",
+      "Gear notes tell you when better arrows and bullets come out (levels 10, 25 and 40).",
+      "Pet reminders: tells you when your pet is missing or dead, and when it's low and needs Mend Pet.",
+      "Reminds you of a missing Hunter's Mark or Serpent Sting on your target.",
+      "Survival: calls out Mongoose Bite and Counterattack when they light up.",
+      "Movable and resizable, and you can turn it off with <code>/hp combat</code>.",
+    ],
+    profDefault: "Leatherworking and Skinning",
+    buffs: "your aspect (any aspect counts, a click casts Aspect of the Hawk) and Trueshot Aura",
+    party: null,
+  },
+  {
+    key: "rogue", name: "RoguePlan", color: "#fff569", slash: "rp", cls: "rogue", id: 1794105,
+    summary: "Rogue leveling companion for WoW Forever: Combat, Assassination or Subtlety talent plans, upgrade check with agility and attack power weights, poison watcher, combo point call-outs, dungeon guide and help for any two professions.",
+    main: "Quests & Leveling", extra: ["Class: Rogue", "Professions", "Tooltip", "Combat"],
+    tagline: "Your rogue leveling companion for WoW Forever, from level 1 to 60.",
+    specs: ["<b>Combat</b>: swords or fist weapons, Sinister Strike, Blade Flurry and Adrenaline Rush at 40.", "<b>Assassination</b>: daggers and poisons, Cold Blood, Seal Fate and Mutilate at 40.", "<b>Subtlety</b>: openers from Stealth, Ghostly Strike, Hemorrhage and Death Mark at 40."],
+    specNote: "The upgrade check counts agility, attack power, crit and hit for every spec, and weapon speed and damage for your main hand.",
+    classTitle: "Rogue tools",
+    classBits: [
+      "<b>Poisons in the buff watcher:</b> an icon for each weapon without poison. <b>Click it and the best poison in your bags goes on that weapon</b> (Instant on the main hand, Deadly on the off-hand). It warns 5 minutes before a poison runs out.",
+      "Calls out 5 combo points (time for Eviscerate or Slice and Dice) and Riposte for Combat.",
+      "Reminds you when Slice and Dice is down, and of Rupture on your target for Assassination.",
+      "Tells you about the level 20 poison quest, so you don't miss it.",
+      "Movable and resizable, and you can turn it off with <code>/rp combat</code>.",
+    ],
+    profDefault: "Leatherworking and Skinning",
+    buffs: "poisons on both weapons",
+    party: null,
+  },
+];
+
+function ul(items) { return "<ul>" + items.map(i => `<li>${i}</li>`).join("") + "</ul>"; }
+
+function descHtml(a) {
+  return [
+    `<h2>${a.name}</h2>`,
+    `<p><b>${a.tagline}</b> ${a.name} tells you what to train, which talent to take, which gear is better and where to go next, so you can spend your time playing instead of looking things up.</p>`,
+    `<h3>Pick your spec</h3>`, ul(a.specs), `<p>${a.specNote}</p>`,
+    `<h3>Talents</h3>`, ul(COMMON.plan(a.slash)),
+    `<h3>${a.classTitle}</h3>`, ul(a.classBits.concat(COMMON.alerts)),
+    `<h3>Buff watcher</h3>`, ul(COMMON.buffs(a.slash, a.buffs).concat(a.party ? COMMON.party(a.party) : [])),
+    `<h3>Spells and ranks</h3>`, ul(COMMON.train(a.slash)),
+    `<h3>Gear</h3>`, ul(COMMON.gear),
+    `<h3>Sell, disenchant and junk</h3>`, ul(COMMON.bags(a.slash)),
+    `<h3>Dungeons</h3>`, ul(COMMON.dungeons(a.cls)),
+    `<h3>Professions</h3>`, ul(COMMON.profs(a.profDefault)),
+    `<h3>And more</h3>`, ul(COMMON.more(a.slash)),
+    `<h3>Getting started</h3>`,
+    `<p>Type <code>/${a.slash}</code> to open the plan window, <code>/${a.slash} config</code> for settings and <code>/${a.slash} help</code> for all commands. You can also right-click the minimap icon.</p>`,
+    `<p>${a.name} only runs on ${a.cls} characters, so you can keep all the Plan addons installed: MagePlan, ShamanPlan, DruidPlan, WarriorPlan, PaladinPlan, WarlockPlan, PriestPlan, HunterPlan and RoguePlan.</p>`,
+    `<p>Made for WoW Forever. Dungeon quest data comes from QuestieDB (GPL-3.0). Found a bug or have an idea? Leave a comment.</p>`,
+  ].join("\n");
+}
+
+// Markdown version for the CurseForge editor's Markdown mode.
+function toMarkdown(html) {
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  const inline = (n) => Array.from(n.childNodes).map(c => {
+    if (c.nodeType === 3) return c.textContent;
+    const t = c.tagName;
+    if (t === "B") return `**${inline(c)}**`;
+    if (t === "CODE") return "`" + c.textContent + "`";
+    return inline(c);
+  }).join("");
+  const out = [];
+  for (const el of d.children) {
+    if (el.tagName === "H2") out.push("# " + inline(el));
+    else if (el.tagName === "H3") out.push("## " + inline(el));
+    else if (el.tagName === "P") out.push(inline(el));
+    else if (el.tagName === "UL") out.push(Array.from(el.children).map(li => "- " + inline(li)).join("\n"));
+  }
+  return out.join("\n\n") + "\n";
+}
+
+async function copyText(btn, text, html) {
+  let ok = false;
+  try {
+    if (html && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([text], { type: "text/plain" }),
+      })]);
+      ok = true;
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    }
+  } catch (e) { ok = false; }
+  if (!ok) {
+    // Fallback: select the rendered text so Ctrl+C copies it.
+    const target = btn.closest(".field").querySelector(".desc, .value");
+    const r = document.createRange(); r.selectNodeContents(target);
+    const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    btn.textContent = "Markerat, tryck Ctrl+C";
+  } else {
+    const old = btn.dataset.label;
+    btn.textContent = "Kopierat";
+    btn.classList.add("done");
+    setTimeout(() => { btn.textContent = old; btn.classList.remove("done"); }, 1600);
+  }
+}
+
+// First comment for the project page: asks for ideas, bugs and build feedback.
+const IDEAS = {
+  mage: ["Is the Shatter indicator showing at the right moments, and is it in a good spot on your screen?", "Which mage chores would you like help with? Portals, food and water for the group, mana gems, anything else?"],
+  shaman: ["Would totem reminders help, or call-outs for Stormstrike and shocks?", "Elemental and Restoration players: what do you miss most while leveling?"],
+  druid: ["Would you want bear tanking support, or help with powershifting?", "Balance and Restoration players: what do you miss most while leveling?"],
+  warrior: ["Would stance reminders or a Sunder Armor counter for tanking help?", "Arms, Fury or Protection: does the combat helper call out the right things for your spec?"],
+  paladin: ["Is the aura picker enough, or do you want more help with seals and Judgement?", "Would blessing tracking for your party be useful?"],
+  warlock: ["Would you like a Soul Shard counter, or Healthstone and Soulstone reminders for your group?", "Which demon do you level with, and should the combat helper know about your pet?"],
+  priest: ["Should the addon remind you to Shield or Renew your group, or call out when a party member is low?", "Shadow, Holy or Discipline: does the combat helper call out the right things for your spec?"],
+  rogue: ["Would a reminder to restock poisons at the vendor help, or a Pick Pocket helper?", "Do the poison icons and combo point call-outs work right for your spec?"],
+  hunter: ["Would pet happiness and feeding reminders help, or tips on which pets to tame?", "Does the ammo alert warn at the right time, and is the aspect icon working for you?"],
+};
+
+function postText(a) {
+  return [
+    `Hi everyone, and thanks for trying ${a.name}!`,
+    ``,
+    `${a.name} is brand new and still in beta. I build it while I level my own ${a.cls} on WoW Forever, so your feedback decides what comes next.`,
+    ``,
+    `I'd love to hear about:`,
+    `- Features you want. What would make leveling your ${a.cls} easier?`,
+    ...(IDEAS[a.key] || []).map(q => `- ${q}`),
+    `- The talent plans. Do you level with a different build? Tell me which talents and why.`,
+    `- Bugs. Anything that looks wrong, shows the wrong thing or throws an error.`,
+    ``,
+    `When you report a bug, please include:`,
+    `- The addon version (top left of the settings window)`,
+    `- Your spec and level`,
+    `- What you did and what happened`,
+    `- The full Lua error if you got one (BugSack makes it easy to copy)`,
+    ``,
+    `The code is open source (GPL-3.0) on GitHub, and you're welcome to open issues there too: https://github.com/zodac-75/CorePlan/issues`,
+    ``,
+    `Happy leveling!`,
+    `zodac`,
+  ].join("\n");
+}
+
+function render(a) {
+  const sheet = document.getElementById("sheet");
+  document.documentElement.style.setProperty("--cls", a.color);
+  const html = descHtml(a);
+  sheet.innerHTML = `
+    <div class="field">
+      <div class="label"><span>Projektnamn</span><button class="copy" data-label="Kopiera" data-k="name">Kopiera</button></div>
+      <div class="value">${a.name}</div>
+    </div>
+    <div class="field">
+      <div class="label"><span>Sammanfattning</span><small>${a.summary.length} tecken</small><button class="copy" data-label="Kopiera" data-k="summary">Kopiera</button></div>
+      <div class="value">${a.summary}</div>
+    </div>
+    <div class="field">
+      <div class="label"><span>Kategorier</span><small>huvudkategori först</small></div>
+      <div class="cats"><span class="chip main">${a.main}</span>${a.extra.map(c => `<span class="chip">${c}</span>`).join("")}</div>
+      <div class="note">Spelversion: 1.60.1 (WoW Forever). Projekt-ID ${a.id}.</div>
+    </div>
+    <div class="field">
+      <div class="label"><span>Beskrivning</span>
+        <div class="btns"><button class="copy" data-label="Kopiera beskrivning" data-k="desc">Kopiera beskrivning</button>
+        <button class="copy" data-label="Kopiera som Markdown" data-k="md">Kopiera som Markdown</button></div></div>
+      <div class="desc">${html}</div>
+    </div>
+    <div class="field">
+      <div class="label"><span>Första kommentaren</span><small>klistra in under Comments och fäst den</small><button class="copy" data-label="Kopiera" data-k="post">Kopiera</button></div>
+      <div class="value post">${postText(a).replace(/&/g, "&amp;").replace(/</g, "&lt;")}</div>
+    </div>`;
+  sheet.querySelectorAll(".copy").forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.k;
+    if (k === "name") copyText(b, a.name);
+    else if (k === "summary") copyText(b, a.summary);
+    else if (k === "desc") copyText(b, sheet.querySelector(".desc").innerText, html);
+    else if (k === "post") copyText(b, postText(a));
+    else copyText(b, toMarkdown(html));
+  }));
+}
+
+function select(key) {
+  const a = ADDONS.find(x => x.key === key) || ADDONS[0];
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.k === a.key)));
+  render(a);
+  try { localStorage.setItem("planTab", a.key); } catch (e) {}
+}
+
+const tabs = document.getElementById("tabs");
+ADDONS.forEach(a => {
+  const b = document.createElement("button");
+  b.className = "tab"; b.role = "tab"; b.dataset.k = a.key; b.id = "tab-" + a.key;
+  b.style.setProperty("--c", a.color);
+  b.innerHTML = `<span class="dot"></span>${a.name}`;
+  b.addEventListener("click", () => { select(a.key); history.replaceState(null, "", "#" + a.key); });
+  tabs.appendChild(b);
+});
+let start = (location.hash || "").slice(1);
+if (!start) { try { start = localStorage.getItem("planTab") || ""; } catch (e) {} }
+select(start || "mage");
+window.addEventListener("hashchange", () => select(location.hash.slice(1)));
+</script>

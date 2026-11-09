@@ -22,6 +22,12 @@ tests and release steps. This file has the rules and the things that bit us befo
   Wait until the editor content starts with `<h2><Addon></h2>` before editing (the page is an SPA
   and keeps the old project's text for a moment). If logged out, tell him; don't log in.
 - Every addon gets every core feature ("same on all addons").
+- The CurseForge texts live in `docs/curseforge/`: `kit.html` (name, summary, categories,
+  description and first comment for every addon; also published as his "CurseForge kit"
+  artifact) and one `<Addon>.html` per addon, written by `node docs/curseforge/export.js`.
+  Change the kit, export, push, then in the browser fetch
+  `https://raw.githubusercontent.com/zodac-75/CorePlan/main/docs/curseforge/<Addon>.html`
+  and put it in the editor (see above).
 
 ## Addons
 
