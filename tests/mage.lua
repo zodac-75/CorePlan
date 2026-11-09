@@ -1023,6 +1023,73 @@ do
   IsInGroup, UnitExists, C_UnitAuras, UnitAura = oldIG, oldUE, oldC, oldU
   ns.RefreshBuffWatch()
 end
+print("--- Gruppmarkeringar ---")
+do
+  local oldIG, oldUE = IsInGroup, UnitExists
+  IsInGroup = function() return true end
+  IsInRaid = function() return false end
+  UnitExists = function(u) return u == "player" or u == "party1" or u == "party2" end
+  UnitName = function(u) if u == "party1" then return "Jennie" elseif u == "party2" then return "Tank" end return "Me" end
+  local marks, calls = {}, {}
+  GetRaidTargetIndex = function(u) return marks[u] end
+  SetRaidTarget = function(u, i)
+    table.insert(calls, u .. "=" .. i)
+    if marks[u] == i then marks[u] = nil else marks[u] = (i ~= 0) and i or nil end
+  end
+  ns.db.marks = {}
+  local sel = ns.MARK_SELECTORS
+  if not sel or #sel ~= 5 then table.insert(errors, "fem markeringar saknas i menyn") else
+    sel[1].step(1)                 -- Star: Off -> Me
+    sel[2].step(1)                 -- Circle: Off -> Jennie (Me has Star)
+    sel[5].step(-1)                -- Moon: Off -> (last) Tank
+    print("  " .. sel[1].value() .. " / " .. sel[2].value() .. " / " .. sel[5].value())
+    -- The addon may never set marks itself (protected): only the macro on a click.
+    if #calls > 0 then table.insert(errors, "addon anropade SetRaidTarget: " .. table.concat(calls, " ")) end
+    local m = ns.PartyMarkMacro()
+    print("  makro: " .. (m and m.macro:gsub("\n", " | ") or "nil"))
+    if not m or m.macro ~= "/tm [@player] 1\n/tm [@party1] 2\n/tm [@party2] 5" then table.insert(errors, "fel markeringsmakro") end
+    -- The buff row shows it as a clickable macro icon.
+    ns.RefreshBuffWatch()
+    local found
+    for k = 1, 8 do
+      local b = rawget(_G, "MagePlanBuff" .. k)
+      if b and b.__shown and b.__attrs and b.__attrs.macrotext1 == (m and m.macro) then found = b end
+    end
+    if not found then table.insert(errors, "markeringsikonen syns inte i buffraden")
+    elseif found.__attrs.type1 ~= "macro" then table.insert(errors, "markeringsikonen är inte klickbar: " .. tostring(found.__attrs.type1)) end
+    if found then pcall(found.__scripts.OnEnter, found) end
+    -- Marks already on: no icon (setting one again would take it off).
+    marks.player, marks.party1, marks.party2 = 1, 2, 5
+    if ns.PartyMarkMacro() then table.insert(errors, "markeringsikon trots att alla har sin markering") end
+    marks.party1 = nil
+    local m2 = ns.PartyMarkMacro()
+    if not m2 or m2.macro ~= "/tm [@party1] 2" then table.insert(errors, "bara den saknade markeringen ska med: " .. tostring(m2 and m2.macro)) end
+    sel[3].step(1)                  -- Diamond: everyone has a mark, stays Off
+    if sel[3].value() ~= ns.T("CFG_OFF") then table.insert(errors, "en spelare fick två markeringar: " .. sel[3].value()) end
+    for k = 1, 5 do while sel[k].value() ~= ns.T("CFG_OFF") do sel[k].step(1) end end
+    InCombatLockdown = function() return true end
+    sel[4].step(1)
+    if ns.PartyMarkMacro() then table.insert(errors, "markeringsmakro i strid") end
+    InCombatLockdown = function() return false end
+    sel[4].step(-1)
+    -- The icons in the settings window: click, right-click, scroll, tooltip.
+    local cells = {}
+    for _, w in ipairs(allFrames) do if w.item and w.name and tostring(w.item.key):find("^MK_") then cells[#cells + 1] = w end end
+    if #cells ~= 5 then table.insert(errors, "settings: " .. #cells .. " markeringsikoner, inte 5") else
+      local c = cells[2]
+      for _, f in ipairs({ function() c.__scripts.OnClick(c, "LeftButton") end, function() c.__scripts.OnClick(c, "RightButton") end,
+        function() c.__scripts.OnMouseWheel(c, -1) end, function() c.__scripts.OnEnter(c) end }) do
+        local ok, err = pcall(f); if not ok then table.insert(errors, "markeringsikon: " .. err) end
+      end
+      print("  ikon Circle: " .. tostring(c.name.__text))
+      -- Off -> click: me -> right-click: off -> scroll down: me
+      if not tostring(c.name.__text):find(ns.T("MK_ME"), 1, true) then table.insert(errors, "scroll gav fel spelare: " .. tostring(c.name.__text)) end
+      c.__scripts.OnClick(c, "RightButton")
+    end
+  end
+  IsInGroup, UnitExists, IsInRaid, SetRaidTarget, GetRaidTargetIndex = oldIG, oldUE, nil, nil, nil
+  ns.db.marks = nil
+end
 print("--- Walk on Air ---")
 do
   local oldC, oldU = C_UnitAuras, UnitAura

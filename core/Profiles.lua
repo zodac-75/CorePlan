@@ -20,7 +20,7 @@ local KEYS = {
   "theme", "fontSize",
   -- features
   "shatterOff", "tooltipOff", "bagAutoOff", "rankChatOff", "bagBtnOff", "upgradeOff", "questOff", "polyOff",
-  "drinkOff", "drinkPct", "xpOff", "zoneTipsOff", "locked", "dungeonAutoOpen",
+  "drinkOff", "drinkPct", "xpOff", "zoneTipsOff", "locked", "dungeonAutoOpen", "marks",
 }
 
 local function Store()
