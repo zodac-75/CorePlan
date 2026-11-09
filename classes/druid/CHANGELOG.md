@@ -1,6 +1,6 @@
 # DruidPlan 1.4.2
 
-- **Party marks follow party slots:** you pick you or party member 2-5 (the order in the party frames) for each mark, so the marks stay set when people leave or join. A new "Party marks icon" tick box (or /@SLASH@ marks) turns the feature on or off.
+- **Party marks follow party slots:** you pick you or party member 2-5 (the order in the party frames) for each mark, so the marks stay set when people leave or join. A new "Party marks icon" tick box (or /dp marks) turns the feature on or off.
 
 # DruidPlan 1.4.1
 

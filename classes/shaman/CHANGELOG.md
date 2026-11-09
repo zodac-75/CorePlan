@@ -1,6 +1,6 @@
 # ShamanPlan 1.5.2
 
-- **Party marks follow party slots:** you pick you or party member 2-5 (the order in the party frames) for each mark, so the marks stay set when people leave or join. A new "Party marks icon" tick box (or /@SLASH@ marks) turns the feature on or off.
+- **Party marks follow party slots:** you pick you or party member 2-5 (the order in the party frames) for each mark, so the marks stay set when people leave or join. A new "Party marks icon" tick box (or /sp marks) turns the feature on or off.
 
 # ShamanPlan 1.5.1
 
