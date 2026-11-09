@@ -1,0 +1,11 @@
+{
+  "name": "HunterPlan",
+  "color": "abd473",
+  "slash": "hp",
+  "class": "HUNTER",
+  "modules": [
+    "Combat.lua",
+    "Ammo.lua"
+  ],
+  "notes": "Hunter leveling companion with Beast Mastery, Marksmanship and Survival plans: talent plan, upgrade check, rank check, aspect watcher, ammo alert, pet reminders, dungeon guide, profession assistant, XP tracker."
+}
