@@ -35,7 +35,7 @@ tests and release steps. This file has the rules and the things that bit us befo
 | WarlockPlan | /wl | 1792150 |
 | PriestPlan | /pp | 1792569 |
 | HunterPlan | /hp | 1793633 |
-| RoguePlan | /rp | not created yet |
+| RoguePlan | /rp | 1794105 |
 
 A new class has no `curseId` in class.json until he creates the CurseForge project and sends the
 link; until then CI only makes a GitHub release. He needs a logo (Media/Logo.tga, Icon.tga) and a

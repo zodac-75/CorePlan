@@ -12,7 +12,7 @@ Leveling companions for **WoW Forever**, one addon per class, built from one sha
 | WarlockPlan | Affliction, Demonology or Destruction warlock | project 1792150 |
 | PriestPlan | Shadow, Holy or Discipline priest | project 1792569 |
 | HunterPlan | Beast Mastery, Marksmanship or Survival hunter | project 1793633 |
-| RoguePlan | Combat, Assassination or Subtlety rogue | not on CurseForge yet |
+| RoguePlan | Combat, Assassination or Subtlety rogue | project 1794105 |
 
 ## Layout
 

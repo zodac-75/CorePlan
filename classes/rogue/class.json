@@ -3,6 +3,7 @@
   "color": "fff569",
   "slash": "rp",
   "class": "ROGUE",
+  "curseId": 1794105,
   "modules": [
     "Combat.lua"
   ],
