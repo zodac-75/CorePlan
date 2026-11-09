@@ -141,13 +141,19 @@ local function GiverText(id)
   local g = Giver(ns.DQUESTS[id])
   if not g then return ns.T("DG_UNKNOWN") end
   if g.inside then return ns.T("DG_INSIDE", g[1]) end
+  if g.item and g.from and g[2] then
+    return ns.T("DG_ITEM_FROM", ns.ItemName(g.item, g[1]), g.from, ns.MapName(g[2]))
+  end
   if g.item then return ns.T("DG_ITEM", ns.ItemName(g.item, g[1])) end
   return g[1] .. ", " .. ns.MapName(g[2])
 end
 
 local function WayTo(id)
   local g = Giver(ns.DQUESTS[id])
-  if g and g[2] then
+  if g and g.item and g.from and g[2] then
+    -- Item quest: point at the mob (or chest) that drops the item.
+    ns.SetWaypoint(g[2], g[3], g[4], g.from .. " – " .. ns.ItemName(g.item, g[1]))
+  elseif g and g[2] then
     ns.SetWaypoint(g[2], g[3], g[4], g[1] .. " – " .. QuestName(id))
   elseif g and g.inside then
     ns.Print(ns.T("DG_INSIDE", g[1]))

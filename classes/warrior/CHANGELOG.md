@@ -1,3 +1,7 @@
+# WarriorPlan 1.3.5
+
+- **Arrow for quests that start from an item:** clicking such a quest (like Dark Iron Map for Old Ironforge Incursion) now points the arrow at the mob that drops the item, and the guide says who drops it and where.
+
 # WarriorPlan 1.3.4
 
 - **Waypoint arrow always on top:** a resized dungeon window could cover the arrow after you clicked a quest. The arrow now stays above the addon's windows.

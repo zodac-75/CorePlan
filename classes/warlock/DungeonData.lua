@@ -111,7 +111,8 @@ ns.DUNGEONS = {
 
 -- n = name, req = required level, lvl = quest level, any/all = pre-quests, excl = exclusive with,
 -- races = allowed races when restricted (Alliance H D N G S, Horde O U T R K),
--- g = giver {name, map, x, y} / {name, inside} / {name, item}; gh = the Horde giver when it differs
+-- g = giver {name, map, x, y} / {name, inside} / {name, item} / {item name, map, x, y, item, from = who drops it};
+-- gh = the Horde giver when it differs
 ns.DQUESTS = {
   [17] = {n="Uldaman Reagent Run",req=38,lvl=42,any={2500},races="GHDNS",g={"Ghak Healtouch",1432,37.07,49.38}},
   [65] = {n="The Defias Brotherhood",req=14,lvl=18,races="GHDNS",g={"Gryan Stoutmantle",1436,56.33,47.52}},
@@ -163,7 +164,7 @@ ns.DQUESTS = {
   [1052] = {n="Down the Scarlet Path",req=34,lvl=40,any={261},races="GHDNS",g={"Brother Anton",1443,66.52,7.91}},
   [1053] = {n="In the Name of the Light",req=34,lvl=40,any={1052},races="GHDNS",g={"Raleigh the Devout",1424,51.47,58.35}},
   [1098] = {n="Deathstalkers in Shadowfang",req=18,lvl=25,races="OKRTU",g={"High Executor Hadrec",1421,43.42,40.86}},
-  [1100] = {n="Lonebrow's Journal",req=29,lvl=34,races="GHDNS",g={"Henrig Lonebrow's Journal",item=5791}},
+  [1100] = {n="Lonebrow's Journal",req=29,lvl=34,races="GHDNS",g={"Henrig Lonebrow's Journal",1441,30.73,24.35,item=5791,from="Henrig Lonebrow's Journal"}},
   [1101] = {n="The Crone of the Kraul",req=29,lvl=34,any={1100},races="GHDNS",g={"Falfindel Waywarder",1444,89.64,46.57}},
   [1102] = {n="A Vengeful Fate",req=29,lvl=34,races="OKRTU",g={"Auld Stonespire",1456,35.97,59.92}},
   [1109] = {n="Going, Going, Guano!",req=30,lvl=33,races="OKRTU",g={"Master Apothecary Faranell",1458,48.82,69.28}},
@@ -203,7 +204,7 @@ ns.DQUESTS = {
   [1490] = {n="Nara Wildmane",req=12,lvl=16,any={1489},races="OKRTU",g={"Arch Druid Hamuul Runetotem",1456,78.62,28.56}},
   [1491] = {n="Smart Drinks",req=13,lvl=18,any={865},g={"Mebok Mizzyrix",1413,62.37,37.62}},
   [2040] = {n="Underground Assault",req=15,lvl=20,races="GHDNS",g={"Shoni the Shilent",1453,62.63,34.11}},
-  [2198] = {n="The Shattered Necklace",req=37,lvl=41,races="GHDNS",g={"Shattered Necklace",item=7666}},
+  [2198] = {n="The Shattered Necklace",req=37,lvl=41,races="GHDNS",g={"Shattered Necklace",1418,43.8,10.6,item=7666,from="Shadowforge Surveyor"}},
   [2199] = {n="Lore for a Price",req=37,lvl=41,any={2198},races="GHDNS",g={"Talvash del Kissel",1455,36.38,3.61}},
   [2200] = {n="Back to Uldaman",req=37,lvl=42,any={2199},races="GHDNS",g={"Talvash del Kissel",1455,36.38,3.61}},
   [2201] = {n="Find the Gems",req=37,lvl=43,any={2200},races="GHDNS",g={"Remains of a Paladin",inside=true}},
@@ -324,7 +325,7 @@ ns.DQUESTS = {
   [4242] = {n="Abandoned Hope",req=48,lvl=54,any={4241},races="GHDNS",g={"Marshal Windsor",inside=true}},
   [4262] = {n="Overmaster Pyron",req=48,lvl=52,races="GHDNS",g={"Jalinda Sprig",1428,85.41,70.06}},
   [4263] = {n="Incendius!",req=48,lvl=56,any={4262},races="GHDNS",g={"Jalinda Sprig",1428,85.41,70.06}},
-  [4264] = {n="A Crumpled Up Note",req=50,lvl=58,any={4242},races="GHDNS",g={"A Crumpled Up Note",item=11446}},
+  [4264] = {n="A Crumpled Up Note",req=50,lvl=58,any={4242},races="GHDNS",g={"A Crumpled Up Note",1415,46.82,67.7,item=11446,from="Overmaster Pyron"}},
   [4282] = {n="A Shred of Hope",req=50,lvl=58,any={4264},races="GHDNS",g={"Marshal Windsor",inside=true}},
   [4286] = {n="The Good Stuff",req=50,lvl=56,races="GHDNS",g={"Oralius",1428,84.56,68.68}},
   [4322] = {n="Jail Break!",req=50,lvl=58,any={4282},races="GHDNS",g={"Marshal Windsor",inside=true}},
@@ -434,7 +435,7 @@ ns.DQUESTS = {
   [6561] = {n="Blackfathom Villainy",req=18,lvl=27,races="OKRTU",g={"Argent Guard Thaelrid",inside=true}},
   [6562] = {n="Trouble in the Deeps",req=17,lvl=22,races="OKRTU",g={"Tsunaman",1442,47.36,64.25}},
   [6563] = {n="The Essence of Aku'Mai",req=17,lvl=22,races="OKRTU",g={"Je'neu Sancrea",1440,11.56,34.29}},
-  [6564] = {n="Allegiance to the Old Gods",req=17,lvl=22,any={6562},races="OKRTU",g={"Damp Note",item=16790}},
+  [6564] = {n="Allegiance to the Old Gods",req=17,lvl=22,any={6562},races="OKRTU",g={"Damp Note",1440,13.55,12.06,item=16790,from="Blackfathom Tide Priestess"}},
   [6565] = {n="Allegiance to the Old Gods",req=17,lvl=26,any={6564},races="OKRTU",g={"Je'neu Sancrea",1440,11.56,34.29}},
   [6566] = {n="What the Wind Carries",req=55,lvl=60,any={4974},races="OKRTU",g={"Thrall",1454,31.73,37.82}},
   [6567] = {n="The Champion of the Horde",req=55,lvl=60,any={6566},races="OKRTU",g={"Thrall",1454,31.73,37.82}},
@@ -476,7 +477,7 @@ ns.DQUESTS = {
   [7502] = {n="Harnessing Shadows",req=54,lvl=60,g={"Harnessing Shadows",item=18360}},
   [7604] = {n="A Binding Contract",req=60,lvl=60,g={"Thorium Brotherhood Contract",item=18628}},
   [7703] = {n="Unfinished Gordok Business",req=56,lvl=60,g={"Captain Kromcrush",inside=true}},
-  [7761] = {n="Blackhand's Command",req=55,lvl=60,g={"Blackhand's Command",item=18987}},
+  [7761] = {n="Blackhand's Command",req=55,lvl=60,g={"Blackhand's Command",1415,49.12,64.1,item=18987,from="Scarshield Quartermaster"}},
   [7877] = {n="The Treasure of the Shen'dralar",req=56,lvl=60,any={7461},g={"Shen'dralar Ancient",inside=true}},
   [8286] = {n="What Tomorrow Brings",req=60,lvl=60,g={"Baristolth of the Shifting Sands",1451,49.45,36.45}},
   [8288] = {n="Only One May Rise",req=60,lvl=60,any={8286},g={"Baristolth of the Shifting Sands",1451,49.45,36.45}},
@@ -560,7 +561,7 @@ ns.DQUESTS = {
   [95795] = {n="Fallen in the Fen",req=24,lvl=31,races="GHDNS"},
   [95809] = {n="Heartwoven",req=24,lvl=31,races="GHDNS"},
   [95810] = {n="Lost Relic Carry",req=24,lvl=31,races="GHDNS",g={"Titan Relic",item=270865}},
-  [96391] = {n="Underground Map",req=9,lvl=15,races="GHDNS",g={"Dark Iron Map",item=274268}},
+  [96391] = {n="Underground Map",req=9,lvl=15,races="GHDNS",g={"Dark Iron Map",1426,76.96,60.93,item=274268,from="Dark Iron Spy"}},
   [96393] = {n="Old Ironforge Incursion",req=9,lvl=16,any={96391},races="GHDNS",g={"Earthseer Farsen",1426,64.87,58.47}},
   [96394] = {n="The Restless Dead",req=10,lvl=15,races="GHDNS",g={"Afadra Dunwall",1455,33.2,47.93}},
   [96403] = {n="Important Heirlooms",req=10,lvl=15,races="GHDNS",g={"Thom Filch",1455,32.18,44.5}},

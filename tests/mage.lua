@@ -525,6 +525,11 @@ do
     if math.abs(w:GetScale() - s1) > 0.001 then table.insert(errors, "scroll utan Ctrl ändrade storleken") end
     w:SetScale(s0); ns.db.dungeonScale = nil
     IsControlKeyDown = oldCtrl
+    -- Quests that start from an item point at the mob that drops it.
+    local q = ns.DQUESTS[96391]
+    if not (q and q.g and q.g.from == "Dark Iron Spy" and q.g[2] == 1426) then
+      table.insert(errors, "Dark Iron Map saknar var den droppar")
+    end
     -- Open at logout/reload is remembered, with the dungeon shown.
     w:Show()
     fire("PLAYER_LOGOUT")

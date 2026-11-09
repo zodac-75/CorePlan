@@ -113,9 +113,22 @@ local function giver(q, ids, fac)
       if s then return { name = o[1], at = s } end
     end
   end
+  -- Starts from an item: who (or what) drops it, and where, so the arrow can point there.
   for _, item in ipairs(sb[3] or {}) do
     local it = I[item]
-    if it then return { name = it[1], item = item } end
+    if it then
+      for _, npc in ipairs(it[2] or {}) do
+        local n = N[npc]
+        local s = n and spot(n[7], ids)
+        if type(s) == "table" then return { name = it[1], item = item, from = n[1], at = s } end
+      end
+      for _, obj in ipairs(it[3] or {}) do
+        local o = O[obj]
+        local s = o and spot(o[4], ids)
+        if type(s) == "table" then return { name = it[1], item = item, from = o[1], at = s } end
+      end
+      return { name = it[1], item = item }
+    end
   end
   return nil
 end
@@ -232,7 +245,8 @@ L[#L + 1] = "}"
 L[#L + 1] = ""
 L[#L + 1] = "-- n = name, req = required level, lvl = quest level, any/all = pre-quests, excl = exclusive with,"
 L[#L + 1] = "-- races = allowed races when restricted (Alliance H D N G S, Horde O U T R K),"
-L[#L + 1] = "-- g = giver {name, map, x, y} / {name, inside} / {name, item}; gh = the Horde giver when it differs"
+L[#L + 1] = "-- g = giver {name, map, x, y} / {name, inside} / {name, item} / {item name, map, x, y, item, from = who drops it};"
+L[#L + 1] = "-- gh = the Horde giver when it differs"
 L[#L + 1] = "ns.DQUESTS = {"
 local ids = {}
 for id in pairs(quests) do ids[#ids + 1] = id end
@@ -247,7 +261,9 @@ for _, id in ipairs(ids) do
   for _, k in ipairs({ "g", "gh" }) do
     local g = e[k]
     if g then
-      if g.item then parts[#parts + 1] = string.format("%s={%s,item=%d}", k, s(g.name), g.item)
+      if g.item and type(g.at) == "table" then
+        parts[#parts + 1] = string.format("%s={%s,%d,%s,%s,item=%d,from=%s}", k, s(g.name), g.at[1], f(g.at[2]), f(g.at[3]), g.item, s(g.from))
+      elseif g.item then parts[#parts + 1] = string.format("%s={%s,item=%d}", k, s(g.name), g.item)
       elseif g.at == "inside" then parts[#parts + 1] = string.format("%s={%s,inside=true}", k, s(g.name))
       else parts[#parts + 1] = string.format("%s={%s,%d,%s,%s}", k, s(g.name), g.at[1], f(g.at[2]), f(g.at[3])) end
     end
