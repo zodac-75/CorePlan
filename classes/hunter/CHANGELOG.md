@@ -1,3 +1,7 @@
+# HunterPlan 1.0.0-beta11
+
+- **Waypoint arrow always on top:** a resized dungeon window could cover the arrow after you clicked a quest. The arrow now stays above the addon's windows.
+
 # HunterPlan 1.0.0-beta10
 
 - **Dungeon guide stays open after /reload:** if the dungeon window was open, it opens again after a reload or login, on the same dungeon.

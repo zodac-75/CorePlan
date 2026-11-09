@@ -84,7 +84,8 @@ end
 local function CreateArrow()
   arrow = CreateFrame("Button", "@ADDON@Arrow", UIParent)
   arrow:SetSize(64, 64)
-  arrow:SetFrameStrata("HIGH")
+  -- Above the addon's windows (HIGH), so a big dungeon window never hides it.
+  arrow:SetFrameStrata("DIALOG")
   arrow:SetClampedToScreen(true)
   arrow:SetMovable(true)
   arrow:EnableMouse(true)

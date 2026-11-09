@@ -1,3 +1,7 @@
+# WarriorPlan 1.3.4
+
+- **Waypoint arrow always on top:** a resized dungeon window could cover the arrow after you clicked a quest. The arrow now stays above the addon's windows.
+
 # WarriorPlan 1.3.3
 
 - **Dungeon guide stays open after /reload:** if the dungeon window was open, it opens again after a reload or login, on the same dungeon.
