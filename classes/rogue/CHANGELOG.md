@@ -1,3 +1,7 @@
+# RoguePlan 1.0.0-beta15
+
+- **Dungeon guide stays open through loading screens:** the window now comes back after /reload, login and zoning into a dungeon if it was open (the game could hide it during the loading screen before the addon saved it).
+
 # RoguePlan 1.0.0-beta14
 
 - **Party marks follow party slots:** you pick you or party member 2-5 (the order in the party frames) for each mark, so the marks stay set when people leave or join. A new "Party marks icon" tick box (or /rp marks) turns the feature on or off.

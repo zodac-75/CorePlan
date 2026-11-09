@@ -532,7 +532,10 @@ do
     end
     -- Open at logout/reload is remembered, with the dungeon shown.
     w:Show()
-    fire("PLAYER_LOGOUT")
+    fire("PLAYER_LEAVING_WORLD")
+    w:Hide() -- the loading screen may hide it
+    fire("PLAYER_ENTERING_WORLD")
+    if not w:IsShown() then table.insert(errors, "dungeonfönstret kommer inte tillbaka efter laddningsskärmen") end
     print("  sparat vid reload: open=" .. tostring(ns.db.dungeonOpen) .. " " .. tostring(ns.db.dungeonSel))
     if not ns.db.dungeonOpen or not ns.db.dungeonSel then table.insert(errors, "dungeonfönstret sparas inte som öppet") end
     ns.db.dungeonOpen, ns.db.dungeonSel = nil, nil

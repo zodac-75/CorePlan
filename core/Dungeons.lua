@@ -656,8 +656,11 @@ end
 
 ns.RegisterModule(function()
   CreateWindow()
-  -- Open after a /reload (or login) if it was open, on the same dungeon.
-  if ns.db.dungeonOpen then
+  -- Stays open through loading screens (/reload, login, zoning into a dungeon): the state is
+  -- saved just before a loading screen (the game may hide windows during it) and the window
+  -- comes back after it, on the same dungeon.
+  local function Restore()
+    if not ns.db.dungeonOpen or win:IsShown() then return end
     local want
     for _, d in ipairs(ns.DUNGEONS) do
       if Visible(d) and d.name == ns.db.dungeonSel then want = d end
@@ -666,11 +669,18 @@ ns.RegisterModule(function()
     win:Show()
     if selected then pcall(Select, selected) end
   end
+  Restore()
   local save = CreateFrame("Frame")
-  save:RegisterEvent("PLAYER_LOGOUT")
-  save:SetScript("OnEvent", function()
-    ns.db.dungeonOpen = win and win:IsShown() or nil
-    ns.db.dungeonSel = selected and selected.name or nil
+  save:RegisterEvent("PLAYER_LEAVING_WORLD")
+  save:RegisterEvent("PLAYER_ENTERING_WORLD")
+  save:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_LEAVING_WORLD" then
+      ns.db.dungeonOpen = win:IsShown() or nil
+      ns.db.dungeonSel = selected and selected.name or nil
+    else
+      Restore()
+      C_Timer.After(1, Restore)
+    end
   end)
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("PLAYER_ENTERING_WORLD")

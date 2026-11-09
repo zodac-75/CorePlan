@@ -1,3 +1,7 @@
+# MagePlan 1.27.3
+
+- **Dungeon guide stays open through loading screens:** the window now comes back after /reload, login and zoning into a dungeon if it was open (the game could hide it during the loading screen before the addon saved it).
+
 # MagePlan 1.27.2
 
 - **Party marks follow party slots:** you pick you or party member 2-5 (the order in the party frames) for each mark, so the marks stay set when people leave or join. A new "Party marks icon" tick box (or /mp marks) turns the feature on or off.
