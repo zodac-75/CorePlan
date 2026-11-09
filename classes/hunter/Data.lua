@@ -83,7 +83,7 @@ ns.spells = {
 
 -- Profession goals: at this level you want at least this skill.
 ns.profTargets = {
-  { level = 10, skill = 50,  note = { "Train Journeyman at your profession trainer", "Träna Journeyman hos din yrkestränare" } },
+  { level = 10, skill = 50,  note = { "Train Journeyman (from level 10)", "Träna Journeyman (från level 10)" } },
   { level = 20, skill = 125, note = { "Train Expert (from level 20)", "Träna Expert (från level 20)" } },
   { level = 35, skill = 200, note = { "Train Artisan (from level 35)", "Träna Artisan (från level 35)" } },
   { level = 50, skill = 260, note = { "Keep pace towards 300", "Håll takten mot 300" } },

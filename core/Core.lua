@@ -470,7 +470,7 @@ function ns.ProfGoalLine(prof, level)
     local note
     if target.train and (not maxRank or maxRank <= target.train + 25) then
       local who = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][target.train]
-      note = ns.T("GOAL_TRAIN", target.rank, who or "?")
+      note = ns.T("GOAL_TRAIN", target.rank, who and ns.Tx(who) or "?")
     else
       note = ns.T("GOAL_PACE")
     end

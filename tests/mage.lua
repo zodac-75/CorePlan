@@ -1099,6 +1099,22 @@ do
   else table.insert(errors, "hittade inte minimapknappen") end
   slash("bagbutton"); slash("bagbutton")
 end
+do
+  local t = ns.PROF_TRAINERS.Tailoring[125]
+  if ns.Tx(t) ~= "Georgio Bolero (Stormwind)" then table.insert(errors, "Alliance fick fel tränare: " .. tostring(ns.Tx(t))) end
+  local old = UnitFactionGroup
+  UnitFactionGroup = function() return "Horde", "Horde" end
+  if ns.Tx(t) ~= "Josef Gregorian (Undercity)" then table.insert(errors, "Horde fick fel tränare: " .. tostring(ns.Tx(t))) end
+  if ns.Tx(ns.HERB_ZONES[1].zones):find("Elwynn", 1, true) then table.insert(errors, "Horde fick Alliance-zoner") end
+  if ns.Tx(ns.ROUTES.Enchanting[7].note):find("Kithas", 1, true) == nil then table.insert(errors, "Horde fick fel formel-försäljare") end
+  UnitFactionGroup = old
+  for prof, r in pairs(ns.ROUTES) do
+    for _, st in ipairs(r) do
+      for _, m in ipairs(st.mats) do if not m[1] or m[1] == 0 then table.insert(errors, "saknat item-ID: " .. prof .. " " .. tostring(m[3])) end end
+    end
+  end
+  print("  tränare A/H och item-ID:n kollade")
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

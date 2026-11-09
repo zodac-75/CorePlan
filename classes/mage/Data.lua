@@ -89,10 +89,10 @@ ns.spells = {
 
 -- Profession goals: at this level you want at least this skill.
 ns.profTargets = {
-  { level = 10, skill = 50,  note = { "Train Journeyman (Stormwind)", "Träna Journeyman (Stormwind)" } },
+  { level = 10, skill = 50,  note = { "Train Journeyman (from level 10)", "Träna Journeyman (från level 10)" } },
   { level = 15, skill = 75,  note = { "Needed for Filigreed Silky Gown", "Krävs för Filigreed Silky Gown" } },
-  { level = 20, skill = 125, note = { "Train Expert (Georgio Bolero / Kitta Firewind)", "Träna Expert (Georgio Bolero / Kitta Firewind)" } },
-  { level = 35, skill = 200, note = { "Train Artisan (Theramore / Annora in Uldaman)", "Träna Artisan (Theramore / Annora i Uldaman)" } },
+  { level = 20, skill = 125, note = { "Train Expert (from level 20)", "Träna Expert (från level 20)" } },
+  { level = 35, skill = 200, note = { "Train Artisan (from level 35)", "Träna Artisan (från level 35)" } },
   { level = 50, skill = 260, note = { "Keep pace towards 300", "Håll takten mot 300" } },
   { level = 58, skill = 300, note = { "300 needed for Manaflare", "300 krävs för Manaflare" } },
 }

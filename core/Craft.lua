@@ -176,14 +176,19 @@ local function Header(prof, out)
   local cap = (maxRank and maxRank > 0) and maxRank or 300
   local warn = maxRank and maxRank < 300 and skill >= maxRank - 25
   local rankNote = warn and ns.RANK_NOTES and ns.RANK_NOTES[prof] and ns.RANK_NOTES[prof][maxRank]
+  local trainer
   if warn and not rankNote then
     local lvl = ns.RANK_LEVEL[maxRank]
     row.text = row.text .. "  |cffff9900" .. (lvl and ns.T("CR_TRAIN_LVL", lvl) or ns.T("CR_TRAIN")) .. "|r"
+    -- Who teaches the next rank, for your faction (Journeyman at 50, Expert 125, Artisan 200).
+    local who = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][maxRank - 25]
+    if who then trainer = ns.T("CR_TRAIN_AT", ns.Tx(who)) end
   end
   -- Orange when you're close to the cap and need to train, blue otherwise.
   row.bar = { value = skill, max = cap, color = warn and { 1, 0.6, 0.1 } or { 0.35, 0.75, 1 } }
   -- Secondary skills say exactly where the next rank is (a book or a quest).
   if rankNote then table.insert(out, { indent = 22, text = "|cffff9900" .. ns.Tx(rankNote) .. "|r" }) end
+  if trainer then table.insert(out, { indent = 22, text = "|cffff9900" .. trainer .. "|r" }) end
   return skill
 end
 
@@ -212,6 +217,7 @@ local function RouteSection(prof, out)
     text = string.format("|cffffd100%d-%d:|r %s, %s", s.from, s.to, s.craft, what) })
   for _, e in ipairs(extra) do table.insert(out, { indent = 22, text = e }) end
   if s.note then table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.Tx(s.note) .. "|r" }) end
+  if s.untested then table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("CR_UNTESTED") .. "|r" }) end
   if nxt then
     table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("CR_THEN", nxt.from, nxt.to, nxt.craft) .. "|r" })
   end
@@ -239,7 +245,7 @@ local function NodeSection(prof, out, nodes, zones)
   end
   for _, z in ipairs(zones) do
     if skill < z.to then
-      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. z.zones })
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.Tx(z.zones) })
       break
     end
   end
@@ -255,6 +261,12 @@ local function SkinSection(out)
     table.insert(out, { indent = 22, items = { { id = best[1], extra = best[2] } },
       text = "|cff888888" .. ns.T("SK_LEATHER", best[2]) .. "|r" })
   end
+  for _, z in ipairs(ns.SKIN_ZONES or {}) do
+    if skill < z.to then
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.Tx(z.zones) })
+      break
+    end
+  end
 end
 
 local function FishSection(out)
@@ -262,7 +274,7 @@ local function FishSection(out)
   if not skill then return end
   for _, z in ipairs(ns.FISH_ZONES) do
     if skill < z.to then
-      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. z.zones })
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.Tx(z.zones) })
       break
     end
   end

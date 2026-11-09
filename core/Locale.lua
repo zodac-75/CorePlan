@@ -20,8 +20,19 @@ function ns.T(key, ...)
 end
 
 -- Data entries: a plain string, or { "English", "Svenska" }.
+-- Horde or Alliance (Alliance when the game doesn't say).
+function ns.IsHorde()
+  local ok, f = pcall(UnitFactionGroup, "player")
+  return ok and f == "Horde"
+end
+
+-- A text in the player's language: "text", { "English", "Svenska" }, or a faction pick
+-- { A = ..., H = ... } whose parts are either of those.
 function ns.Tx(entry)
   if type(entry) == "table" then
+    if entry.A or entry.H then
+      return ns.Tx((ns.IsHorde() and entry.H) or entry.A or entry.H)
+    end
     return (ns.Lang() == "svSE" and entry[2]) or entry[1]
   end
   return entry
@@ -102,6 +113,8 @@ E.CR_DONE = "300 - done!"
 E.CR_SKILL = "Skill %d/%d"
 E.CR_TRAIN = "Train next rank!"
 E.CR_TRAIN_LVL = "Train next rank (requires level %d)!"
+E.CR_TRAIN_AT = "Trainer: %s"
+E.CR_UNTESTED = "Not tested in WoW Forever yet (the guide was written during the beta)"
 E.CR_BATCH = "make %d (the whole batch)"
 E.CR_LEFT = "about %d left"
 E.CR_EQUALS = "(= %d %s, you have %d)"
@@ -480,6 +493,8 @@ S.CR_DONE = "300 - klart!"
 S.CR_SKILL = "Skill %d/%d"
 S.CR_TRAIN = "Träna nästa rang!"
 S.CR_TRAIN_LVL = "Träna nästa rang (kräver level %d)!"
+S.CR_TRAIN_AT = "Tränare: %s"
+S.CR_UNTESTED = "Inte testat i WoW Forever än (guiden skrevs under betan)"
 S.CR_BATCH = "gör %d st (hela batchen)"
 S.CR_LEFT = "ca %d kvar"
 S.CR_EQUALS = "(= %d %s, du har %d)"
