@@ -1,3 +1,7 @@
+# DruidPlan 1.0.0
+
+- **First stable release.** Thanks to everyone who played the betas and reported bugs. Same features as the last beta.
+
 # DruidPlan 1.0.0-beta51
 
 - **Fix: Omen of Clarity no longer shows in the buff watcher.** It's passive in WoW Forever, so there was nothing to click and the icon kept flashing red.

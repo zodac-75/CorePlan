@@ -1,3 +1,7 @@
+# PaladinPlan 1.0.0
+
+- **First stable release.** Thanks to everyone who played the betas and reported bugs. Same features as the last beta.
+
 # PaladinPlan 1.0.0-beta44
 
 - **Rank check can be quiet:** untick "Rank check messages in chat" under Leveling in the settings (or `/pal rankchat`). `/pal ranks` still checks your bars when you ask.
