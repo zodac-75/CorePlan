@@ -1005,6 +1005,19 @@ do
     for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown and rawget(b, "whoName") == "Jennie" then return true end end
     return false
   end
+  -- Out of range and back: no second alert sound.
+  local sounds, oldPlay, oldSound = 0, ns.PlayAlertSound, ns.db.alertSound
+  ns.PlayAlertSound = function() sounds = sounds + 1 end
+  ns.db.alertSound = "test"
+  ns.RefreshBuffWatch()
+  local before = sounds
+  IsSpellInRange = function() return 0 end
+  ns.RefreshBuffWatch()
+  IsSpellInRange = nil
+  ns.RefreshBuffWatch()
+  print("  ljud vid tillbaka i räckhåll: " .. (sounds - before))
+  if sounds ~= before then table.insert(errors, "varningsljudet spelades igen när spelaren kom tillbaka i räckhåll") end
+  ns.PlayAlertSound, ns.db.alertSound = oldPlay, oldSound
   IsSpellInRange = function() return 0 end
   ns.RefreshBuffWatch()
   print("  utom räckhåll: visas=" .. tostring(jennieShown()))

@@ -1,3 +1,7 @@
+# DruidPlan 1.4.4
+
+- **No more repeated buff alerts:** a party member stepping out of range and back no longer sets off the "buff missing" sound again (it waits until they've been gone a minute), and party buff alerts are silent in combat.
+
 # DruidPlan 1.4.3
 
 - **Dungeon guide stays open through loading screens:** the window now comes back after /reload, login and zoning into a dungeon if it was open (the game could hide it during the loading screen before the addon saved it).

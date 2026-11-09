@@ -19,6 +19,8 @@ local SIZE, GAP, WARN = 36, 6, 60
 local holder, buttons = nil, {}
 local acc, pendingLayout = 0, false
 local warned = {} -- spells already announced as running out (sound + message once)
+local gone = {}   -- when an announced one left the row (a party member out of range for a moment)
+local FORGET = 60 -- seconds away before it counts as new again
 
 -- Out of combat you get an earlier "rebuff now" heads-up (minutes; 0 = off).
 ns.REBUFF_TIMES = { 0, 1, 2, 3, 5, 10 }
@@ -417,12 +419,17 @@ local function Update()
   -- A heads-up the first time a buff starts running out (or goes missing) out of combat:
   -- a line above the row, the icon pulses, and the alert sound if sounds are on.
   local msg, now = nil, {}
+  local fighting = InCombatLockdown and InCombatLockdown()
   for i, n in ipairs(list) do
     if n.left >= 0 then
       now[n.key] = true
       if not warned[n.key] then
         warned[n.key] = true
-        if (ns.db.alertSound or "off") ~= "off" and ns.PlayAlertSound then ns.PlayAlertSound() end
+        -- No sound for party buffs in combat: players moving in and out of range would
+        -- set it off again and again.
+        if (ns.db.alertSound or "off") ~= "off" and ns.PlayAlertSound and not (fighting and n.who) then
+          ns.PlayAlertSound()
+        end
       end
       local b = buttons[i]
       if b.pulse and not b.pulse:IsPlaying() then b.pulse:Play() end
@@ -437,7 +444,16 @@ local function Update()
       buttons[i].pulse:Stop()
     end
   end
-  for s in pairs(warned) do if not now[s] then warned[s] = nil end end
+  -- Forget a warning only when it has been gone a while, so a party member stepping out
+  -- of range and back doesn't warn again.
+  local t = GetTime and GetTime() or 0
+  for s in pairs(warned) do
+    if now[s] then gone[s] = nil
+    else
+      gone[s] = gone[s] or t
+      if t - gone[s] > FORGET then warned[s], gone[s] = nil, nil end
+    end
+  end
   for i = #list + 1, #buttons do if buttons[i].pulse then buttons[i].pulse:Stop() end end
   holder.msg:SetText(msg and ("|cffffd100" .. msg .. "|r") or "")
   holder.msg:SetShown(msg ~= nil and not unlocked)
