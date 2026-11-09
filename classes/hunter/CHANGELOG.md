@@ -1,3 +1,7 @@
+# HunterPlan 1.0.0-beta3
+
+- New logo and minimap icon.
+
 # HunterPlan 1.0.0-beta2
 
 - First version on CurseForge.

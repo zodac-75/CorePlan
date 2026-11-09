@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta24
+
+- New logo and minimap icon.
+
 # WarlockPlan 1.0.0-beta23
 
 - **Rank check can be quiet:** untick "Rank check messages in chat" under Leveling in the settings (or `/wl rankchat`). `/wl ranks` still checks your bars when you ask.

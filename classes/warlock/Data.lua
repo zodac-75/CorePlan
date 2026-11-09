@@ -187,4 +187,4 @@ ns.CLASS_TIPS = {
 ns.COMBAT_CMD = "combat"
 ns.THEME_BG = { 0.06, 0.03, 0.09, 0.92 }
 ns.THEME_BORDER = { 0.58, 0.51, 0.79, 0.9 }
-ns.LOGO = { h = 341 / 512, size = 290, y = 62, panel = 300 }
+ns.LOGO = { h = 471 / 512, size = 210, y = 62, panel = 260 }
