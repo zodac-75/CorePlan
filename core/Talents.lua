@@ -345,8 +345,108 @@ local function FindButton(root, t)
   return ok and btn or nil
 end
 
+-- The old window only has buttons for the tab you're looking at.
+local function TabOk(root, t)
+  if root ~= PlayerTalentFrame then return true end
+  local sel
+  if PanelTemplates_GetSelectedTab then
+    local ok, s = pcall(PanelTemplates_GetSelectedTab, PlayerTalentFrame)
+    if ok then sel = s end
+  end
+  sel = sel or PlayerTalentFrame.selectedTab
+  return not (sel and sel ~= t.tab)
+end
+
 local function HideGlow()
   if glow then glow:Hide(); glow.btn = nil end
+end
+
+-- The rest of the plan: a yellow frame on every talent that is in the plan but not taken
+-- yet (the next talent keeps its green frame and arrow). Same rules as the glow: our own
+-- frames, only anchored to Blizzard's buttons.
+local marks, markBtn = {}, {}
+
+local function HideMarks(from)
+  for i = from or 1, #marks do marks[i]:Hide(); marks[i].btn = nil end
+end
+
+local function PlannedList()
+  local map = TalentMap()
+  if not next(map) then return {} end
+  local skip = Skipped()
+  local nextName = ns.NextTalent()
+  local want, order = {}, {}
+  for lvl = 10, 60 do
+    local entry = ns.talents[lvl]
+    local name, w = entry and entry:match("^(.-)%s+(%d+)/%d+$")
+    w = tonumber(w)
+    if name and w then
+      if not want[name] then order[#order + 1] = name end
+      if not want[name] or w > want[name] then want[name] = w end
+    end
+  end
+  local out = {}
+  for _, name in ipairs(order) do
+    local t = map[name]
+    if t and (t.rank or 0) < want[name] and not skip[name] and name ~= nextName then
+      out[#out + 1] = { name = name, t = t }
+    end
+  end
+  return out
+end
+
+local function GetMark(i)
+  if marks[i] then return marks[i] end
+  local m = CreateFrame("Frame", nil, UIParent)
+  m:SetFrameStrata("FULLSCREEN_DIALOG")
+  if glow then m:SetFrameLevel(math.max(1, glow:GetFrameLevel() - 1)) end
+  local Y = { 1, 0.82, 0 }
+  local function Edge(p1, p2, w, h)
+    local e = m:CreateTexture(nil, "OVERLAY")
+    e:SetColorTexture(Y[1], Y[2], Y[3], 0.95)
+    e:SetPoint(p1); e:SetPoint(p2)
+    if w then e:SetWidth(w) end
+    if h then e:SetHeight(h) end
+  end
+  Edge("TOPLEFT", "TOPRIGHT", nil, 2)
+  Edge("BOTTOMLEFT", "BOTTOMRIGHT", nil, 2)
+  Edge("TOPLEFT", "BOTTOMLEFT", 2, nil)
+  Edge("TOPRIGHT", "BOTTOMRIGHT", 2, nil)
+  local shine = m:CreateTexture(nil, "ARTWORK")
+  shine:SetAllPoints()
+  shine:SetColorTexture(Y[1], Y[2], Y[3], 0.12)
+  -- Hide right away when the button scrolls away or the window closes.
+  m:SetScript("OnUpdate", function(self)
+    local b = self.btn
+    if not b or not b:IsVisible() then self:Hide(); self.btn = nil end
+  end)
+  m:Hide()
+  marks[i] = m
+  return m
+end
+
+local function UpdateMarks(root)
+  if not root then HideMarks() return end
+  local used = 0
+  for _, p in ipairs(PlannedList()) do
+    if TabOk(root, p.t) then
+      local btn = markBtn[p.name]
+      if not (btn and btn:IsVisible()) then
+        btn = FindButton(root, p.t)
+        markBtn[p.name] = btn
+      end
+      if btn and btn:IsVisible() then
+        used = used + 1
+        local m = GetMark(used)
+        m.btn = btn
+        m:ClearAllPoints()
+        m:SetPoint("TOPLEFT", btn, "TOPLEFT", -3, 3)
+        m:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 3, -3)
+        m:Show()
+      end
+    end
+  end
+  HideMarks(used + 1)
 end
 
 local function UpdateGlow()
@@ -354,6 +454,7 @@ local function UpdateGlow()
   local root = ShownRoot()
   if not root then
     HideGlow()
+    HideMarks()
     if hint then hint:Hide() end
     return
   end
@@ -364,10 +465,13 @@ local function UpdateGlow()
     local okV, vis = pcall(tf.IsVisible, tf)
     if okV and not vis then
       HideGlow()
+      HideMarks()
       if hint then hint:Hide() end
       return
     end
   end
+
+  pcall(UpdateMarks, root)
 
   local line = NextText()
   if hint and line then
@@ -381,15 +485,7 @@ local function UpdateGlow()
 
   local name, t = ns.NextTalent()
   if not t or name == "done" then HideGlow(); return end
-  if root == PlayerTalentFrame then
-    local sel
-    if PanelTemplates_GetSelectedTab then
-      local ok, s = pcall(PanelTemplates_GetSelectedTab, PlayerTalentFrame)
-      if ok then sel = s end
-    end
-    sel = sel or PlayerTalentFrame.selectedTab
-    if sel and sel ~= t.tab then HideGlow(); return end
-  end
+  if not TabOk(root, t) then HideGlow(); return end
 
   local btn = FindButton(root, t)
   if not btn or not btn:IsVisible() then HideGlow(); return end
@@ -406,7 +502,7 @@ local function HookRoot(f)
   if roots[f] then return end
   roots[f] = true
   pcall(f.HookScript, f, "OnShow", function() C_Timer.After(0.1, function() pcall(UpdateGlow) end) end)
-  pcall(f.HookScript, f, "OnHide", function() HideGlow() if hint then hint:Hide() end end)
+  pcall(f.HookScript, f, "OnHide", function() HideGlow() HideMarks() if hint then hint:Hide() end end)
 end
 
 local function ScanRoots()
