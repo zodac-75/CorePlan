@@ -1065,43 +1065,48 @@ do
     -- The addon may never set marks itself (protected): only the macro on a click.
     if #calls > 0 then table.insert(errors, "addon anropade SetRaidTarget: " .. table.concat(calls, " ")) end
     local m = ns.PartyMarkMacro()
-    print("  makro: " .. (m and m.macro:gsub("\n", " | ") or "nil"))
-    if not m or m.macro ~= "/tm [@player] 1\n/tm [@party1] 2\n/tm [@party2] 5" then table.insert(errors, "fel markeringsmakro") end
-    -- The toggle turns the icon off.
-    ns.db.marksOff = true
-    if ns.PartyMarkMacro() then table.insert(errors, "markeringsikon trots att den är avslagen") end
-    ns.db.marksOff = nil
-    -- The buff row shows it as a clickable macro icon.
+    print("  makro: " .. m:gsub("\n", " | "))
+    if m ~= "/tm [@player] 1\n/tm [@party1] 2\n/tm [@party2] 5" then table.insert(errors, "fel markeringsmakro") end
+    -- Its own button, shown in a party, with the macro on a click; nothing in the buff row.
+    local mb = rawget(_G, "MagePlanMarkButton")
+    ns.UpdateMarkButton()
+    if not mb or not mb.__shown then table.insert(errors, "markeringsknappen syns inte i grupp")
+    elseif mb.__attrs.type1 ~= "macro" or mb.__attrs.macrotext1 ~= m then table.insert(errors, "markeringsknappen har fel makro: " .. tostring(mb.__attrs.macrotext1)) end
+    if mb then pcall(mb.__scripts.OnEnter, mb) end
     ns.RefreshBuffWatch()
-    local found
     for k = 1, 8 do
       local b = rawget(_G, "MagePlanBuff" .. k)
-      if b and b.__shown and b.__attrs and b.__attrs.macrotext1 == (m and m.macro) then found = b end
+      if b and b.__shown and b.__attrs and tostring(b.__attrs.macrotext1):find("/tm", 1, true) then table.insert(errors, "markeringar ligger kvar i buffraden") end
     end
-    if not found then table.insert(errors, "markeringsikonen syns inte i buffraden")
-    elseif found.__attrs.type1 ~= "macro" then table.insert(errors, "markeringsikonen är inte klickbar: " .. tostring(found.__attrs.type1)) end
-    if found then pcall(found.__scripts.OnEnter, found) end
-    -- Marks already on: no icon (setting one again would take it off).
+    -- The toggle hides the button.
+    ns.db.marksOff = true
+    ns.UpdateMarkButton()
+    if mb and mb.__shown then table.insert(errors, "markeringsknappen syns trots att den är avslagen") end
+    ns.db.marksOff = nil
+    -- Marks already on: the button stays, with only the missing one in its macro.
     marks.player, marks.party1, marks.party2 = 1, 2, 5
-    if ns.PartyMarkMacro() then table.insert(errors, "markeringsikon trots att alla har sin markering") end
+    if ns.PartyMarkMacro() ~= "" then table.insert(errors, "makro trots att alla har sin markering") end
     marks.party1 = nil
-    -- Too far away (not visible): left out until they're near.
-    UnitIsVisible = function(u) return u ~= "party1" end
-    if ns.PartyMarkMacro() then table.insert(errors, "markerar spelare långt bort") end
-    UnitIsVisible = nil
-    UnitInRange = function(u) return u ~= "party1", true end
-    if ns.PartyMarkMacro() then table.insert(errors, "markerar spelare utom räckhåll") end
-    UnitInRange = nil
-    local m2 = ns.PartyMarkMacro()
-    if not m2 or m2.macro ~= "/tm [@party1] 2" then table.insert(errors, "bara den saknade markeringen ska med: " .. tostring(m2 and m2.macro)) end
+    if ns.PartyMarkMacro() ~= "/tm [@party1] 2" then table.insert(errors, "bara den saknade markeringen ska med: " .. ns.PartyMarkMacro()) end
+    ns.UpdateMarkButton()
+    if not (mb and mb.__shown) then table.insert(errors, "markeringsknappen försvann") end
+    -- Going into combat loads "clear and set all", so one click brings every mark back.
+    fire("PLAYER_REGEN_DISABLED")
+    local cm = mb and mb.__attrs.macrotext1 or ""
+    print("  i strid: " .. cm:gsub("\n", " | "))
+    if cm ~= "/tm [@player] 0\n/tm [@player] 1\n/tm [@party1] 0\n/tm [@party1] 2\n/tm [@party2] 0\n/tm [@party2] 5" then table.insert(errors, "fel stridsmakro") end
+    if #cm > 255 then table.insert(errors, "stridsmakrot är för långt") end
+    -- In combat nothing on the button changes.
+    InCombatLockdown = function() return true end
+    ns.db.marksOff = true; ns.UpdateMarkButton(); ns.db.marksOff = nil
+    if not mb.__shown or mb.__attrs.macrotext1 ~= cm then table.insert(errors, "knappen ändrades i strid") end
+    InCombatLockdown = function() return false end
+    fire("PLAYER_REGEN_ENABLED")
+    if #calls > 0 then table.insert(errors, "addon anropade SetRaidTarget: " .. table.concat(calls, " ")) end
     sel[3].step(1)                  -- Diamond: skips taken ones (me, slot 2, slot 3) -> slot 4
     if sel[3].value() ~= ns.T("MK_SLOT", 4) then table.insert(errors, "en spelare fick två markeringar: " .. sel[3].value()) end
     for k = 1, 5 do while sel[k].value() ~= ns.T("CFG_OFF") do sel[k].step(1) end end
-    InCombatLockdown = function() return true end
-    sel[4].step(1)
-    if ns.PartyMarkMacro() then table.insert(errors, "markeringsmakro i strid") end
-    InCombatLockdown = function() return false end
-    sel[4].step(-1)
+    if mb and mb.__shown then table.insert(errors, "knappen syns utan valda markeringar") end
     -- The icons in the settings window: click, right-click, scroll, tooltip.
     local cells = {}
     for _, w in ipairs(allFrames) do if w.item and w.name and tostring(w.item.key):find("^MK_") then cells[#cells + 1] = w end end

@@ -230,14 +230,6 @@ local function Needed()
       end
     end
   end
-  -- Party marks: one icon that puts all missing marks on with a click (marks need a click).
-  if not combat and ns.PartyMarkMacro then
-    local ok, m = pcall(ns.PartyMarkMacro)
-    if ok and m then
-      table.insert(out, { entry = { use = function() return m end }, spell = m.name, left = 0,
-        key = "marks:" .. m.macro, markWho = m.who })
-    end
-  end
   return out
 end
 
@@ -299,12 +291,6 @@ local function MakeButton(i)
   b:SetScript("OnEnter", function(self)
     if not GameTooltip or not self.spell then return end
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    if self.markWho then
-      GameTooltip:SetText(self.spell)
-      GameTooltip:AddLine(ns.T("MK_CLICK", self.markWho), 0.6, 0.8, 1, true)
-      GameTooltip:Show()
-      return
-    end
     local _, id = ns.SpellInfo(self.spell)
     if id and GameTooltip.SetSpellByID then GameTooltip:SetSpellByID(id) else GameTooltip:SetText(self.spell) end
     if ns.db.shatterUnlocked then
@@ -403,7 +389,6 @@ local function Update()
     local castType = (n.unit or use) and "macro" or "spell"
     b:SetAttribute("type1", (not unlocked and reach) and castType or nil)
     b.icon:SetTexture(use and use.icon or ns.SpellIcon(n.spell))
-    b.markWho = n.markWho
     -- Red frame: missing. Yellow frame: running out.
     if n.left == 0 then b.border:SetColorTexture(1, 0.25, 0.25, 0.9)
     elseif n.left < 0 then b.border:SetColorTexture(0.5, 0.5, 0.5, 0.6)

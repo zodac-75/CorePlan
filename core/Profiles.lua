@@ -14,7 +14,7 @@ local KEYS = {
   "pos", "posW", "posS", "hidden",
   "craftPos", "craftPosW", "craftPosS",
   "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "bagPos", "bagScale", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
-  "arrowPos", "dungeonPos", "dungeonScale", "configPos", "marksOff", "stormstrikeOff",
+  "arrowPos", "dungeonPos", "dungeonScale", "configPos", "marksOff", "markPos", "markScale", "stormstrikeOff",
   "minimapAngle", "minimapHidden",
   -- look
   "theme", "fontSize",
@@ -93,6 +93,11 @@ local function ApplyAll()
   Place(_G.@ADDON@Dungeons, db.dungeonPos, { "CENTER", "CENTER", 0, 40 })
   if _G.@ADDON@Dungeons then _G.@ADDON@Dungeons:SetScale(db.dungeonScale or 1) end
   Place(_G.@ADDON@Config, db.configPos, { "CENTER", "CENTER", 0, -30 })
+  if _G.@ADDON@MarkButton and not (InCombatLockdown and InCombatLockdown()) then
+    Place(_G.@ADDON@MarkButton, db.markPos, { "CENTER", "CENTER", 260, -150 })
+    _G.@ADDON@MarkButton:SetScale(db.markScale or 1)
+    if ns.UpdateMarkButton then ns.UpdateMarkButton() end
+  end
   if ns.UpdateMinimapButton then ns.UpdateMinimapButton() end
   ns.ApplyThemeAll()
   ns.ApplyFontAll()
