@@ -1333,6 +1333,21 @@ do
   end
   print("  tränare A/H och item-ID:n kollade")
 end
+print("--- Enchanter: disenchanta allt ---")
+do
+  -- Gröna stövlar som säljer för mer än de ger i material: en enchanter ska ändå få DE.
+  items[9992] = { "Green Boots", 2, 10, "INVTYPE_FEET", 50000, 4, nil, 0, 2 }
+  local oldSkill = ns.GetProfSkill
+  ns.GetProfSkill = function(p) if p == "Enchanting" then return 150 end return oldSkill(p) end
+  local r = ns.Evaluate("|Hitem:9992|h[Green Boots]|h", false)
+  print("  enchanter: " .. tostring(r and r.best.key))
+  if not (r and r.best.key == "de") then table.insert(errors, "enchanter fick inte DE på grön utrustning: " .. tostring(r and r.best.key)) end
+  ns.GetProfSkill = function(p) if p == "Enchanting" then return nil end return oldSkill(p) end
+  r = ns.Evaluate("|Hitem:9992|h[Green Boots]|h", false)
+  print("  utan enchanting: " .. tostring(r and r.best.key))
+  if r and r.best.key == "de" then table.insert(errors, "DE föreslogs utan Enchanting") end
+  ns.GetProfSkill = oldSkill
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

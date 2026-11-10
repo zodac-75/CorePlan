@@ -93,6 +93,11 @@ function ns.Evaluate(link, isBound)
   if not r.ah and not r.de and r.canDE and best.key == "vendor" then
     best = { key = "de", value = nil, reason = ns.T("DE_NOPRICE") }
   end
+  -- An enchanter disenchants everything they can (skill and materials), even when the
+  -- vendor or AH pays a little more. Shift-click still sells it at a vendor.
+  if r.canDE and best.key ~= "de" then
+    best = { key = "de", value = r.de, reason = ns.T("DE_ENCHANTER") }
+  end
   r.best = best
   return r
 end
