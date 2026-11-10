@@ -628,7 +628,10 @@ local function DebugTalentUI()
     local shown = 0
     for _, m in ipairs(marks) do if m:IsShown() then shown = shown + 1 end end
     ns.Print("  frames shown: " .. shown .. (okM and "" or ("  ERROR " .. tostring(errM))))
-    for i = 1, math.min(#list, 6) do
+    local all = {}
+    for _, p in ipairs(list) do all[#all + 1] = p.name .. "(" .. tostring(p.t.tab) .. ")" end
+    for i = 1, #all, 6 do ns.Print("  plan: " .. table.concat(all, ", ", i, math.min(i + 5, #all))) end
+    for i = 1, math.min(#list, 3) do
       local p = list[i]
       local okF, b = pcall(FindButton, root or UIParent, p.t)
       ns.Print(string.format("  %s (tab %s rank %s/%s): %s", p.name, tostring(p.t.tab), tostring(p.t.rank),
