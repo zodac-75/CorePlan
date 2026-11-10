@@ -1,3 +1,7 @@
+# WarriorPlan 1.9.0
+
+- **Green tick on finished talents:** talents in your plan that you have taken all the planned points in now get a small green tick in the top right corner in the talent window, beside the icon so you still see which talent it is. Yellow frames still show what's left and the green frame and arrow the next one.
+
 # WarriorPlan 1.8.2
 
 - **Yellow talent frames follow your plan:** switching plans or reopening the talent window could leave frames from an earlier plan on the wrong talents. Each frame is now placed fresh every time, and one talent that can't be found no longer stops the rest. /war talentui lists the planned talents by name.

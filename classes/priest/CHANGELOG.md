@@ -1,3 +1,7 @@
+# PriestPlan 1.0.0-beta33
+
+- **Green tick on finished talents:** talents in your plan that you have taken all the planned points in now get a small green tick in the top right corner in the talent window, beside the icon so you still see which talent it is. Yellow frames still show what's left and the green frame and arrow the next one.
+
 # PriestPlan 1.0.0-beta32
 
 - **Yellow talent frames follow your plan:** switching plans or reopening the talent window could leave frames from an earlier plan on the wrong talents. Each frame is now placed fresh every time, and one talent that can't be found no longer stops the rest. /pp talentui lists the planned talents by name.

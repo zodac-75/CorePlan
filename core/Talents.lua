@@ -364,10 +364,30 @@ end
 -- The rest of the plan: a yellow frame on every talent that is in the plan but not taken
 -- yet (the next talent keeps its green frame and arrow). Same rules as the glow: our own
 -- frames, only anchored to Blizzard's buttons.
-local marks = {}
+local marks, checks = {}, {}
 
-local function HideMarks(from)
+local function HideMarks(from, checkFrom)
   for i = from or 1, #marks do marks[i]:Hide(); marks[i].btn = nil end
+  for i = checkFrom or 1, #checks do checks[i]:Hide(); checks[i].btn = nil end
+end
+
+-- A small green tick in the top right corner of a planned talent you have finished,
+-- outside the icon so you still see which talent it is.
+local function GetCheck(i)
+  if checks[i] then return checks[i] end
+  local c = CreateFrame("Frame", nil, UIParent)
+  c:SetFrameStrata("FULLSCREEN_DIALOG")
+  c:SetSize(14, 14)
+  local tex = c:CreateTexture(nil, "OVERLAY")
+  tex:SetAllPoints()
+  tex:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+  c:SetScript("OnUpdate", function(self)
+    local b = self.btn
+    if not b or not b:IsVisible() then self:Hide(); self.btn = nil end
+  end)
+  c:Hide()
+  checks[i] = c
+  return c
 end
 
 local function PlannedList()
@@ -386,14 +406,16 @@ local function PlannedList()
       if not want[name] or w > want[name] then want[name] = w end
     end
   end
-  local out = {}
+  local out, done = {}, {}
   for _, name in ipairs(order) do
     local t = map[name]
-    if t and (t.rank or 0) < want[name] and not skip[name] and name ~= nextName then
+    if t and (t.rank or 0) >= want[name] then
+      done[#done + 1] = { name = name, t = t }
+    elseif t and not skip[name] and name ~= nextName then
       out[#out + 1] = { name = name, t = t }
     end
   end
-  return out
+  return out, done
 end
 
 local function GetMark(i)
@@ -428,19 +450,23 @@ end
 
 local function UpdateMarks(root)
   if not root then HideMarks() return end
-  local okL, list = pcall(PlannedList)
+  local okL, list, done = pcall(PlannedList)
   if not okL then HideMarks() return end
-  local used = 0
-  for _, p in ipairs(list) do
-    -- One talent that can't be found (or errors) must not stop the rest, or the frames
-    -- from the previous plan would stay up. The button is looked up fresh every time: the
-    -- window reuses its buttons for other talents when it rebuilds.
+  -- One talent that can't be found (or errors) must not stop the rest, or the frames
+  -- from the previous plan would stay up. The button is looked up fresh every time: the
+  -- window reuses its buttons for other talents when it rebuilds.
+  local function ButtonFor(p)
     local okB, btn = pcall(function()
       if not TabOk(root, p.t) then return nil end
       local b = FindButton(root, p.t)
       if b and b:IsVisible() then return b end
     end)
-    if okB and btn then
+    return okB and btn or nil
+  end
+  local used = 0
+  for _, p in ipairs(list) do
+    local btn = ButtonFor(p)
+    if btn then
       used = used + 1
       local m = GetMark(used)
       m.btn = btn
@@ -450,7 +476,19 @@ local function UpdateMarks(root)
       m:Show()
     end
   end
-  HideMarks(used + 1)
+  local ticks = 0
+  for _, p in ipairs(done or {}) do
+    local btn = ButtonFor(p)
+    if btn then
+      ticks = ticks + 1
+      local c = GetCheck(ticks)
+      c.btn = btn
+      c:ClearAllPoints()
+      c:SetPoint("CENTER", btn, "TOPRIGHT", 2, 2)
+      c:Show()
+    end
+  end
+  HideMarks(used + 1, ticks + 1)
 end
 
 local function UpdateGlow()
