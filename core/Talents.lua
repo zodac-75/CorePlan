@@ -448,10 +448,45 @@ local function GetMark(i)
   return m
 end
 
+-- Replacement talent windows (Daylight UI and the like) draw their own window and leave
+-- Blizzard's talent frame in place but invisible, so a search can also find buttons that
+-- are nowhere near what you see. The window to mark is the one that holds the next talent's
+-- button: its biggest ancestor that is clearly smaller than the screen.
+local function WindowOf(btn)
+  local sw, sh = UIParent:GetWidth(), UIParent:GetHeight()
+  local f, best = btn, nil
+  for _ = 1, 20 do
+    local okP, parent = pcall(f.GetParent, f)
+    if not okP or not parent or parent == UIParent then break end
+    f = parent
+    local okR, _, _, w, h = pcall(f.GetRect, f)
+    if okR and w and h and w * h < 0.7 * sw * sh then best = f end
+  end
+  return best
+end
+
+local function InWindow(win, btn)
+  if not win then return true end
+  local okC, bx, by = pcall(btn.GetCenter, btn)
+  local okR, l, b, w, h = pcall(win.GetRect, win)
+  if not (okC and okR and bx and by and l and w) then return true end
+  local bs, ws = btn:GetEffectiveScale(), win:GetEffectiveScale()
+  bx, by = bx * bs, by * bs
+  l, b, w, h = l * ws, b * ws, w * ws, h * ws
+  return bx >= l and bx <= l + w and by >= b and by <= b + h
+end
+
 local function UpdateMarks(root)
   if not root then HideMarks() return end
   local okL, list, done = pcall(PlannedList)
   if not okL then HideMarks() return end
+  -- The window to mark: the one the next talent's button is in (when there is one).
+  local win
+  local nname, nt = ns.NextTalent()
+  if nt and nname ~= "done" and TabOk(root, nt) then
+    local okN, nb = pcall(FindButton, root, nt)
+    if okN and nb then win = WindowOf(nb) end
+  end
   -- One talent that can't be found (or errors) must not stop the rest, or the frames
   -- from the previous plan would stay up. The button is looked up fresh every time: the
   -- window reuses its buttons for other talents when it rebuilds.
@@ -459,7 +494,7 @@ local function UpdateMarks(root)
     local okB, btn = pcall(function()
       if not TabOk(root, p.t) then return nil end
       local b = FindButton(root, p.t)
-      if b and b:IsVisible() then return b end
+      if b and b:IsVisible() and InWindow(win, b) then return b end
     end)
     return okB and btn or nil
   end
