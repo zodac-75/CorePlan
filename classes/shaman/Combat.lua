@@ -72,7 +72,8 @@ local function Update()
 
   -- Stormstrike: with Improved Stormstrike every dodge or parry resets its cooldown, so
   -- call it out the moment it's ready again.
-  if not main and inCombat and hasTarget and ns.PlanKey() == "enhancement" and ns.SpellUsable("Stormstrike") then
+  if not main and inCombat and hasTarget and not ns.db.stormstrikeOff and ns.PlanKey() == "enhancement"
+    and ns.SpellUsable("Stormstrike") then
     state = "go"
     main = ns.AlertMain("|cff@COLOR@", "STORMSTRIKE!", ns.T("SH_STORMSTRIKE"), "Stormstrike")
   end
@@ -178,4 +179,9 @@ ns.RegisterCommand("move", true, function()
   f:EnableMouseWheel(ns.db.shatterUnlocked and true or false)
   if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
   ns.Print(ns.db.shatterUnlocked and ns.T("SH_UNLOCKED") or ns.T("SH_LOCKED"))
+end)
+
+ns.RegisterCommand("stormstrike", true, function()
+  ns.db.stormstrikeOff = not ns.db.stormstrikeOff
+  ns.Print(ns.db.stormstrikeOff and ns.T("SH_SS_OFF") or ns.T("SH_SS_ON"))
 end)

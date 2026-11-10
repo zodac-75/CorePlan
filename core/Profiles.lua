@@ -14,7 +14,7 @@ local KEYS = {
   "pos", "posW", "posS", "hidden",
   "craftPos", "craftPosW", "craftPosS",
   "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "bagPos", "bagScale", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
-  "arrowPos", "dungeonPos", "dungeonScale", "configPos", "marksOff",
+  "arrowPos", "dungeonPos", "dungeonScale", "configPos", "marksOff", "stormstrikeOff",
   "minimapAngle", "minimapHidden",
   -- look
   "theme", "fontSize",

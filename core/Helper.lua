@@ -34,7 +34,29 @@ function ns.TargetHealthPct()
   return nil
 end
 
--- True when the spell is known and usable right now (enough rage/mana, proc active).
+-- When you last cast each spell (your own casts), for cooldowns the game hides in combat.
+local lastCast = {}
+local castWatch = CreateFrame("Frame")
+pcall(castWatch.RegisterUnitEvent, castWatch, "UNIT_SPELLCAST_SUCCEEDED", "player")
+castWatch:SetScript("OnEvent", function(_, _, _, _, spellID)
+  pcall(function()
+    local name = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID))
+      or (GetSpellInfo and GetSpellInfo(spellID))
+    if type(name) == "string" and not (issecretvalue and issecretvalue(name)) then lastCast[name] = GetTime() end
+  end)
+end)
+ns.lastCast = lastCast
+
+-- The spell's cooldown in seconds without talents (for when the live one is hidden).
+local function BaseCooldown(spell)
+  local ok, ms = pcall(GetSpellBaseCooldown, spell)
+  if ok and ns.Readable(ms) and ms > 0 then return ms / 1000 end
+  return 8
+end
+
+-- True when the spell is known and usable right now (enough rage/mana, proc active, off
+-- cooldown). When the game hides the cooldown (combat), the spell counts as on cooldown
+-- for its base cooldown after you cast it, so a call-out doesn't stay up while it's ticking.
 function ns.SpellUsable(spell)
   if not ns.SpellInfo(spell) then return false end
   local ok, usable, noPower
@@ -44,7 +66,11 @@ function ns.SpellUsable(spell)
     ok, usable, noPower = pcall(IsUsableSpell, spell)
   end
   if not ok or (issecretvalue and (issecretvalue(usable) or issecretvalue(noPower))) then return false end
-  return usable and not noPower and ns.CooldownLeft(spell) <= 0
+  if not usable or noPower then return false end
+  local s, d = ns.SpellCooldown(spell)
+  if ns.Readable(s) and ns.Readable(d) then return ns.CooldownLeft(spell) <= 0 end
+  local t = lastCast[spell]
+  return not t or GetTime() - t >= BaseCooldown(spell)
 end
 
 ---------------------------------------------------------------------------

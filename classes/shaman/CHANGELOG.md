@@ -1,3 +1,9 @@
+# ShamanPlan 1.6.0
+
+- **Skip a talent in the plan:** right-click "Next talent" in the plan window (or type /sp skip) to skip that talent, for example when you already put those points somewhere else. /sp skip reset brings skipped talents back.
+- **Call-outs respect cooldowns in combat:** the game can hide cooldowns in combat, and a "use it now" call-out then stayed up while the spell was on cooldown. It now counts as on cooldown after you cast it.
+- **Stormstrike call-out can be turned off:** a "Stormstrike call-out" tick box (or /sp stormstrike) keeps just the Maelstrom 5 call-out.
+
 # ShamanPlan 1.5.4
 
 - **No more repeated buff alerts:** a party member stepping out of range and back no longer sets off the "buff missing" sound again (it waits until they've been gone a minute), and party buff alerts are silent in combat.

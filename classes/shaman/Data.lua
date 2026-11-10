@@ -183,3 +183,8 @@ ns.PLAN_WEIGHTS = {
   resto = { heal = 1.0, sp = 1.0, int = 0.8, mp5 = 2.0, scrit = 8, spi = 0.2, sta = 0.25 },
 }
 ns.COMBAT_CMD = "combat"
+
+-- Class tick box: the Stormstrike call-out (Combat group), for those who only want Maelstrom.
+ns.EXTRA_FEATURES = {
+  { group = "CAT_COMBAT", key = "MM_STORMSTRIKE", on = function() return not ns.db.stormstrikeOff end, cmd = "stormstrike" },
+}

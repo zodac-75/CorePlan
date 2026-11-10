@@ -882,5 +882,19 @@ print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end
 table.sort(names); print(table.concat(names, ", "))
+print("--- Hoppa över talent ---")
+do
+  local first = ns.NextTalent()
+  -- Right-click on the plan window's "Next talent" row skips it.
+  local row
+  for _, f in ipairs(allFrames) do if f.item and f.item.rclick and f:IsShown() then row = f end end
+  if row then row.__scripts.OnClick(row, "RightButton") else ns.SkipTalent() end
+  local second = ns.NextTalent()
+  print("  " .. tostring(first) .. " -> " .. tostring(second) .. (row and " (högerklick)" or " (kommando)"))
+  if not first or first == second then table.insert(errors, "skip hoppade inte över " .. tostring(first)) end
+  if not row then table.insert(errors, "nästa talent-raden går inte att högerklicka") end
+  ns.SkipTalent("reset")
+  if ns.NextTalent() ~= first then table.insert(errors, "skip reset tog inte tillbaka " .. tostring(first)) end
+end
 print("--- FEL (" .. #errors .. ") ---")
 for _, e in ipairs(errors) do print(e) end

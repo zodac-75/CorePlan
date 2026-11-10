@@ -717,6 +717,7 @@ do
       end
     end
     print("  " .. label .. ": shown=" .. tostring(cf and cf.__shown) .. " | " .. table.concat(texts, " / "))
+    return table.concat(texts, " / ")
   end
   UnitAffectingCombat = function() return true end
   ns.db.shatterOff = false
@@ -742,7 +743,24 @@ do
     GetSpellCooldown = function() return 0, 0, 1 end
     IsUsableSpell = function() return true, false end
     local oldMW = SIM_MAELSTROM; SIM_MAELSTROM = 0
-    dump("stormstrike ready (reset by dodge/parry)")
+    local function hasSS(t) return t:find("STORMSTRIKE", 1, true) ~= nil end
+    if not hasSS(dump("stormstrike ready (reset by dodge/parry)")) then table.insert(errors, "Stormstrike syns inte när den är redo") end
+    -- The tick box turns it off.
+    ns.db.stormstrikeOff = true
+    if hasSS(dump("stormstrike call-out off")) then table.insert(errors, "Stormstrike syns trots att utropet är av") end
+    ns.db.stormstrikeOff = nil
+    -- Cooldown hidden by the game (combat): right after a cast it counts as on cooldown.
+    local oldSecret = issecretvalue
+    local HIDDEN = {}
+    issecretvalue = function(v) return v == HIDDEN or (oldSecret and oldSecret(v)) end
+    if cs then cs.GetSpellCooldown = function() return { startTime = HIDDEN, duration = HIDDEN } end end
+    GetSpellCooldown = function() return HIDDEN, HIDDEN, 1 end
+    ns.lastCast["Stormstrike"] = GetTime()
+    if hasSS(dump("stormstrike just cast, cooldown hidden")) then table.insert(errors, "Stormstrike syns direkt efter cast när cooldownen är dold") end
+    now = now + 30
+    if not hasSS(dump("stormstrike cooldown hidden, cast long ago")) then table.insert(errors, "Stormstrike kommer inte tillbaka efter cooldownen") end
+    ns.lastCast["Stormstrike"] = nil
+    issecretvalue = oldSecret
     SIM_MAELSTROM = oldMW
     if cs then cs.GetSpellCooldown, cs.IsSpellUsable = oldCD, oldU end
     GetSpellCooldown, IsUsableSpell = oldGCD, oldGU

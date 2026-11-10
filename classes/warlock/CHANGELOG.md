@@ -1,3 +1,8 @@
+# WarlockPlan 1.0.0-beta39
+
+- **Skip a talent in the plan:** right-click "Next talent" in the plan window (or type /wl skip) to skip that talent, for example when you already put those points somewhere else. /wl skip reset brings skipped talents back.
+- **Call-outs respect cooldowns in combat:** the game can hide cooldowns in combat, and a "use it now" call-out then stayed up while the spell was on cooldown. It now counts as on cooldown after you cast it.
+
 # WarlockPlan 1.0.0-beta38
 
 - **No more repeated buff alerts:** a party member stepping out of range and back no longer sets off the "buff missing" sound again (it waits until they've been gone a minute), and party buff alerts are silent in combat.

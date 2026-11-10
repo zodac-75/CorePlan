@@ -59,7 +59,7 @@ function ns.RowRenderer(frame)
     local r = rowPool[i]
     if r then return r end
     r = CreateFrame("Button", nil, frame)
-    r:RegisterForClicks("LeftButtonUp")
+    r:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     r.hl = r:CreateTexture(nil, "HIGHLIGHT")
     r.hl:SetAllPoints()
     r.hl:SetColorTexture(1, 1, 1, 0.08)
@@ -75,7 +75,15 @@ function ns.RowRenderer(frame)
     r.barBg = r:CreateTexture(nil, "BACKGROUND")
     r.barBg:SetColorTexture(0, 0, 0, 0.45)
     r.bar = r:CreateTexture(nil, "ARTWORK")
-    r:SetScript("OnClick", function(self) if self.item and self.item.click then self.item.click() end end)
+    r:SetScript("OnClick", function(self, button)
+      local item = self.item
+      if not item then return end
+      if button == "RightButton" then
+        if item.rclick then item.rclick() end -- right-click only does something when a row asks for it
+      elseif item.click then
+        item.click()
+      end
+    end)
     r:SetScript("OnEnter", function(self)
       local tip, list = self.item and self.item.tip, self.fullList
       if tip or list then

@@ -134,22 +134,49 @@ local function TalentMap()
   return map
 end
 
+-- Talents you chose to skip in this plan (right-click the next talent, or /@SLASH@ skip):
+-- for points you spent elsewhere, or a talent you don't want.
+local function Skipped()
+  ns.db.talentSkip = ns.db.talentSkip or {}
+  local key = (ns.PlanKey and ns.PlanKey()) or "default"
+  ns.db.talentSkip[key] = ns.db.talentSkip[key] or {}
+  return ns.db.talentSkip[key]
+end
+
 -- Returns name, talent info, wanted rank; "done" when the plan is complete.
 function ns.NextTalent()
   local map = TalentMap()
   if not next(map) then return nil end
+  local skip = Skipped()
   for lvl = 10, 60 do
     local entry = ns.talents[lvl]
     if entry then
       local name, want = entry:match("^(.-)%s+(%d+)/%d+$")
       want = tonumber(want)
       local t = name and map[name]
-      if t and want and t.rank < want then
+      if t and want and t.rank < want and not skip[name] then
         return name, t, want
       end
     end
   end
   return "done"
+end
+
+-- Skip the next talent (all its ranks), or bring the skipped ones back with "reset".
+function ns.SkipTalent(arg)
+  local skip = Skipped()
+  if arg and arg:lower():match("^%s*reset") then
+    for k in pairs(skip) do skip[k] = nil end
+    ns.Print(ns.T("TALENT_SKIP_RESET"))
+  else
+    local name = ns.NextTalent()
+    if not name or name == "done" then ns.Print(ns.T("TALENT_SKIP_NONE")) return end
+    skip[name] = true
+    local nextName = ns.NextTalent()
+    ns.Print(ns.T("TALENT_SKIPPED", name, (nextName == "done" or not nextName) and ns.T("PLAN_DONE") or nextName))
+  end
+  ns.RefreshMain()
+  if ns.RefreshTalentGlow then ns.RefreshTalentGlow() end
 end
 
 -- Talent by name from the live tree (for its icon), or nil.
@@ -588,10 +615,11 @@ ns.RegisterModule(function()
     local u = Unspent()
     if u and u > 0 and name ~= "done" then
       -- A point to spend goes under "Do this now"; clicking opens the talent window.
-      return { action = true, icon = icon, click = OpenTalents, tip = ns.T("PW_CLICK_TALENT"),
-        text = line .. " |cff60ff60" .. ns.T("POINTS_TO_SPEND", u) .. "|r" }
+      return { action = true, icon = icon, click = OpenTalents, rclick = name ~= "done" and ns.SkipTalent or nil,
+        tip = ns.T("PW_CLICK_TALENT"), text = line .. " |cff60ff60" .. ns.T("POINTS_TO_SPEND", u) .. "|r" }
     end
-    return { icon = icon, text = line, click = OpenTalents, tip = ns.T("PW_CLICK_TALENT") }
+    return { icon = icon, text = line, click = OpenTalents, rclick = name ~= "done" and ns.SkipTalent or nil,
+      tip = ns.T("PW_CLICK_TALENT") }
   end)
 
   C_Timer.After(5, function()
@@ -602,3 +630,5 @@ ns.RegisterModule(function()
     end
   end)
 end)
+
+ns.RegisterCommand("skip", true, function(rest) ns.SkipTalent(rest) end)
