@@ -1,3 +1,7 @@
+# MagePlan 1.29.0
+
+- **Import your own talent build:** make a build in the wow-forever-forge.com talent calculator, click Share, and paste the link with the new "Import talents" button in the settings (or /mp import <link>). The order you clicked the talents in becomes your leveling plan, shown as "Imported" next to our plans. It acts like our plan for the same tree for stat weights and call-outs. "Remove import" (or /mp import clear) takes it away.
+
 # MagePlan 1.28.0
 
 - **Skip a talent in the plan:** right-click "Next talent" in the plan window (or type /mp skip) to skip that talent, for example when you already put those points somewhere else. /mp skip reset brings skipped talents back.

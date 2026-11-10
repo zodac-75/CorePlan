@@ -129,9 +129,9 @@ end
 local PLAN_SELECTORS = {}
 if #ns.PLAN_ORDER > 1 then
   table.insert(PLAN_SELECTORS, { key = "MM_PLANSEL",
-    value = function() return ns.T("PLAN_" .. ns.PlanKey()) end,
+    value = function() return ns.PlanName() end,
     step = function(dir)
-      ns.db.plan = Step(ns.PLAN_ORDER, ns.PlanKey(), dir)
+      ns.db.plan = Step(ns.PLAN_ORDER, ns.PlanChoice(), dir)
       ns.ApplyPlan()
       ns.RefreshMain()
       if ns.RefreshTalentGlow then ns.RefreshTalentGlow() end
@@ -471,7 +471,12 @@ local function CreateConfig()
     { head = "CAT_FUN", checks = Group(FEATURES, "CAT_FUN") },
   })
   Column(COL[2], {
-    { head = "CAT_PLAN", sels = PLAN_SELECTORS },
+    { head = "CAT_PLAN", sels = PLAN_SELECTORS, after = function(x, y)
+      -- Import a build from a wow-forever-forge.com link, or remove it.
+      SmallButton("CFG_IMPORT", x, y, function() ns.AskImport() end)
+      SmallButton("CFG_IMPORT_CLEAR", x + 121, y, function() ns.ClearImport() end)
+      return y - 26
+    end },
     { head = "CAT_PROFS", sels = PROF_SELECTORS, checks = Group(FEATURES, "CAT_PROFS") },
     { head = "CAT_LOOK", sels = LOOK_SELECTORS, after = function(x, y)
       local hint = win:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -565,7 +570,7 @@ end
 local function RefreshQuick()
   if not quick then return end
   if quick.spec then
-    quick.spec.text:SetText(ns.T("MM_PLANSEL"):gsub(":$", "") .. ": " .. Val(ns.T("PLAN_" .. ns.PlanKey())))
+    quick.spec.text:SetText(ns.T("MM_PLANSEL"):gsub(":$", "") .. ": " .. Val(ns.PlanName()))
   end
   for _, r in ipairs(quick.extras) do
     local ok, v = pcall(r.item.value)
@@ -602,11 +607,11 @@ local function BuildQuick()
     r.check:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
     r:SetScript("OnClick", function(_, mouse)
       local dir = mouse == "RightButton" and -1 or 1
-      ns.db.plan = Step(ns.PLAN_ORDER, ns.PlanKey(), dir)
+      ns.db.plan = Step(ns.PLAN_ORDER, ns.PlanChoice(), dir)
       ns.ApplyPlan()
       ns.RefreshMain()
       if ns.RefreshTalentGlow then ns.RefreshTalentGlow() end
-      ns.Print(ns.T("PLAN_SET", ns.T("PLAN_" .. ns.PlanKey())))
+      ns.Print(ns.T("PLAN_SET", ns.PlanName()))
       Refresh()
       RefreshQuick()
     end)

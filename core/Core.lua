@@ -614,7 +614,7 @@ local function Entries(m)
   local out = {}
   local function add(e) table.insert(out, e) end
   add({ head = "|cff@COLOR@@ADDON@|r  |cffaaaaaa" .. ns.T("LEVEL", m.level) ..
-    ((#ns.PLAN_ORDER > 1) and (" · " .. ns.T("PLAN_" .. ns.PlanKey())) or "") .. "|r" })
+    ((#ns.PLAN_ORDER > 1) and (" · " .. ns.PlanName()) or "") .. "|r" })
   add({ gap = 2 })
   add({ head = "|cffffffff" .. ns.T("PW_DO") .. "|r" })
   if #m.actions == 0 then

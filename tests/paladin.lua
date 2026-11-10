@@ -896,5 +896,34 @@ do
   ns.SkipTalent("reset")
   if ns.NextTalent() ~= first then table.insert(errors, "skip reset tog inte tillbaka " .. tostring(first)) end
 end
+print("--- Importera talents (forge-länk) ---")
+do
+  local A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+  local function ch(n) return A:sub(n + 1, n + 1) end
+  local idOf = {}
+  for id, t in pairs(ns.TALENT_IDS) do idOf[t[1]] = id end
+  local code = ""
+  for _, step in ipairs({ { "Benediction", 5 }, { "Improved Judgement", 2 }, { "Conviction", 3 } }) do
+    for _ = 1, step[2] do
+      local id = idOf[step[1]]
+      code = code .. ch((id >> 12) & 63) .. ch((id >> 6) & 63) .. ch(id & 63)
+    end
+  end
+  local ok = ns.ImportTalents("https://wow-forever-forge.com/talents/paladin/" .. code)
+  print("  import: " .. tostring(ok) .. ", plan " .. ns.PlanChoice() .. " (som " .. ns.PlanKey() .. "), 10 = " .. tostring(ns.talents[10]) .. ", 19 = " .. tostring(ns.talents[19]))
+  if not ok or ns.PlanChoice() ~= "import" then table.insert(errors, "importen blev inte vald plan") end
+  if ns.PlanKey() ~= "ret" then table.insert(errors, "importerad Ret-build räknas inte som ret: " .. ns.PlanKey()) end
+  if ns.talents[10] ~= "Benediction 1/5" or ns.talents[19] ~= "Conviction 3/3" then table.insert(errors, "fel ordning i importerad plan") end
+  if not ns.PlanName():find(ns.T("PLAN_ret"), 1, true) then table.insert(errors, "plannamnet visar inte vad den liknar: " .. ns.PlanName()) end
+  -- Wrong class and junk are refused.
+  if ns.ImportTalents("https://wow-forever-forge.com/talents/mage/" .. code) then table.insert(errors, "tog emot en mage-länk") end
+  if ns.ImportTalents("hej hopp") then table.insert(errors, "tog emot skräp") end
+  -- The settings window has the button, and the plan selector can step to it.
+  local found
+  for _, f in ipairs(allFrames) do if f.key == "CFG_IMPORT" or (f.__text and f.__text == ns.T("CFG_IMPORT")) then found = true end end
+  if not found then table.insert(errors, "knappen Importera talents saknas") end
+  ns.ClearImport()
+  if ns.PlanChoice() == "import" or ns.PLANS.import then table.insert(errors, "importen togs inte bort") end
+end
 print("--- FEL (" .. #errors .. ") ---")
 for _, e in ipairs(errors) do print(e) end

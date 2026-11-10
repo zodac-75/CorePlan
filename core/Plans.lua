@@ -24,10 +24,26 @@ for i, key in ipairs(ns.PLAN_ORDER) do
   ns.PLANS[key] = { talents = steps and ns.BuildPlan(10, steps) or (i == 1 and ns.talents) or {} }
 end
 
-function ns.PlanKey()
+-- The plan you picked (one of ours, or "import" for a talent link you imported).
+function ns.PlanChoice()
   local k = ns.db and ns.db.plan
   if k and ns.PLANS[k] then return k end
   return ns.PLAN_ORDER[1]
+end
+
+-- The spec the addon acts on (stat weights, combat call-outs, buffs). An imported build
+-- acts like the plan of ours that spends most in the same tree.
+function ns.PlanKey()
+  local c = ns.PlanChoice()
+  local p = ns.PLANS[c]
+  return (p and p.like) or c
+end
+
+-- The picked plan's name for the settings and the plan window.
+function ns.PlanName()
+  local c = ns.PlanChoice()
+  if c == "import" then return ns.T("PLAN_import", ns.T("PLAN_" .. ns.PlanKey())) end
+  return ns.T("PLAN_" .. c)
 end
 
 -- Stat weights per plan (ns.PLAN_WEIGHTS[key]); plans without their own use ns.STATS.weights.
@@ -35,7 +51,7 @@ local baseWeights = ns.STATS and ns.STATS.weights
 
 function ns.ApplyPlan()
   local key = ns.PlanKey()
-  ns.talents = ns.PLANS[key].talents
+  ns.talents = ns.PLANS[ns.PlanChoice()].talents
   ns.planTag = "@" .. key
   if ns.STATS then
     ns.STATS.weights = (ns.PLAN_WEIGHTS and ns.PLAN_WEIGHTS[key]) or baseWeights
@@ -43,13 +59,13 @@ function ns.ApplyPlan()
 end
 
 function ns.CyclePlan()
-  local cur, nextKey = ns.PlanKey(), ns.PLAN_ORDER[1]
+  local cur, nextKey = ns.PlanChoice(), ns.PLAN_ORDER[1]
   for i, k in ipairs(ns.PLAN_ORDER) do
     if k == cur then nextKey = ns.PLAN_ORDER[(i % #ns.PLAN_ORDER) + 1] end
   end
   ns.db.plan = nextKey
   ns.ApplyPlan()
-  ns.Print(ns.T("PLAN_SET", ns.T("PLAN_" .. nextKey)))
+  ns.Print(ns.T("PLAN_SET", ns.PlanName()))
   ns.RefreshMain()
   if ns.RefreshTalentGlow then ns.RefreshTalentGlow() end
   if ns.RefreshMenu then ns.RefreshMenu() end

@@ -72,7 +72,7 @@ the live tree after every change:
 texlua tools/checktalents.lua warrior
 ```
 
-`tools/exporttrees.py` refreshes `tools/trees/` from the client data.
+`tools/exporttrees.py` refreshes `tools/trees/` and every `classes/<class>/TalentIds.lua` (talent IDs for importing wow-forever-forge.com links) from the client data.
 
 ## Data
 

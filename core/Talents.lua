@@ -138,7 +138,7 @@ end
 -- for points you spent elsewhere, or a talent you don't want.
 local function Skipped()
   ns.db.talentSkip = ns.db.talentSkip or {}
-  local key = (ns.PlanKey and ns.PlanKey()) or "default"
+  local key = (ns.PlanChoice and ns.PlanChoice()) or "default"
   ns.db.talentSkip[key] = ns.db.talentSkip[key] or {}
   return ns.db.talentSkip[key]
 end

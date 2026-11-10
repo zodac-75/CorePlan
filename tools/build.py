@@ -26,8 +26,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Load order. Class modules (class.json "modules") go where CLASS_MODULES is.
 ORDER = [
-    "Locale.lua", "LocaleClass.lua", "Data.lua", "TrainData.lua", "ProfData.lua",
-    "Core.lua", "Rows.lua", "Plans.lua", "Ranks.lua", "Talents.lua", "Trainer.lua", "Helper.lua",
+    "Locale.lua", "LocaleClass.lua", "Data.lua", "TalentIds.lua", "TrainData.lua", "ProfData.lua",
+    "Core.lua", "Rows.lua", "Plans.lua", "Import.lua", "Ranks.lua", "Talents.lua", "Trainer.lua", "Helper.lua",
     "CLASS_MODULES",
     "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "QuestReward.lua", "Bags.lua",
     "Drink.lua", "Buffs.lua", "Marks.lua", "Glide.lua", "Minimap.lua", "DungeonData.lua", "Arrow.lua", "Dungeons.lua",

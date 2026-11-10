@@ -65,7 +65,8 @@ description for the project; descriptions are generated from the same text for e
 Copy the closest class folder (PriestPlan is the newest pattern). Data sources:
 
 - Talent trees and leveling abilities: https://github.com/brainw0rm/forge (clone it).
-  `python3 tools/exporttrees.py forge/public/data/classes` (trees already exported for all
+  `python3 tools/exporttrees.py forge/public/data/classes` (also writes classes/<class>/TalentIds.lua
+  for the forge link import; trees already exported for all
   classes incl. hunter), then plan the specs in Data.lua and check with
   `texlua tools/checktalents.lua <class>` until it reports no problems.
 - Trainer: `python3 tools/gentrain.py <class> classes/<class>/TrainData.lua forge` writes the rank
