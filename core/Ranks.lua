@@ -114,8 +114,8 @@ local function SpellsOnBars()
     onBar[name] = onBar[name] or {}
     table.insert(onBar[name], entry)
   end
-  -- 1-180: the normal bars plus the extra pages some bar and controller addons use.
-  for slot = 1, 180 do
+  -- 1-360: the normal bars, the extra pages bar addons use, and the controller's sets.
+  for slot = 1, 360 do
     local ok, kind, id = pcall(GetActionInfo, slot)
     if ok and kind == "spell" and id then
       local name = ns.SpellInfo(id)
@@ -136,6 +136,28 @@ local function SpellsOnBars()
         local okS, spellId = pcall(GetMacroSpell, id)
         local name = okS and spellId and ns.SpellInfo(spellId)
         if name then Add(name, { slot = slot, macro = MacroName(id, slot) }) end
+      end
+    end
+  end
+  -- Still not found: ask the game whether the spell is on any button at all. This also
+  -- finds WoW Forever's controller layouts, wherever their slots are.
+  local AB = C_ActionBar
+  for _, name in pairs(wanted) do
+    if not onBar[name] and AB then
+      local _, id = ns.SpellInfo(name)
+      if id then
+        local ok, slots = pcall(AB.FindSpellActionButtons, id)
+        if ok and type(slots) == "table" and slots[1] then
+          for _, slot in ipairs(slots) do
+            if type(slot) == "number" and not (issecretvalue and issecretvalue(slot)) then
+              Add(name, { slot = slot, id = id })
+            end
+          end
+        end
+        if not onBar[name] and AB.IsOnBarOrSpecialBar then
+          local ok2, on = pcall(AB.IsOnBarOrSpecialBar, id)
+          if ok2 and on == true then Add(name, { slot = 0, bound = "bar" }) end
+        end
       end
     end
   end
@@ -164,6 +186,19 @@ local function Scan(force)
 
   local onBar = SpellsOnBars()
   local newOutdated, newMissing = {}, {}
+  if debugScan then
+    -- Where each checked spell was found (or not), to see how a controller layout shows up.
+    for _, spell in ipairs(CHECK) do
+      local name = ns.SpellInfo(spell)
+      if name then
+        local where = {}
+        for _, s in ipairs(onBar[name] or {}) do
+          where[#where + 1] = s.bound and ("bound " .. tostring(s.bound)) or s.macro and ("macro " .. s.macro .. " @" .. s.slot) or ("slot " .. s.slot)
+        end
+        ns.Print("  " .. name .. ": " .. (#where > 0 and table.concat(where, ", ") or "NOT FOUND"))
+      end
+    end
+  end
 
   for _, spell in ipairs(CHECK) do
     local name, bestId = ns.SpellInfo(spell)

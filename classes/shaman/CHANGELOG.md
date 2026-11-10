@@ -1,3 +1,7 @@
+# ShamanPlan 1.7.2
+
+- **Rank check finds controller buttons:** spells on WoW Forever's controller layouts no longer show as "not on any button". The check now looks at more action slots and asks the game whether a spell is on any button. /sp ranks debug lists where each spell was found.
+
 # ShamanPlan 1.7.1
 
 - **Import Wowhead talent links too:** "Import talents" (or /sp import <link>) now also takes a link from Wowhead's WoW Forever talent calculator. Wowhead links don't carry the order you clicked in, so the plan fills the tree with the most points first, row by row; forge links keep your exact order.

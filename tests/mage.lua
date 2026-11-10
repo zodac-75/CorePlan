@@ -1199,6 +1199,31 @@ do
     table.insert(errors, "bundna spells räknas som saknade: " .. all)
   end
   GetBindingKey = nil
+  -- WoW Forever's controller sets: spells the game finds on a button outside slots 1-180,
+  -- or that only C_ActionBar knows about, are not missing either.
+  local oldAB = rawget(_G, "C_ActionBar")
+  C_ActionBar = {
+    FindSpellActionButtons = function(id) return { 250 } end,
+    IsOnBarOrSpecialBar = function() return true end,
+  }
+  printed = {}
+  ns.RunCommand("ranks", "")
+  all = table.concat(printed, " | ")
+  print("  kontroller (C_ActionBar): " .. all)
+  if all:find("isn't on any button", 1, true) or all:find("inte ligger på någon knapp", 1, true) then
+    table.insert(errors, "spells på kontrollerns knappar räknas som saknade: " .. all)
+  end
+  C_ActionBar = { FindSpellActionButtons = function() return {} end, IsOnBarOrSpecialBar = function() return true end }
+  printed = {}
+  ns.RunCommand("ranks", "")
+  all = table.concat(printed, " | ")
+  if all:find("isn't on any button", 1, true) or all:find("inte ligger på någon knapp", 1, true) then
+    table.insert(errors, "IsOnBarOrSpecialBar räknas inte: " .. all)
+  end
+  printed = {}
+  ns.RunCommand("ranks", "debug")
+  print("  debug: " .. table.concat(printed, " | "):sub(1, 200))
+  C_ActionBar = oldAB
   printed = {}
   ns.RunCommand("rankchat", "")
   if not ns.db.rankChatOff then table.insert(errors, "rankchat stängde inte av") end
