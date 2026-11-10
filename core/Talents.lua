@@ -617,6 +617,23 @@ local function DebugTalentUI()
   local ok, err = pcall(UpdateGlow)
   ns.Print("glow: " .. (ok and "ok" or ("error " .. tostring(err))) .. "  shown: " ..
     tostring(glow and glow:IsShown()) .. "  hint: " .. tostring(hint and hint:IsShown()))
+  -- The yellow frames: how many talents are left in the plan, which ones have a button.
+  local okP, list = pcall(PlannedList)
+  if not okP then
+    ns.Print("yellow: error in PlannedList: " .. tostring(list))
+  else
+    ns.Print("yellow: " .. #list .. " planned talents left")
+    local okM, errM = pcall(UpdateMarks, root)
+    local shown = 0
+    for _, m in ipairs(marks) do if m:IsShown() then shown = shown + 1 end end
+    ns.Print("  frames shown: " .. shown .. (okM and "" or ("  ERROR " .. tostring(errM))))
+    for i = 1, math.min(#list, 6) do
+      local p = list[i]
+      local okF, b = pcall(FindButton, root or UIParent, p.t)
+      ns.Print(string.format("  %s (tab %s rank %s/%s): %s", p.name, tostring(p.t.tab), tostring(p.t.rank),
+        tostring(p.t.max), okF and (b and (b:IsVisible() and "button visible" or "button hidden") or "no button") or ("error " .. tostring(b))))
+    end
+  end
   -- What's under the mouse: hover a talent in the window while you type the command.
   local focus
   if GetMouseFoci then
