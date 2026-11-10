@@ -1,3 +1,7 @@
+# RoguePlan 1.0.0-beta19
+
+- **Import Wowhead talent links too:** "Import talents" (or /rp import <link>) now also takes a link from Wowhead's WoW Forever talent calculator. Wowhead links don't carry the order you clicked in, so the plan fills the tree with the most points first, row by row; forge links keep your exact order.
+
 # RoguePlan 1.0.0-beta18
 
 - **Import your own talent build:** make a build in the wow-forever-forge.com talent calculator, click Share, and paste the link with the new "Import talents" button in the settings (or /rp import <link>). The order you clicked the talents in becomes your leveling plan, shown as "Imported" next to our plans. It acts like our plan for the same tree for stat weights and call-outs. "Remove import" (or /rp import clear) takes it away.

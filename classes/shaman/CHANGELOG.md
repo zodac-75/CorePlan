@@ -1,3 +1,7 @@
+# ShamanPlan 1.7.1
+
+- **Import Wowhead talent links too:** "Import talents" (or /sp import <link>) now also takes a link from Wowhead's WoW Forever talent calculator. Wowhead links don't carry the order you clicked in, so the plan fills the tree with the most points first, row by row; forge links keep your exact order.
+
 # ShamanPlan 1.7.0
 
 - **Import your own talent build:** make a build in the wow-forever-forge.com talent calculator, click Share, and paste the link with the new "Import talents" button in the settings (or /sp import <link>). The order you clicked the talents in becomes your leveling plan, shown as "Imported" next to our plans. It acts like our plan for the same tree for stat weights and call-outs. "Remove import" (or /sp import clear) takes it away.

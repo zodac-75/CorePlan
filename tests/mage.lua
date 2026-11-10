@@ -1120,6 +1120,27 @@ do
   IsInGroup, UnitExists, IsInRaid, SetRaidTarget, GetRaidTargetIndex = oldIG, oldUE, nil, nil, nil
   ns.db.marks = nil
 end
+print("--- Importera Wowhead-länk ---")
+do
+  local link = "https://www.wowhead.com/forever/talent-calc/mage/vkndmh05002322302-25500001-0530300031211_t0/2BCEJknM1aaB0BEfffJHMG1Ch2p"
+  local ok = ns.ImportTalents(link)
+  local n = 0
+  for _ in pairs(ns.talents) do n = n + 1 end
+  print("  import: " .. tostring(ok) .. ", " .. n .. " poäng, som " .. ns.PlanKey() .. ", 10 = " .. tostring(ns.talents[10]) .. ", 60 = " .. tostring(ns.talents[60]))
+  if not ok or n ~= 51 then table.insert(errors, "Wowhead-importen gav " .. n .. " poäng, inte 51") end
+  local want = { ["Improved Channeling"] = "5/5", ["Shatter"] = "1/3", ["Pyroblast"] = "1/1", ["Arcane Concentration"] = "3/5" }
+  local final = {}
+  for _, e in pairs(ns.talents) do local name, r = e:match("^(.-)%s+(%d+/%d+)$"); final[name] = r end
+  for name, r in pairs(want) do
+    -- final rank is the highest seen
+    local best = 0
+    for _, e in pairs(ns.talents) do local nm, k = e:match("^(.-)%s+(%d+)/%d+$"); if nm == name and tonumber(k) > best then best = tonumber(k) end end
+    if tostring(best) .. "/" .. r:match("/(%d+)") ~= r then table.insert(errors, "Wowhead: " .. name .. " blev " .. best .. ", inte " .. r) end
+  end
+  if ns.talents[10] ~= "Improved Channeling 1/5" then table.insert(errors, "Wowhead: huvudträdet (Arcane) ska komma först: " .. tostring(ns.talents[10])) end
+  if ns.ImportTalents("https://www.wowhead.com/forever/talent-calc/priest/0550-55") then table.insert(errors, "tog emot en priest-länk") end
+  ns.ClearImport()
+end
 print("--- Walk on Air ---")
 do
   local oldC, oldU = C_UnitAuras, UnitAura
