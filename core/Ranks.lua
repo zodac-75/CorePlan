@@ -102,9 +102,26 @@ local function MacroName(index, slot)
   return "?"
 end
 
+-- The normal bars (main, pages, bars 2-8) end at button 180. Above that are the controller's
+-- own button sets: they can keep an old rank you can't see, so they only count when a
+-- controller is in use. Auto-detected, or forced with "/@SLASH@ ranks controller on|off".
+local NORMAL_BAR_SLOTS = 180
+
+local function ControllerBars()
+  if ns.db.rankController ~= nil then return ns.db.rankController end
+  local on = Call(C_GamePad and C_GamePad.IsEnabled)
+  if type(on) == "boolean" then return on end
+  on = Call(GetCVarBool, "GamePadEnable")
+  if type(on) == "boolean" then return on end
+  return true -- can't tell: look everywhere
+end
+
+function ns.RankControllerOn() return ControllerBars() end
+
 local function SpellsOnBars()
   local onBar = {}
   if not GetActionInfo then return onBar end
+  local lastSlot = ControllerBars() and 360 or NORMAL_BAR_SLOTS
   local wanted = {} -- lower-case name -> spell name, for the spells we check
   for _, spell in ipairs(CHECK) do
     local name = ns.SpellInfo(spell)
@@ -114,8 +131,8 @@ local function SpellsOnBars()
     onBar[name] = onBar[name] or {}
     table.insert(onBar[name], entry)
   end
-  -- 1-360: the normal bars, the extra pages bar addons use, and the controller's sets.
-  for slot = 1, 360 do
+  -- 1-180: the normal bars and the extra pages bar addons use; up to 360 the controller's sets.
+  for slot = 1, lastSlot do
     local ok, kind, id = pcall(GetActionInfo, slot)
     if ok and kind == "spell" and id then
       local name = ns.SpellInfo(id)
@@ -149,7 +166,7 @@ local function SpellsOnBars()
         local ok, slots = pcall(AB.FindSpellActionButtons, id)
         if ok and type(slots) == "table" and slots[1] then
           for _, slot in ipairs(slots) do
-            if type(slot) == "number" and not (issecretvalue and issecretvalue(slot)) then
+            if type(slot) == "number" and not (issecretvalue and issecretvalue(slot)) and slot <= lastSlot then
               Add(name, { slot = slot, id = id })
             end
           end
@@ -291,7 +308,29 @@ ns.RegisterCommand("rankchat", true, function()
   ns.Print(ns.db.rankChatOff and ns.T("RANKCHAT_OFF") or ns.T("RANKCHAT_ON"))
 end)
 
+-- The "I use a controller" tick box: switches to the opposite of what is used now.
+ns.RegisterCommand("rankcontroller", true, function()
+  ns.db.rankController = not ControllerBars()
+  ns.Print(ns.T(ns.db.rankController and "RANKS_CTRL_ON" or "RANKS_CTRL_OFF", ""))
+  lastPrinted = ""
+  Scan(true)
+end)
+
 ns.RegisterCommand("ranks", true, function(arg)
+  arg = type(arg) == "string" and arg or ""
+  -- "/@SLASH@ ranks controller on|off|auto": count the controller's button sets or not.
+  local sub, val = arg:match("^(%S+)%s*(%S*)")
+  if sub == "controller" then
+    val = val:lower()
+    if val == "on" then ns.db.rankController = true
+    elseif val == "off" then ns.db.rankController = false
+    elseif val == "auto" then ns.db.rankController = nil end
+    ns.Print(ns.T(ControllerBars() and "RANKS_CTRL_ON" or "RANKS_CTRL_OFF",
+      ns.db.rankController == nil and ns.T("RANKS_CTRL_AUTO") or ""))
+    lastPrinted = ""
+    Scan(true)
+    return
+  end
   missing = {}
   -- "/@SLASH@ ranks debug" prints what the check sees for every button.
   debugScan = arg == "debug"

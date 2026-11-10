@@ -49,6 +49,7 @@ local FEATURES = {
   { group = "CAT_ITEMS", key = "MM_BAGBTN", on = function() return not ns.db.bagBtnOff end, cmd = "bagbutton" },
   { group = "CAT_ITEMS", key = "MM_BAGAUTO", on = function() return not ns.db.bagAutoOff end, cmd = "bagauto" },
   { group = "CAT_LEVEL", key = "MM_RANKCHAT", on = function() return not ns.db.rankChatOff end, cmd = "rankchat" },
+  { group = "CAT_LEVEL", key = "MM_RANKCTRL", on = function() return ns.RankControllerOn and ns.RankControllerOn() end, cmd = "rankcontroller" },
   { group = "CAT_BUFFS", key = "MM_MARKS", on = function() return not ns.db.marksOff end, cmd = "marks" },
   { group = "CAT_LEVEL", key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
   { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
