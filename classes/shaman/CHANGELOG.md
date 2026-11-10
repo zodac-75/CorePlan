@@ -1,3 +1,7 @@
+# ShamanPlan 1.9.1
+
+- **Yellow frames on the talent tree now show:** the frames for the rest of your plan didn't appear because of a bug in how the plan was read. Fixed. /sp talentui also lists what the check sees.
+
 # ShamanPlan 1.9.0
 
 - **The whole plan on the talent tree:** besides the green frame and arrow on your next talent, every other talent in your plan that you haven't taken yet now gets a yellow frame in the talent window, so you can see where the build is heading. Talents you skip or have finished lose their frame.

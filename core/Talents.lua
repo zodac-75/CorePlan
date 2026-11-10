@@ -378,7 +378,8 @@ local function PlannedList()
   local want, order = {}, {}
   for lvl = 10, 60 do
     local entry = ns.talents[lvl]
-    local name, w = entry and entry:match("^(.-)%s+(%d+)/%d+$")
+    local name, w
+    if entry then name, w = entry:match("^(.-)%s+(%d+)/%d+$") end -- "a and f()" would keep only the first value
     w = tonumber(w)
     if name and w then
       if not want[name] then order[#order + 1] = name end

@@ -1,3 +1,7 @@
+# RoguePlan 1.0.0-beta24
+
+- **Yellow frames on the talent tree now show:** the frames for the rest of your plan didn't appear because of a bug in how the plan was read. Fixed. /rp talentui also lists what the check sees.
+
 # RoguePlan 1.0.0-beta23
 
 - **The whole plan on the talent tree:** besides the green frame and arrow on your next talent, every other talent in your plan that you haven't taken yet now gets a yellow frame in the talent window, so you can see where the build is heading. Talents you skip or have finished lose their frame.
