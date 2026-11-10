@@ -764,7 +764,11 @@ do
   methods.SetAttribute = methods.SetAttribute or function(self, k, v) rawset(self, "__attr_" .. k, v) end
   methods.GetAttribute = methods.GetAttribute or function(self, k) return rawget(self, "__attr_" .. k) end
   items[9990] = { "Broken Fang", 0, 5, "", 25, 15 }
+  items[9991] = { "Worn Tunic", 1, 5, "INVTYPE_CHEST", 12, 4, nil, nil, 1 }
+  items[6256] = { "Fishing Pole", 1, 5, "INVTYPE_2HWEAPON", 5, 2, nil, nil, 20 }
+  items[2901] = { "Mining Pick", 1, 5, "INVTYPE_WEAPON", 20, 2, nil, nil, 0 }
   bag[4] = 9990
+  bag[5], bag[6], bag[7] = 9991, 6256, 2901
   local ok, err = pcall(function()
     ns.db.bagAutoOff = nil
     fire("MERCHANT_SHOW")
@@ -779,6 +783,19 @@ do
     elseif junk:GetAttribute("macrotext1") ~= "/use 0 4" then table.insert(errors, "skräpraden säljer inte: " .. tostring(junk:GetAttribute("macrotext1"))) end
     local sa = rawget(_G, "DruidPlanBagSellAll")
     if not (sa and sa.__shown and tostring(sa:GetAttribute("macrotext1")):find("/use 0 4", 1, true)) then table.insert(errors, "sälj-allt-knappen saknas") end
+    -- Vit utrustning säljs (men inte fiskespö eller gruvhacka).
+    local white, pole, pick
+    for i = 1, 40 do
+      local b = rawget(_G, "DruidPlanBagLine" .. i)
+      if b and b.__shown and b.entry then
+        if b.entry.id == 9991 then white = b.entry end
+        if b.entry.id == 6256 then pole = true end
+        if b.entry.id == 2901 then pick = true end
+      end
+    end
+    if not (white and white.key == "vendor") then table.insert(errors, "vit utrustning hamnade inte bland det som säljs") end
+    if pole then table.insert(errors, "fiskespöet erbjöds till försäljning") end
+    if pick then table.insert(errors, "gruvhackan erbjöds till försäljning") end
     if junk and junk.__scripts.OnEnter then junk.__scripts.OnEnter(junk) end
     -- Högerklick sparar föremålet: då säljs det inte.
     if junk then junk.__scripts.OnMouseUp(junk, "RightButton") end
@@ -803,6 +820,7 @@ do
   end)
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
+  bag[5], bag[6], bag[7] = nil, nil, nil
 end
 print("--- Buffar med dold auralista ---")
 if MODE == "modern" then

@@ -1,4 +1,5 @@
--- @ADDON@: bag check. Disenchant, AH or vendor for green and blue gear, plus grey junk.
+-- @ADDON@: bag check. Disenchant, AH or vendor for green and blue gear, plus white gear
+-- that is no upgrade and grey junk.
 -- Advice shows in item tooltips, and /@SLASH@ de opens a window that lists your bags.
 -- With a vendor open you sell from the window; with Enchanting you disenchant from it.
 -- AH prices come from Auctionator (do a full scan at the AH first).
@@ -159,7 +160,35 @@ end
 
 local GROUPS = { "junk", "vendor", "de", "ah" }
 
--- Everything worth a decision: green/blue gear (DE, AH or vendor) and grey junk.
+-- Profession tools are white weapons too: never offer to sell them.
+local TOOLS = {
+  [2901] = true, -- Mining Pick
+  [7005] = true, -- Skinning Knife
+  [5956] = true, -- Blacksmith Hammer
+  [6219] = true, -- Arclight Spanner
+  [12709] = true, -- Finkle's Skinner
+  [19901] = true, -- Zulian Slicer
+}
+
+-- White (common) gear from drops: vendor it, unless it would be an upgrade for you,
+-- it's a fishing pole or a profession tool, or a shirt or tabard.
+local function WhiteGear(link)
+  local ok, name, _, quality, _, _, _, _, _, equipLoc, _, sell, classID, subclassID = pcall(ns.ItemInfo, link)
+  if not ok or not name or quality ~= 1 or not (sell and sell > 0) then return nil end
+  if classID ~= 2 and classID ~= 4 then return nil end
+  if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_BODY" or equipLoc == "INVTYPE_TABARD" then return nil end
+  if classID == 2 and subclassID == 20 then return nil end -- fishing pole
+  local id = tonumber(link:match("item:(%d+)"))
+  if id and TOOLS[id] then return nil end
+  if ns.CompareToEquipped then
+    local okC, delta = pcall(ns.CompareToEquipped, link)
+    if okC and type(delta) == "number" and delta > 0 then return nil end
+  end
+  return sell
+end
+
+-- Everything worth a decision: green/blue gear (DE, AH or vendor), white gear that
+-- isn't an upgrade (vendor) and grey junk.
 function ns.BagScan()
   local list = { de = {}, ah = {}, vendor = {}, junk = {}, kept = {} }
   local totals = { de = 0, ah = 0, vendor = 0, junk = 0 }
@@ -178,6 +207,12 @@ function ns.BagScan()
           if ok and name and quality == 0 and (sell or 0) > 0 then
             e = { key = "junk", value = sell * (count or 1) }
             icon = icon or tex
+          elseif ok and name and quality == 1 then
+            local price = WhiteGear(link)
+            if price then
+              e = { key = "vendor", value = price * (count or 1), reason = ns.T("BAG_WHITE") }
+              icon = icon or tex
+            end
           end
         end
         if e then
