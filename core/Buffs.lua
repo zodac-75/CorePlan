@@ -115,7 +115,9 @@ local function PlayerBuffs(unit)
     end
     if issecretvalue and (issecretvalue(name) or issecretvalue(expires)) then
       unsure = true
-    elseif type(name) == "string" then
+    elseif type(name) ~= "string" then
+      unsure = true -- an aura without a readable name (restricted): can't tell what it is
+    else
       local left = (type(expires) == "number" and expires > 0) and (expires - now) or 0
       out[name] = math.max(out[name] or 0, left)
       if ns.Readable(dur) and dur > 0 then durs[name] = dur end
@@ -173,7 +175,9 @@ end
 -- During a boss fight the game hides other players' buffs (and sometimes yours): the list
 -- comes back empty or secret and a lookup by name finds nothing, which looked like
 -- "everyone is missing Arcane Intellect" at the pull. Then "not found" means "can't tell".
+local bossFight = false -- ENCOUNTER_START .. ENCOUNTER_END, for clients without IsEncounterInProgress
 local function InEncounter()
+  if bossFight then return true end
   if not IsEncounterInProgress then return false end
   local ok, v = pcall(IsEncounterInProgress)
   return ok and v == true
@@ -531,7 +535,10 @@ ns.RegisterModule(function()
   pcall(ev.RegisterEvent, ev, "GROUP_ROSTER_UPDATE")
   pcall(ev.RegisterEvent, ev, "ENCOUNTER_START")
   pcall(ev.RegisterEvent, ev, "ENCOUNTER_END")
+  pcall(ev.RegisterEvent, ev, "PLAYER_ENTERING_WORLD")
   ev:SetScript("OnEvent", function(_, event, unit)
+    if event == "ENCOUNTER_START" then bossFight = true
+    elseif event == "ENCOUNTER_END" or event == "PLAYER_ENTERING_WORLD" then bossFight = false end
     if event == "UNIT_AURA" and unit ~= "player" and not (type(unit) == "string" and unit:find("^party")) then return end
     ns.Debounce("buffs", 0.2, function() pcall(Update) end)
   end)
@@ -569,6 +576,37 @@ ns.RegisterCommand("buffdebug", false, function()
       (not e.only or e.only()) and "yes" or "no", found and "yes" or "no",
       byName == nil and "?" or (byName > 0 and "yes" or "no"),
       (found and Outranked(e.buffs, ids, spell)) and ", higher rank from someone else (not watched until it ends)" or ""))
+  end
+  -- Party: what the game lets us see of each member's buffs.
+  ns.Print(string.format("  boss fight %s, party buffs %s", InEncounter() and "YES" or "no",
+    ns.db.partyBuffsOff and "OFF" or "on"))
+  if IsInGroup and IsInGroup() then
+    for i = 1, 4 do
+      local unit = "party" .. i
+      if UnitExists(unit) then
+        local theirs, unsureP, _, theirIds = PlayerBuffs(unit)
+        local n, names = 0, {}
+        for name in pairs(theirs) do n = n + 1; if n <= 4 then table.insert(names, name) end end
+        local okN, who = pcall(UnitName, unit)
+        if not okN or (issecretvalue and issecretvalue(who)) then who = unit end
+        local parts = {}
+        for _, e in ipairs(ns.PARTY_BUFFS or {}) do
+          local list = type(e.spells) == "function" and e.spells(unit) or e.spells or {}
+          local spell
+          for _, s in ipairs(list) do if ns.SpellInfo(s) then spell = s break end end
+          if spell then
+            local has
+            for _, b in ipairs(e.buffs or {}) do if theirs[b] then has = b end end
+            local byName = LookupByName(unit, e.buffs)
+            table.insert(parts, string.format("%s %s/by name %s%s", spell, has and "yes" or "no",
+              byName == nil and "?" or (byName > 0 and "yes" or "no"),
+              (has and Outranked(e.buffs, theirIds, spell)) and "/higher rank" or ""))
+          end
+        end
+        ns.Print(string.format("  %s: %d buffs%s (%s) %s", tostring(who), n, unsureP and ", HIDDEN" or "",
+          table.concat(names, ", "), table.concat(parts, "; ")))
+      end
+    end
   end
   local n = 0
   for _, b in ipairs(buttons) do if b:IsShown() then n = n + 1 end end

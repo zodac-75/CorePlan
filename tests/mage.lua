@@ -1037,6 +1037,14 @@ do
   IsEncounterInProgress = nil
   ns.RefreshBuffWatch()
   if not jennieShown() then table.insert(errors, "after the boss: Jennie's missing buff not shown again") end
+  -- Same without IsEncounterInProgress: the ENCOUNTER_START/END events.
+  fire("ENCOUNTER_START", 1, "Boss", 1, 5)
+  ns.RefreshBuffWatch()
+  if jennieShown() then table.insert(errors, "ENCOUNTER_START: hidden party buffs counted as missing") end
+  slash("buffdebug")
+  fire("ENCOUNTER_END", 1, "Boss", 1, 5, 1)
+  ns.RefreshBuffWatch()
+  if not jennieShown() then table.insert(errors, "ENCOUNTER_END: Jennie's missing buff not shown again") end
   ns.RunCommand("partybuffs"); ns.RefreshBuffWatch()
   local after = 0
   for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown then after = after + 1 end end

@@ -1,3 +1,7 @@
+# MagePlan 1.33.1
+
+- **Buff watcher in boss fights, take two:** also notices the boss fight from the game's encounter events (for clients without IsEncounterInProgress), and a buff whose name the game hides counts as "can't tell" instead of "missing". `/mp buffdebug` now also lists what it can see of each party member's buffs.
+
 # MagePlan 1.33.0
 
 - **Buff watcher in boss fights:** at the pull the game hides other players' buffs, which made the buff row ask you to buff the whole party again. A buff you can't see during a boss fight now counts as "can't tell" instead of "missing".
