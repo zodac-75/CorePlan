@@ -93,11 +93,6 @@ function ns.Evaluate(link, isBound)
   if not r.ah and not r.de and r.canDE and best.key == "vendor" then
     best = { key = "de", value = nil, reason = ns.T("DE_NOPRICE") }
   end
-  -- An enchanter disenchants everything they can (skill and materials), even when the
-  -- vendor or AH pays a little more. Shift-click still sells it at a vendor.
-  if r.canDE and best.key ~= "de" then
-    best = { key = "de", value = r.de, reason = ns.T("DE_ENCHANTER") }
-  end
   r.best = best
   return r
 end
@@ -256,25 +251,35 @@ end
 
 local function SellMacro(e) return "/use " .. e.bag .. " " .. e.slot end
 
--- What a left-click (and shift-left-click) on a row does, and the label for it.
+local function DEMacro(e) return "/cast " .. DisenchantName() .. "\n" .. SellMacro(e) end
+
+-- What a left-click, shift-left-click and alt-left-click on a row do, and the label.
+-- Alt-click disenchants a sell or AH item when you can disenchant it (enchanters keep
+-- the best-price advice but can still DE anything).
 local function RowAction(e)
   if e.kept then return nil, nil, "|cff888888" .. ns.T("BAG_ACT_KEPT") .. "|r" end
   local shift = merchantOpen and SellMacro(e) or nil
   if e.key == "de" and e.r and e.r.canDE then
-    return "/cast " .. DisenchantName() .. "\n" .. SellMacro(e), shift, COLORS.de .. ns.T("BAG_ACT_DE") .. "|r"
+    return DEMacro(e), shift, COLORS.de .. ns.T("BAG_ACT_DE") .. "|r"
   end
+  local alt = (e.r and e.r.canDE) and DEMacro(e) or nil
+  local plusDE = alt and (COLORS.de .. ns.T("BAG_ACT_PLUSDE") .. "|r") or ""
   if (e.key == "vendor" or e.key == "junk") and merchantOpen then
-    return SellMacro(e), nil, "|cff60ff60" .. ns.T("BAG_ACT_SELL") .. "|r"
+    return SellMacro(e), nil, "|cff60ff60" .. ns.T("BAG_ACT_SELL") .. "|r" .. plusDE, alt
   end
-  if e.key == "ah" then return nil, shift, COLORS.ah .. ns.T("BAG_ACT_AH") .. "|r" end
+  if e.key == "ah" then return nil, shift, COLORS.ah .. ns.T("BAG_ACT_AH") .. "|r" .. plusDE, alt end
+  -- No vendor to sell to: a plain click disenchants.
+  if alt then return alt, nil, COLORS.de .. ns.T("BAG_ACT_DE") .. "|r", nil end
   return nil, nil, ""
 end
 
-local function SetSecure(b, main, shift)
+local function SetSecure(b, main, shift, alt)
   b:SetAttribute("type1", main and "macro" or nil)
   b:SetAttribute("macrotext1", main)
   b:SetAttribute("shift-type1", shift and "macro" or nil)
   b:SetAttribute("shift-macrotext1", shift)
+  b:SetAttribute("alt-type1", alt and "macro" or nil)
+  b:SetAttribute("alt-macrotext1", alt)
 end
 
 local Refresh
@@ -289,11 +294,11 @@ local function LineTooltip(self)
     GameTooltip:SetHyperlink(e.link)
   end
   GameTooltip:AddLine(" ")
-  local main, shift = RowAction(e)
+  local main, shift, _, alt = RowAction(e)
   if e.kept then
     GameTooltip:AddLine(ns.T("BAG_TT_UNKEEP"), 0.7, 0.7, 0.7)
   else
-    if main and e.key == "de" then
+    if main and (e.key == "de" or (e.r and e.r.canDE and not merchantOpen and e.key ~= "ah")) then
       GameTooltip:AddLine(ns.T("BAG_TT_DE"), 0.7, 0.45, 1)
     elseif main then
       GameTooltip:AddLine(ns.T("BAG_TT_SELL"), 0.4, 1, 0.4)
@@ -303,6 +308,7 @@ local function LineTooltip(self)
       GameTooltip:AddLine(ns.T("BAG_TT_NOVENDOR"), 0.7, 0.7, 0.7)
     end
     if shift then GameTooltip:AddLine(ns.T("BAG_TT_SHIFT"), 1, 0.82, 0) end
+    if alt then GameTooltip:AddLine(ns.T("BAG_TT_ALT"), 0.7, 0.45, 1) end
     GameTooltip:AddLine(ns.T("BAG_TT_KEEP"), 0.7, 0.7, 0.7)
   end
   GameTooltip:Show()
@@ -328,7 +334,7 @@ local function GetLine(i)
   b.name:SetWordWrap(false)
   b.act = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   b.act:SetPoint("RIGHT", 0, 0)
-  b.act:SetWidth(44)
+  b.act:SetWidth(58)
   b.act:SetJustifyH("RIGHT")
   b.value = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   b.value:SetPoint("RIGHT", b.act, "LEFT", -6, 0)
@@ -361,8 +367,8 @@ end
 
 local function ShowEntry(b, e)
   b.entry = e
-  local main, shift, label = RowAction(e)
-  SetSecure(b, main, shift)
+  local main, shift, label, alt = RowAction(e)
+  SetSecure(b, main, shift, alt)
   b:EnableMouse(true)
   b.head:Hide()
   b.icon:SetTexture(e.icon or "Interface\\Icons\\INV_Misc_QuestionMark")

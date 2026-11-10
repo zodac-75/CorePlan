@@ -1333,19 +1333,46 @@ do
   end
   print("  tränare A/H och item-ID:n kollade")
 end
-print("--- Enchanter: disenchanta allt ---")
+print("--- Enchanter: DE som alternativ ---")
 do
-  -- Gröna stövlar som säljer för mer än de ger i material: en enchanter ska ändå få DE.
+  -- Gröna stövlar som säljer för mer än materialen: säljraden står kvar,
+  -- men en enchanter kan alt-klicka för att disenchanta.
   items[9992] = { "Green Boots", 2, 10, "INVTYPE_FEET", 50000, 4, nil, 0, 2 }
   local oldSkill = ns.GetProfSkill
   ns.GetProfSkill = function(p) if p == "Enchanting" then return 150 end return oldSkill(p) end
   local r = ns.Evaluate("|Hitem:9992|h[Green Boots]|h", false)
-  print("  enchanter: " .. tostring(r and r.best.key))
-  if not (r and r.best.key == "de") then table.insert(errors, "enchanter fick inte DE på grön utrustning: " .. tostring(r and r.best.key)) end
-  ns.GetProfSkill = function(p) if p == "Enchanting" then return nil end return oldSkill(p) end
-  r = ns.Evaluate("|Hitem:9992|h[Green Boots]|h", false)
-  print("  utan enchanting: " .. tostring(r and r.best.key))
-  if r and r.best.key == "de" then table.insert(errors, "DE föreslogs utan Enchanting") end
+  print("  enchanter: " .. tostring(r and r.best.key) .. ", kan DE " .. tostring(r and r.canDE))
+  if not (r and r.best.key == "vendor" and r.canDE) then table.insert(errors, "grön utrustning: väntade sälj med DE-möjlighet") end
+  local ok, err = pcall(function()
+    methods.SetAttribute = methods.SetAttribute or function(self, k, v) rawset(self, "__attr_" .. k, v) end
+    methods.GetAttribute = methods.GetAttribute or function(self, k) return rawget(self, "__attr_" .. k) end
+    bag[4] = 9992
+    fire("MERCHANT_SHOW")
+    if not (rawget(_G, "MagePlanBags") and rawget(_G, "MagePlanBags").__shown) then slash("de") end
+    ns.RefreshBags()
+    local row
+    for i = 1, 40 do
+      local b = rawget(_G, "MagePlanBagLine" .. i)
+      if b and b.__shown and b.entry and b.entry.id == 9992 then row = b end
+    end
+    if not row then table.insert(errors, "stövlarna syns inte i väskgenomgången") return end
+    print("  rad: " .. tostring(row.entry.key) .. " klick=" .. tostring(row:GetAttribute("macrotext1")) .. " alt=" .. tostring(row:GetAttribute("alt-macrotext1")))
+    if row.entry.key ~= "vendor" then table.insert(errors, "stövlarna borde ligga under sälj") end
+    if not tostring(row:GetAttribute("macrotext1")):find("^/use") then table.insert(errors, "klick säljer inte stövlarna") end
+    if not tostring(row:GetAttribute("alt-macrotext1")):find("Disenchant", 1, true) then table.insert(errors, "alt-klick disenchantar inte") end
+    -- Utan Enchanting: inget alt-klick.
+    ns.GetProfSkill = function(p) if p == "Enchanting" then return nil end return oldSkill(p) end
+    ns.RefreshBags()
+    for i = 1, 40 do
+      local b = rawget(_G, "MagePlanBagLine" .. i)
+      if b and b.__shown and b.entry and b.entry.id == 9992 and b:GetAttribute("alt-macrotext1") then
+        table.insert(errors, "alt-klick DE utan Enchanting")
+      end
+    end
+    fire("MERCHANT_CLOSED")
+  end)
+  if not ok then table.insert(errors, "enchanter-test: " .. tostring(err)) end
+  bag[4] = nil
   ns.GetProfSkill = oldSkill
 end
 print("--- Okända globaler som lästes ---")
