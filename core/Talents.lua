@@ -364,7 +364,7 @@ end
 -- The rest of the plan: a yellow frame on every talent that is in the plan but not taken
 -- yet (the next talent keeps its green frame and arrow). Same rules as the glow: our own
 -- frames, only anchored to Blizzard's buttons.
-local marks, markBtn = {}, {}
+local marks = {}
 
 local function HideMarks(from)
   for i = from or 1, #marks do marks[i]:Hide(); marks[i].btn = nil end
@@ -428,23 +428,26 @@ end
 
 local function UpdateMarks(root)
   if not root then HideMarks() return end
+  local okL, list = pcall(PlannedList)
+  if not okL then HideMarks() return end
   local used = 0
-  for _, p in ipairs(PlannedList()) do
-    if TabOk(root, p.t) then
-      local btn = markBtn[p.name]
-      if not (btn and btn:IsVisible()) then
-        btn = FindButton(root, p.t)
-        markBtn[p.name] = btn
-      end
-      if btn and btn:IsVisible() then
-        used = used + 1
-        local m = GetMark(used)
-        m.btn = btn
-        m:ClearAllPoints()
-        m:SetPoint("TOPLEFT", btn, "TOPLEFT", -3, 3)
-        m:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 3, -3)
-        m:Show()
-      end
+  for _, p in ipairs(list) do
+    -- One talent that can't be found (or errors) must not stop the rest, or the frames
+    -- from the previous plan would stay up. The button is looked up fresh every time: the
+    -- window reuses its buttons for other talents when it rebuilds.
+    local okB, btn = pcall(function()
+      if not TabOk(root, p.t) then return nil end
+      local b = FindButton(root, p.t)
+      if b and b:IsVisible() then return b end
+    end)
+    if okB and btn then
+      used = used + 1
+      local m = GetMark(used)
+      m.btn = btn
+      m:ClearAllPoints()
+      m:SetPoint("TOPLEFT", btn, "TOPLEFT", -3, 3)
+      m:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 3, -3)
+      m:Show()
     end
   end
   HideMarks(used + 1)

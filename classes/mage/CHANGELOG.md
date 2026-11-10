@@ -1,3 +1,7 @@
+# MagePlan 1.31.2
+
+- **Yellow talent frames follow your plan:** switching plans or reopening the talent window could leave frames from an earlier plan on the wrong talents. Each frame is now placed fresh every time, and one talent that can't be found no longer stops the rest. /mp talentui lists the planned talents by name.
+
 # MagePlan 1.31.1
 
 - **Yellow frames on the talent tree now show:** the frames for the rest of your plan didn't appear because of a bug in how the plan was read. Fixed. /mp talentui also lists what the check sees.

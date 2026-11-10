@@ -1,3 +1,7 @@
+# HunterPlan 1.0.0-beta26
+
+- **Yellow talent frames follow your plan:** switching plans or reopening the talent window could leave frames from an earlier plan on the wrong talents. Each frame is now placed fresh every time, and one talent that can't be found no longer stops the rest. /hp talentui lists the planned talents by name.
+
 # HunterPlan 1.0.0-beta25
 
 - **Yellow frames on the talent tree now show:** the frames for the rest of your plan didn't appear because of a bug in how the plan was read. Fixed. /hp talentui also lists what the check sees.

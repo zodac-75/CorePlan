@@ -1,3 +1,7 @@
+# RoguePlan 1.0.0-beta25
+
+- **Yellow talent frames follow your plan:** switching plans or reopening the talent window could leave frames from an earlier plan on the wrong talents. Each frame is now placed fresh every time, and one talent that can't be found no longer stops the rest. /rp talentui lists the planned talents by name.
+
 # RoguePlan 1.0.0-beta24
 
 - **Yellow frames on the talent tree now show:** the frames for the rest of your plan didn't appear because of a bug in how the plan was read. Fixed. /rp talentui also lists what the check sees.

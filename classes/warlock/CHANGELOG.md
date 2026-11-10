@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta47
+
+- **Yellow talent frames follow your plan:** switching plans or reopening the talent window could leave frames from an earlier plan on the wrong talents. Each frame is now placed fresh every time, and one talent that can't be found no longer stops the rest. /wl talentui lists the planned talents by name.
+
 # WarlockPlan 1.0.0-beta46
 
 - **Yellow frames on the talent tree now show:** the frames for the rest of your plan didn't appear because of a bug in how the plan was read. Fixed. /wl talentui also lists what the check sees.
