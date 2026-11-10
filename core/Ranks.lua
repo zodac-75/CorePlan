@@ -21,8 +21,10 @@ end
 
 -- "Rank 3" from the game, or nil when it hides it (Forever often returns "").
 local function RankNumber(id)
-  for _, fn in ipairs({ C_Spell and C_Spell.GetSpellSubtext, GetSpellSubtext }) do
-    local s = Call(fn, id)
+  -- Not ipairs: when C_Spell has no GetSpellSubtext the first entry is nil and ipairs
+  -- would stop before trying the old GetSpellSubtext.
+  for _, fn in pairs({ C_Spell and C_Spell.GetSpellSubtext or false, GetSpellSubtext or false }) do
+    local s = fn and Call(fn, id)
     if type(s) == "string" and not (issecretvalue and issecretvalue(s)) then
       local n = tonumber(s:match("(%d+)"))
       if n then return n end
@@ -56,6 +58,7 @@ local function OlderRank(id, bestId)
   if c and bc and c ~= bc then return c < bc, r, best, "cost" end
   return false, r, best, nil
 end
+ns.OlderRank = OlderRank -- the buff watcher asks: is someone else's buff a higher rank?
 
 -- Spells a macro casts: { {name = "Frostbolt", rank = 1 or nil}, ... }.
 -- Reads /cast, /use, /castsequence, /castrandom and #showtooltip lines; drops

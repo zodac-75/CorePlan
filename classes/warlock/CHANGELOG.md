@@ -1,3 +1,9 @@
+# WarlockPlan 1.0.0-beta50
+
+- **Buff watcher in boss fights:** at the pull the game hides other players' buffs, which made the buff row ask you to buff the whole party again. A buff you can't see during a boss fight now counts as "can't tell" instead of "missing".
+- **Someone else's stronger buff:** when a higher-level player has put a higher rank of your buff on you or your party (a higher Mark of the Wild, Arcane Intellect, Fortitude …), the buff watcher leaves it alone until it runs out, since your weaker rank can't replace it. `/wl buffdebug` says when that is the case.
+- **Rank check:** reads the spell rank on clients without C_Spell.GetSpellSubtext too.
+
 # WarlockPlan 1.0.0-beta49
 
 - **Talent window in replacement UIs (Daylight UI):** the yellow frames and green ticks now stay inside the talent window you actually see, instead of landing on Blizzard's hidden talent buttons elsewhere on the screen.

@@ -1030,6 +1030,13 @@ do
   if jennieShown() then table.insert(errors, "in another zone but still shown") end
   UnitIsVisible = nil
   ns.RefreshBuffWatch()
+  -- Boss fight: the game hides their buffs (empty list). That's "can't tell", not "missing".
+  IsEncounterInProgress = function() return true end
+  ns.RefreshBuffWatch()
+  if jennieShown() then table.insert(errors, "boss fight: hidden party buffs counted as missing") end
+  IsEncounterInProgress = nil
+  ns.RefreshBuffWatch()
+  if not jennieShown() then table.insert(errors, "after the boss: Jennie's missing buff not shown again") end
   ns.RunCommand("partybuffs"); ns.RefreshBuffWatch()
   local after = 0
   for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown then after = after + 1 end end

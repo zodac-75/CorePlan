@@ -10,6 +10,9 @@
 -- The icon casts the first spell in the list you know. With use (poisons and other items),
 -- the icon runs that macro instead, and the entry only shows while use() returns something.
 --
+-- A higher rank of the same buff from someone else counts as "up" until it runs out:
+-- your weaker cast can't replace it.
+--
 -- Party buffs (ns.PARTY_BUFFS, same fields plus mana = true for mana users only, or
 -- spells = function(unit) -> list): one icon per party member who is missing it, with
 -- their name on it; a click casts it on them.
@@ -92,20 +95,20 @@ end
 -- unsure when the game hides names.
 local function PlayerBuffs(unit)
   unit = unit or "player"
-  local out, unsure, durs = {}, false, {}
+  local out, unsure, durs, ids = {}, false, {}, {}
   local now = GetTime()
   for i = 1, 40 do
-    local name, expires, dur
+    local name, expires, dur, id
     if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
       local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, "HELPFUL")
       if not ok then unsure = true break end
       if not a then break end
-      name, expires, dur = a.name, a.expirationTime, a.duration
+      name, expires, dur, id = a.name, a.expirationTime, a.duration, a.spellId
     elseif UnitAura then
-      local ok, n, _, _, d, _, exp = pcall(UnitAura, unit, i, "HELPFUL")
+      local ok, n, _, _, d, _, exp, _, _, _, sid = pcall(UnitAura, unit, i, "HELPFUL")
       if not ok then unsure = true break end
       if not n then break end
-      name, expires, dur = n, exp, d
+      name, expires, dur, id = n, exp, d, sid
     else
       unsure = true
       break
@@ -116,9 +119,29 @@ local function PlayerBuffs(unit)
       local left = (type(expires) == "number" and expires > 0) and (expires - now) or 0
       out[name] = math.max(out[name] or 0, left)
       if ns.Readable(dur) and dur > 0 then durs[name] = dur end
+      if ns.Readable(id) and type(id) == "number" then ids[name] = id end
     end
   end
-  return out, unsure, durs
+  return out, unsure, durs, ids
+end
+
+-- A higher rank of your buff, cast by someone else (a higher-level druid's Mark of the
+-- Wild): yours can't replace it ("a more powerful spell is already active"), so there is
+-- nothing to cast until it has run out. Unknown ranks count as "not stronger".
+local function StrongerThanMine(auraId, spell)
+  if not (auraId and spell and ns.OlderRank) then return false end
+  local _, myId = ns.SpellInfo(spell)
+  if not myId or myId == auraId then return false end
+  local ok, older = pcall(ns.OlderRank, myId, auraId)
+  return ok and older == true
+end
+
+-- Is one of the buffs that count a stronger one from someone else?
+local function Outranked(names, ids, spell)
+  for _, n in ipairs(names or {}) do
+    if n == spell and StrongerThanMine(ids[n], spell) then return true end
+  end
+  return false
 end
 
 -- When the aura list is hidden (secret values), ask for the buff by name instead.
@@ -147,13 +170,24 @@ local function ImbueLeft(offHand)
   return (ms or 0) / 1000
 end
 
+-- During a boss fight the game hides other players' buffs (and sometimes yours): the list
+-- comes back empty or secret and a lookup by name finds nothing, which looked like
+-- "everyone is missing Arcane Intellect" at the pull. Then "not found" means "can't tell".
+local function InEncounter()
+  if not IsEncounterInProgress then return false end
+  local ok, v = pcall(IsEncounterInProgress)
+  return ok and v == true
+end
+
 -- What each entry needs now: { spell, left } where left = 0 means missing.
 local InRange -- below: can your buff reach them?
 
 local function Needed()
-  local buffs, unsure, durs = PlayerBuffs()
+  local buffs, unsure, durs, ids = PlayerBuffs()
   local out = {}
   local combat = InCombatLockdown and InCombatLockdown()
+  local boss = InEncounter()
+  if boss and next(buffs) == nil then unsure = true end
   for idx, e in ipairs(ns.BUFF_WATCH or {}) do
     local spell = Spells(e)
     if spell and not Hidden(EntryKey(e, idx, false)) and (not e.only or e.only()) then
@@ -175,6 +209,8 @@ local function Needed()
         end
         if best then left = best elseif not unsure then left = 0
         elseif not e.match then left = LookupByName("player", e.buffs) end
+        if left == 0 and unsure and boss then left = nil end
+        if best and Outranked(e.buffs, ids, spell) then left = nil end
       end
       local warn = e.warn or WARN
       -- Out of combat: warn earlier, but at most a third of the buff's length, so a
@@ -198,7 +234,8 @@ local function Needed()
       if okV and issecretvalue and issecretvalue(visible) then visible = true end
       if not okV then visible = true end
       if UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) and visible then
-        local theirs, unsureP = PlayerBuffs(unit)
+        local theirs, unsureP, _, theirIds = PlayerBuffs(unit)
+        if boss and next(theirs) == nil then unsureP = true end
         local isMana
         local okP, pt = pcall(UnitPowerType, unit)
         if okP and not (issecretvalue and issecretvalue(pt)) then isMana = (pt == 0) end
@@ -217,6 +254,9 @@ local function Needed()
             end
             local left = best or (not unsureP and 0 or nil)
             if left == nil and not e.match then left = LookupByName(unit, e.buffs) end
+            -- Their list is hidden: a name lookup that finds nothing isn't proof it's gone.
+            if left == 0 and unsureP then left = nil end
+            if best and Outranked(e.buffs, theirIds, spell) then left = nil end
             local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
             -- Out of buff range: no icon until they come closer (checked every second).
             if left and (left == 0 or left < warn) and InRange(unit, spell) then
@@ -489,6 +529,8 @@ ns.RegisterModule(function()
   ev:RegisterEvent("PLAYER_REGEN_ENABLED")
   ev:RegisterEvent("UNIT_INVENTORY_CHANGED")
   pcall(ev.RegisterEvent, ev, "GROUP_ROSTER_UPDATE")
+  pcall(ev.RegisterEvent, ev, "ENCOUNTER_START")
+  pcall(ev.RegisterEvent, ev, "ENCOUNTER_END")
   ev:SetScript("OnEvent", function(_, event, unit)
     if event == "UNIT_AURA" and unit ~= "player" and not (type(unit) == "string" and unit:find("^party")) then return end
     ns.Debounce("buffs", 0.2, function() pcall(Update) end)
@@ -513,7 +555,7 @@ function ns.RefreshBuffWatch() pcall(Update) end
 
 -- /@SLASH@ buffdebug: why an icon does or doesn't show.
 ns.RegisterCommand("buffdebug", false, function()
-  local buffs, unsure = PlayerBuffs()
+  local buffs, unsure, _, ids = PlayerBuffs()
   ns.Print(string.format("buffs %s, move %s, combat %s, aura list %s", ns.db.buffsOff and "OFF" or "on",
     ns.db.shatterUnlocked and "ON" or "off", (InCombatLockdown and InCombatLockdown()) and "yes" or "no",
     unsure and "HIDDEN (secret)" or "readable"))
@@ -522,10 +564,11 @@ ns.RegisterCommand("buffdebug", false, function()
     local found
     for _, b in ipairs(e.buffs or {}) do if buffs[b] then found = b end end
     local byName = LookupByName("player", e.buffs)
-    ns.Print(string.format("  %s: known %s, ticked %s, for this spec %s, on you %s, by name %s",
+    ns.Print(string.format("  %s: known %s, ticked %s, for this spec %s, on you %s, by name %s%s",
       EntryLabel(e, false), spell and "yes" or "NO", Hidden(EntryKey(e, idx, false)) and "NO" or "yes",
       (not e.only or e.only()) and "yes" or "no", found and "yes" or "no",
-      byName == nil and "?" or (byName > 0 and "yes" or "no")))
+      byName == nil and "?" or (byName > 0 and "yes" or "no"),
+      (found and Outranked(e.buffs, ids, spell)) and ", higher rank from someone else (not watched until it ends)" or ""))
   end
   local n = 0
   for _, b in ipairs(buttons) do if b:IsShown() then n = n + 1 end end

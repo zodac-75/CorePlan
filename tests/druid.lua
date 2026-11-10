@@ -824,6 +824,40 @@ if MODE == "modern" then
   slash("buffdebug")
   issecretvalue, SIM_BUFFS, C_UnitAuras.GetAuraDataBySpellName = oldSecret, oldBuffs, oldByName
 end
+print("--- Högre rank från någon annan ---")
+do
+  -- Bengan (högre level) har lagt Mark of the Wild rank 6 på mig; jag kan bara rank 2.
+  -- Min svagare kan inte ersätta den, så ingen ikon ens när den håller på att ta slut.
+  spellRank[9884] = 6
+  local oldC, oldU = C_UnitAuras, UnitAura
+  local auraId = 9884
+  if C_UnitAuras then
+    C_UnitAuras = { GetAuraDataByIndex = function(u, i, f)
+      if u == "player" and i == 1 then return { name = "Mark of the Wild", spellId = auraId, expirationTime = now + 30, duration = 1800 } end
+      if u == "player" and i == 2 then return { name = "Thorns", spellId = 782, expirationTime = 0 } end
+    end }
+  else
+    UnitAura = function(u, i) if u == "player" then
+      if i == 1 then return "Mark of the Wild", 0, 0, nil, 1800, now + 30, "party1", false, false, auraId end
+      if i == 2 then return "Thorns", 0, 0, nil, 0, 0, "player", false, false, 782 end
+    end end
+  end
+  ns.db.buffsOff = false; ns.db.shatterUnlocked = false; ns.db.buffHide = nil
+  local function motwShown()
+    ns.RefreshBuffWatch()
+    for i = 1, 6 do
+      local b = rawget(_G, "DruidPlanBuff" .. i)
+      if b and b.__shown and rawget(b, "spell") == "Mark of the Wild" then return true end
+    end
+    return false
+  end
+  if motwShown() then table.insert(errors, "högre rank från någon annan: Mark of the Wild visas ändå") end
+  slash("buffdebug")
+  auraId = 5232 -- min egen rank 2 som tar slut: då ska den visas
+  if not motwShown() then table.insert(errors, "egen Mark of the Wild som tar slut visas inte") end
+  C_UnitAuras, UnitAura = oldC, oldU
+  ns.RefreshBuffWatch()
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end
