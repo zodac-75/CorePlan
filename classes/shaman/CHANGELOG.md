@@ -1,3 +1,7 @@
+# ShamanPlan 1.16.3
+
+- **Icy Veins import:** links from the newer Icy Veins talent calculator work again. It now numbers the first talent of the first tree as "0", which the import didn't know, so those links were refused.
+
 # ShamanPlan 1.16.2
 
 - Groundwork for the group bar (class tools in a party, first for Mage and Warlock). Nothing changes for Shamans yet.

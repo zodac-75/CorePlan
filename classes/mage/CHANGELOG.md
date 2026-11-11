@@ -1,3 +1,7 @@
+# MagePlan 1.39.1
+
+- **Icy Veins import:** links from the newer Icy Veins talent calculator work again. It now numbers the first talent of the first tree as "0", which the import didn't know, so those links were refused.
+
 # MagePlan 1.39.0
 
 - **Group bar:** in a party a small button trades water and food. Each click opens a trade with your target, or the next party member in range who hasn't had any, and puts in one stack: water for mana users, food for warriors and rogues, always the best rank their level can use. When a party member opens a trade with you, the stack goes in by itself. You press Trade. Shift-drag to move, Ctrl + mouse wheel to resize, turn it off in the settings (Party marks) or with /mp groupbar.

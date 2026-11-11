@@ -1240,6 +1240,17 @@ do
   print("  fire hela: " .. tostring(ok) .. ", " .. count() .. " poäng, 39 = " .. tostring(ns.talents[39]) .. ", 55 = " .. tostring(ns.talents[55]))
   if not ok or count() ~= 46 then table.insert(errors, "Icy hela Fire gav " .. count() .. " poäng, inte 46") end
   if ns.talents[39] ~= "Master of Elements 1/3" or ns.talents[55] ~= "Combustion 1/1" then table.insert(errors, "Icy Fire: sista åtta stämmer inte") end
+  -- Newer link (build 70862): the first Arcane talent is "0" (10/0/41, Wand Specialization 2/2).
+  ok = ns.ImportTalents("https://www.icy-veins.com/wow-forever/mage-talent-calculator#tc-CCBBBEEEBBJDDDDMMMDLPPHHHICKKORGNNNQQQQQF0033344666~70862-9566df1f")
+  if not ok or count() ~= 51 then table.insert(errors, "Icy 0-länk gav " .. count() .. " poäng, inte 51") end
+  if ns.talents[10] ~= "Precision 1/3" or ns.talents[52] ~= "Wand Specialization 2/2"
+    or ns.talents[60] ~= "Arcane Concentration 3/5" or ns.talents[50] ~= "Improved Frost Nova 1/2" then
+    table.insert(errors, "Icy 0-länk: ordningen stämmer inte: " .. tostring(ns.talents[10]) .. ", " ..
+      tostring(ns.talents[50]) .. ", " .. tostring(ns.talents[52]) .. ", " .. tostring(ns.talents[60]))
+  end
+  if ns.ImportTalents("https://www.icy-veins.com/wow-forever/mage-talent-calculator#tc-0011~70862-1") then
+    table.insert(errors, "tog emot en 0-länk med plats 1 (som vi inte har)")
+  end
   if ns.ImportTalents("https://www.icy-veins.com/wow-forever/priest-talent-calculator#tc-CCC~1") then table.insert(errors, "tog emot en priest-länk (Icy)") end
   if ns.ImportTalents("https://www.icy-veins.com/wow-forever/mage-talent-calculator#tc-ZZZZZ~1") then table.insert(errors, "tog emot en felaktig Icy-länk") end
   ns.ClearImport()

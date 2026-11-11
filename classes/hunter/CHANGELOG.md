@@ -1,3 +1,7 @@
+# HunterPlan 1.0.0-beta45
+
+- **Icy Veins import:** links from the newer Icy Veins talent calculator work again. It now numbers the first talent of the first tree as "0", which the import didn't know, so those links were refused.
+
 # HunterPlan 1.0.0-beta44
 
 - Groundwork for the group bar (class tools in a party, first for Mage and Warlock). Nothing changes for Hunters yet.

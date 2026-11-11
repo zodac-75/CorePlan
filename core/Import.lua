@@ -122,9 +122,15 @@ local function FromIcy(code)
     end
     for _, id in ipairs(tree) do list[#list + 1] = id end
   end
+  -- Newer Icy Veins links (build 70862 on) number the first tree from 0: "0" is its first
+  -- talent, "1" is a slot we have no talent for, and "2" on are the same as before.
+  local fromZero = code:find("0", 1, true) ~= nil
   local ids, have, spent = {}, {}, {}
   for i = 1, #code do
-    local at = ICY_CHARS:find(code:sub(i, i), 1, true)
+    local ch = code:sub(i, i)
+    local at
+    if ch == "0" then at = 1
+    elseif not (fromZero and ch == "1") then at = ICY_CHARS:find(ch, 1, true) end
     local id = at and list[at]
     local t = id and ns.TALENT_IDS[id]
     if not t then return nil end
