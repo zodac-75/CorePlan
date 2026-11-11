@@ -1,3 +1,11 @@
+# HunterPlan 1.0.0-beta42
+
+- **Ten new easter eggs** for friends who also run a Plan addon: /fart (a green cloud), /sing (music notes), /gasp or /surprised (a huge "!!"), /moo (bigger if one of you is a Tauren), /thank (hearts and gold stars), /charge ("LEEEROY!"), /violin (the world's smallest violin), /bow (a crown), /slap (a big fish) and /eat or /hungry (a cake).
+- **Bigger together:** /hug at each other within 30 seconds for a group hug, kiss back within 10 seconds for two hearts, and when three or more Plan users in a party /drink within 30 seconds everyone gets a round ("Skål!").
+- **By themselves:** a rain cloud when the whole party is dead, and a grand finale when you or a friend reach level 60.
+- **Seasonal:** it snows with /wave in December, and /chicken lays a pumpkin around Halloween.
+- New pictures were added, so this update needs a full game restart (not just /reload).
+
 # HunterPlan 1.0.0-beta41
 
 - **Easter egg /drink:** the two mugs now clink glass to glass, with the handles pointing outwards (they used to bump handles).

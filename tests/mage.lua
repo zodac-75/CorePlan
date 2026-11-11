@@ -654,7 +654,8 @@ do
   local oldPrint = ns.Print
   ns.Print = function(m) table.insert(printed, tostring(m)) end
   ns.debug = true
-  for _, e in ipairs({ "TRAIN", "SLEEP", "LAUGH", "SALUTE", "CRY", "FLEX", "PARTY" }) do
+  for _, e in ipairs({ "TRAIN", "SLEEP", "LAUGH", "SALUTE", "CRY", "FLEX", "PARTY", "FART", "SING", "GASP", "MOO",
+    "THANK", "CHARGE", "VIOLIN", "BOW", "SLAP", "EAT", "GROUPHUG", "KISSKISS", "ROUND", "WIPE", "SIXTY", "WAVE", "CHICKEN" }) do
     printed = {}
     ns.ShowEmoteEgg(e, "Tester")
     if #printed > 0 then table.insert(errors, "emote " .. e .. ": " .. printed[1]) end
@@ -676,6 +677,54 @@ do
   sent = table.concat(SIM_ADDONMSG, ", ", before + 1)
   print("  dansfest (dansade tillbaka) skickade: " .. sent)
   if sent ~= "ZodacPlan:EB:PARTY>Kissy" then table.insert(errors, "dansa tillbaka gav ingen fest: " .. sent) end
+  -- Group hug: I hug Kissy, Kissy hugs back within 30 s.
+  now = now + 6
+  DoEmote("HUG", "target")
+  before = #SIM_ADDONMSG
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:HUG", "WHISPER", "Kissy")
+  sent = table.concat(SIM_ADDONMSG, ", ", before + 1)
+  if sent ~= "ZodacPlan:EB:GROUPHUG>Kissy" then table.insert(errors, "gruppkram: " .. sent) end
+  -- Kiss back: Kissy kisses me, I kiss back within 10 s -> two hearts for both.
+  now = now + 6
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "KISS", "WHISPER", "Kissy")
+  now = now + 3
+  before = #SIM_ADDONMSG
+  DoEmote("KISS", "target")
+  sent = table.concat(SIM_ADDONMSG, ", ", before + 1)
+  if sent ~= "ZodacPlan:EB:KISSKISS>Kissy" then table.insert(errors, "puss tillbaka: " .. sent) end
+  -- ...but 20 s later it's just a normal kiss.
+  now = now + 6
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "KISS", "WHISPER", "Kissy")
+  now = now + 20
+  before = #SIM_ADDONMSG
+  DoEmote("KISS", "target")
+  sent = table.concat(SIM_ADDONMSG, ", ", before + 1)
+  if sent ~= "ZodacPlan:KISS>Kissy" then table.insert(errors, "sen puss blev ingen vanlig puss: " .. sent) end
+  -- Effects that never come by message.
+  printed = {}
+  local shown = 0
+  local oldShow = ns.ShowEmoteEgg
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:WIPE", "WHISPER", "Pal-Realm")
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "E:GROUPHUG", "WHISPER", "Pal-Realm")
+  if #SIM_ADDONMSG ~= before + 1 then table.insert(errors, "lokala effekter besvarades: " .. table.concat(SIM_ADDONMSG, ", ", before + 2)) end
+  -- A round of drinks: two party members drink, then I do.
+  do
+    local oldGroup, oldRaid = IsInGroup, IsInRaid
+    IsInGroup = function() return true end
+    IsInRaid = function() return false end
+    now = now + 6
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "R:TOAST", "PARTY", "Jennie")
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "R:TOAST", "PARTY", "Bengan-Realm")
+    before = #SIM_ADDONMSG
+    DoEmote("DRINK")
+    sent = table.concat(SIM_ADDONMSG, ", ", before + 1)
+    print("  runda skickade: " .. sent)
+    if not sent:find("R:TOAST", 1, true) then table.insert(errors, "rundan skickade inget till gruppen: " .. sent) end
+    IsInGroup, IsInRaid = oldGroup, oldRaid
+  end
+  -- A friend hits 60.
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "D:60", "GUILD", "Jennie")
+  if #printed > 0 then table.insert(errors, "nya ägg: " .. printed[1]) end
   -- A friend dings.
   fire("CHAT_MSG_ADDON", "ZodacPlan", "D:30", "PARTY", "Jennie")
   fire("PLAYER_LEVEL_UP", 31)

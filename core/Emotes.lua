@@ -7,7 +7,16 @@
 --   /train   a little train chugs across  /sleep   Z z z floats up
 --   /laugh   bouncing HA HA HA             /salute  fireworks (also /applaud, /clap)
 --   /cry     a rain cloud drizzles         /flex    a strong arm and gold stars
+--   /fart    a green cloud drifts by       /sing    music notes float up
+--   /gasp    a huge "!!" (or /surprised)   /moo     bouncing MOO (bigger for Tauren)
+--   /thank   hearts and gold stars         /charge  "LEEEROY!" across the screen
+--   /violin  the world's smallest violin   /bow     a crown drops in
+--   /slap    a big fish swings past        /eat     a cake with candles (or /hungry)
 -- Dance party: /dance at each other within 30 seconds for a much bigger disco.
+-- Group hug: /hug at each other within 30 seconds. Kiss back within 10 for two hearts.
+-- A round of drinks: three or more Plan users in a party who /drink within 30 seconds.
+-- Wipe: the whole party dead gets a rain cloud. Level 60 gets a grand finale.
+-- Seasonal: snow with /wave in December, a pumpkin from /chicken around Halloween.
 -- Ding party: when a Plan user in your group or guild levels up, everyone with a Plan
 -- addon gets fireworks. Your own ding and finishing the talent plan get one too.
 -- All of it can be turned off with /@SLASH@ eggs (or the box in the settings).
@@ -139,6 +148,46 @@ end
 ---------------------------------------------------------------------------
 local EFFECTS = {}
 
+-- Month and day from the computer's clock (for the seasonal ones).
+local function Today()
+  if type(date) ~= "function" then return 0, 0 end
+  local ok, t = pcall(date, "*t")
+  if ok and type(t) == "table" then return t.month or 0, t.day or 0 end
+  return 0, 0
+end
+local function IsDecember() return (Today()) == 12 end
+local function IsHalloween()
+  local m, d = Today()
+  return (m == 10 and d >= 24) or (m == 11 and d <= 1)
+end
+
+-- Things that fall from the top of the screen: count pieces made by make(i).
+local function Rain(count, make, spreadX, duration)
+  for i = 1, count do
+    local p = make(i)
+    p:SetPoint("CENTER", math.random(-spreadX, spreadX), 420)
+    p:SetAlpha(0)
+    Fade(p, 0, 1, 1, 0.1, math.random() * 2.5)
+    Move(p, math.random(-80, 80), -math.random(620, 820), 2, duration + math.random())
+    Spin(p, math.random(-360, 360), 2, duration)
+    Fade(p, 1, 0, 3, 0.3)
+    Play(p)
+  end
+end
+
+-- Big text that pops in, pulses and fades.
+local function BigText(text, size, r, g, b, y, hold)
+  local t = TextPiece(text, size, r, g, b)
+  t:SetPoint("CENTER", 0, y or 0)
+  t:SetAlpha(0)
+  Fade(t, 0, 1, 1, 0.2)
+  Grow(t, 1.15, 1.15, 2, 0.25); Grow(t, 1 / 1.15, 1 / 1.15, 3, 0.25)
+  Grow(t, 1.15, 1.15, 4, 0.25); Grow(t, 1 / 1.15, 1 / 1.15, 5, 0.25)
+  Fade(t, 1, 0, 6, 0.8, hold or 1.5)
+  Play(t)
+  return t
+end
+
 EFFECTS.KISS = function(from)
   local h = Piece(ns.MEDIA .. "Heart", 256, 256)
   h:SetPoint("CENTER", 0, 80)
@@ -219,6 +268,13 @@ EFFECTS.WAVE = function(from)
   Grow(r, 1.05, 1.05, 2, 1.5)
   Fade(r, 1, 0, 3, 1.0, 0.5)
   Play(r)
+  if IsDecember() then
+    -- December: it snows.
+    Rain(50, function()
+      local n = math.random(6, 12)
+      return Piece(WHITE, n, n)
+    end, 520, 3)
+  end
   Say(ns.T("EM_WAVE", Short(from)))
   Sound("UI_QUEST_LOG_QUEST_ABANDONED")
 end
@@ -254,7 +310,8 @@ EFFECTS.TOAST = function(from)
 end
 
 EFFECTS.CHICKEN = function(from)
-  local e = Piece(ns.MEDIA .. "Egg", 180, 180)
+  -- Around Halloween the chicken lays a pumpkin.
+  local e = Piece(ns.MEDIA .. (IsHalloween() and "Pumpkin" or "Egg"), 180, 180)
   e:SetPoint("CENTER", 0, 380)
   Move(e, 0, -320, 1, 0.45)
   Move(e, 0, 40, 2, 0.15); Move(e, 0, -40, 3, 0.15)
@@ -450,8 +507,304 @@ EFFECTS.PARTY = function(from)
   Sound("UI_EPICLOOT_TOAST")
 end
 
+EFFECTS.FART = function(from)
+  local w = UIParent:GetWidth()
+  local cloud = Piece(ns.MEDIA .. "Cloud", 300, 188)
+  cloud.tex:SetVertexColor(0.55, 0.85, 0.3, 1)
+  cloud:SetPoint("CENTER", -(w / 2 + 200), -120)
+  Move(cloud, w + 400, 60, 1, 4)
+  Play(cloud)
+  for i = 1, 14 do
+    local p = Piece(WHITE, 20, 20)
+    p.tex:SetVertexColor(0.6, 0.85, 0.35, 0.7)
+    p:SetPoint("CENTER", -(w / 2) + w * (i / 15), -150)
+    p:SetAlpha(0)
+    Fade(p, 0, 0.7, 1, 0.1, i * 0.27)
+    Move(p, math.random(-30, 30), 90, 2, 1.1)
+    Grow(p, 2, 2, 2, 1.1)
+    Fade(p, 0.7, 0, 2, 1.1)
+    Play(p)
+  end
+  BigText("Pffft...", 48, 0.6, 0.9, 0.35, 60, 1.2)
+  Say(ns.T("EM_FART", Short(from)))
+end
+
+EFFECTS.SING = function(from)
+  for i = 1, 14 do
+    local c = COLORS[(i % #COLORS) + 1]
+    local size = math.random(46, 84)
+    local n = Piece(ns.MEDIA .. "Note", size, size)
+    n.tex:SetVertexColor(c[1], c[2], c[3], 1)
+    n:SetPoint("CENTER", math.random(-300, 300), -140)
+    n:SetAlpha(0)
+    local delay = (i - 1) * 0.16
+    Fade(n, 0, 1, 1, 0.2, delay)
+    Move(n, 50, 110, 2, 0.8); Move(n, -70, 110, 3, 0.8); Move(n, 50, 110, 4, 0.8)
+    Spin(n, 12, 2, 0.8); Spin(n, -24, 3, 0.8)
+    Fade(n, 1, 0, 4, 0.8)
+    Play(n)
+  end
+  Say(ns.T("EM_SING", Short(from)))
+  Sound("UI_GARRISON_FOLLOWER_LEARN_TRAIT")
+end
+
+EFFECTS.GASP = function(from)
+  local t = TextPiece("!!", 150, 1, 0.85, 0.2)
+  t:SetPoint("CENTER", 0, 90)
+  Grow(t, 1.4, 1.4, 1, 0.12); Grow(t, 1 / 1.4, 1 / 1.4, 2, 0.12)
+  for k = 1, 5 do
+    Move(t, 18, 0, k * 2 + 1, 0.05); Move(t, -18, 0, k * 2 + 2, 0.05)
+  end
+  Fade(t, 1, 0, 13, 0.6, 0.8)
+  Play(t)
+  Say(ns.T("EM_GASP", Short(from)))
+end
+
+-- Is either of you a Tauren? (The other player only when they're your target.)
+local function AnyTauren(from)
+  local function tauren(unit)
+    local ok, _, race = pcall(UnitRace, unit)
+    return ok and race == "Tauren"
+  end
+  if tauren("player") then return true end
+  local ok, name = pcall(UnitName, "target")
+  return ok and name == Short(from) and tauren("target")
+end
+
+EFFECTS.MOO = function(from)
+  local big = AnyTauren(from)
+  for i = 1, big and 7 or 4 do
+    local c = COLORS[math.random(#COLORS)]
+    local m = TextPiece("MOO", big and math.random(70, 110) or math.random(44, 64), c[1], c[2], c[3])
+    m:SetPoint("CENTER", math.random(-300, 300), math.random(-40, 180))
+    m:SetAlpha(0)
+    Fade(m, 0, 1, 1, 0.1, (i - 1) * 0.25)
+    for k = 1, 3 do
+      Move(m, 0, 40, k * 2, 0.18); Move(m, 0, -40, k * 2 + 1, 0.18)
+    end
+    Fade(m, 1, 0, 8, 0.5)
+    Play(m)
+  end
+  Say(ns.T("EM_MOO", Short(from)))
+end
+
+EFFECTS.THANK = function(from)
+  Rain(36, function(i)
+    if i % 2 == 0 then
+      local n = math.random(30, 60)
+      return Piece(ns.MEDIA .. "Heart", n, n)
+    end
+    local n = math.random(24, 44)
+    local st = Piece(ns.MEDIA .. "Star", n, n)
+    st.tex:SetVertexColor(1, 0.85, 0.2, 1)
+    return st
+  end, 480, 2.2)
+  Say(ns.T("EM_THANK", Short(from)))
+  Sound("UI_GARRISON_FOLLOWER_LEARN_TRAIT")
+end
+
+EFFECTS.CHARGE = function(from)
+  local w = UIParent:GetWidth()
+  local t = TextPiece("LEEEROY!", 96, 1, 0.3, 0.2)
+  t:SetPoint("CENTER", -(w / 2 + 500), 60)
+  Move(t, w / 2 + 500, 0, 1, 0.35)
+  for k = 1, 4 do
+    Move(t, 14, 0, k * 2, 0.05); Move(t, -14, 0, k * 2 + 1, 0.05)
+  end
+  Move(t, w / 2 + 600, 0, 10, 0.4, 0.9)
+  Play(t)
+  Say(ns.T("EM_CHARGE", Short(from)))
+  Sound("UI_EPICLOOT_TOAST")
+end
+
+EFFECTS.VIOLIN = function(from)
+  -- The world's smallest violin: really small.
+  local v = Piece(ns.MEDIA .. "Violin", 70, 70)
+  v:SetPoint("CENTER", 0, 70)
+  Fade(v, 0, 1, 1, 0.3)
+  for k = 1, 4 do
+    Spin(v, 10, k * 2, 0.25); Spin(v, -10, k * 2 + 1, 0.25)
+  end
+  Fade(v, 1, 0, 10, 0.6, 0.4)
+  Play(v)
+  for i = 1, 4 do
+    local n = Piece(ns.MEDIA .. "Note", 26, 26)
+    n.tex:SetVertexColor(0.8, 0.85, 1, 1)
+    n:SetPoint("CENTER", 20, 90)
+    n:SetAlpha(0)
+    Fade(n, 0, 1, 1, 0.15, 0.3 + (i - 1) * 0.45)
+    Move(n, 30 + i * 8, 70, 2, 1)
+    Fade(n, 1, 0, 2, 1)
+    Play(n)
+  end
+  Say(ns.T("EM_VIOLIN", Short(from)))
+end
+
+EFFECTS.BOW = function(from)
+  local c = Piece(ns.MEDIA .. "Crown", 200, 200)
+  c:SetPoint("CENTER", 0, 400)
+  Move(c, 0, -320, 1, 0.45)
+  Move(c, 0, 50, 2, 0.14); Move(c, 0, -50, 3, 0.14)
+  Move(c, 0, 20, 4, 0.1); Move(c, 0, -20, 5, 0.1)
+  Fade(c, 1, 0, 6, 0.8, 1.4)
+  Play(c)
+  for i = 1, 10 do
+    local st = Piece(ns.MEDIA .. "Star", 30, 30)
+    st.tex:SetVertexColor(1, 0.85, 0.2, 1)
+    st:SetPoint("CENTER", 0, 80)
+    st:SetAlpha(0)
+    local a = i / 10 * 2 * math.pi
+    Fade(st, 0, 1, 1, 0.1, 0.5)
+    Move(st, math.cos(a) * 180, math.sin(a) * 120, 2, 0.8)
+    Spin(st, 270, 2, 0.8)
+    Fade(st, 1, 0, 3, 0.5)
+    Play(st)
+  end
+  Say(ns.T("EM_BOW", Short(from)))
+  Sound("UI_EPICLOOT_TOAST")
+end
+
+EFFECTS.SLAP = function(from)
+  local w = UIParent:GetWidth()
+  local f = Piece(ns.MEDIA .. "Fish", 240, 240)
+  f:SetPoint("CENTER", w / 2 + 200, 160)
+  Move(f, -(w / 2 + 200), -100, 1, 0.3)
+  Spin(f, 50, 1, 0.3)
+  Spin(f, -70, 2, 0.12)
+  Move(f, -(w / 2 + 300), 120, 3, 0.45, 0.25)
+  Spin(f, 60, 3, 0.45, 0.25)
+  Play(f)
+  local t = TextPiece("SLAP!", 80, 1, 0.9, 0.3)
+  t:SetPoint("CENTER", 0, -40)
+  t:SetAlpha(0)
+  Fade(t, 0, 1, 1, 0.05, 0.3)
+  Grow(t, 1.3, 1.3, 2, 0.1); Grow(t, 1 / 1.3, 1 / 1.3, 3, 0.1)
+  Fade(t, 1, 0, 4, 0.6, 0.6)
+  Play(t)
+  Say(ns.T("EM_SLAP", Short(from)))
+end
+
+EFFECTS.EAT = function(from)
+  local c = Piece(ns.MEDIA .. "Cake", 200, 200)
+  c:SetPoint("CENTER", 0, -260)
+  Move(c, 0, 330, 1, 0.5)
+  Move(c, 0, -30, 2, 0.15); Move(c, 0, 30, 3, 0.15)
+  Grow(c, 1.1, 1.1, 4, 0.2); Grow(c, 1 / 1.1, 1 / 1.1, 5, 0.2)
+  Fade(c, 1, 0, 6, 0.8, 1.4)
+  Play(c)
+  Say(ns.T("EM_EAT", Short(from)))
+  Sound("UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE")
+end
+
+-- Both hugged each other: hearts everywhere.
+EFFECTS.GROUPHUG = function(from)
+  for i = 1, 40 do
+    local size = math.random(40, 110)
+    local h = Piece(ns.MEDIA .. "Heart", size, size)
+    h:SetPoint("CENTER", math.random(-560, 560), math.random(-320, -120))
+    h:SetAlpha(0)
+    Fade(h, 0, 1, 1, 0.3, math.random() * 1.8)
+    Move(h, math.random(-80, 80), math.random(360, 620), 2, 2.6)
+    Grow(h, 1.3, 1.3, 2, 2.6)
+    Fade(h, 1, 0, 3, 0.5)
+    Play(h)
+  end
+  BigText("GROUP HUG!", 54, 1, 0.5, 0.7, -20, 2)
+  Say(ns.T("EM_GROUPHUG", Short(from)))
+  Sound("UI_EPICLOOT_TOAST")
+end
+
+-- A kiss answered with a kiss: two hearts.
+EFFECTS.KISSKISS = function(from)
+  for side = -1, 1, 2 do
+    local h = Piece(ns.MEDIA .. "Heart", 220, 220)
+    h:SetPoint("CENTER", side * 260, 80)
+    Fade(h, 0, 1, 1, 0.3)
+    Move(h, -side * 160, 0, 2, 0.5)
+    for k = 1, 3 do
+      Grow(h, 1.12, 1.12, k * 2 + 1, 0.18); Grow(h, 1 / 1.12, 1 / 1.12, k * 2 + 2, 0.18)
+    end
+    Fade(h, 1, 0, 9, 0.8, 0.6)
+    Play(h)
+  end
+  Say(ns.T("EM_KISSKISS", Short(from)))
+  Sound("UI_GARRISON_FOLLOWER_LEARN_TRAIT")
+end
+
+-- Three or more in the party drank: a row of mugs.
+EFFECTS.ROUND = function()
+  for i = 1, 5 do
+    local m = Piece(ns.MEDIA .. "Mug", 130, 130)
+    m:SetPoint("CENTER", (i - 3) * 150, -260)
+    local delay = (i - 1) * 0.12
+    Move(m, 0, 300, 1, 0.4, delay)
+    for k = 1, 3 do
+      Move(m, 0, 30, k * 2, 0.15); Move(m, 0, -30, k * 2 + 1, 0.15)
+    end
+    Fade(m, 1, 0, 8, 0.7, 1.2)
+    Play(m)
+  end
+  BigText("Skål!", 90, 1, 0.85, 0.3, 190, 2)
+  Say(ns.T("EM_ROUND"))
+  Sound("UI_EPICLOOT_TOAST")
+end
+
+-- The whole party is dead.
+EFFECTS.WIPE = function()
+  local cloud = Piece(ns.MEDIA .. "Cloud", 300, 188)
+  cloud.tex:SetVertexColor(0.6, 0.6, 0.65, 1)
+  cloud:SetPoint("CENTER", 0, 200)
+  Fade(cloud, 0, 1, 1, 0.4)
+  for k = 1, 3 do
+    Move(cloud, 0, -8, k * 2, 0.6); Move(cloud, 0, 8, k * 2 + 1, 0.6)
+  end
+  Fade(cloud, 1, 0, 8, 0.6)
+  Play(cloud)
+  for i = 1, 30 do
+    local d = Piece(WHITE, 4, 16)
+    d.tex:SetVertexColor(0.45, 0.65, 1, 0.9)
+    d:SetPoint("CENTER", math.random(-110, 110), 140)
+    d:SetAlpha(0)
+    Fade(d, 0, 1, 1, 0.05, 0.3 + math.random() * 3)
+    Move(d, 0, -math.random(180, 260), 2, 0.7)
+    Fade(d, 1, 0, 2, 0.7)
+    Play(d)
+  end
+  local t = TextPiece(ns.T("EM_WIPE_BIG"), 40, 0.8, 0.8, 0.9)
+  t:SetPoint("CENTER", 0, 40)
+  t:SetAlpha(0)
+  Fade(t, 0, 1, 1, 0.6, 0.6)
+  Fade(t, 1, 0, 2, 0.8, 3)
+  Play(t)
+  Say(ns.T("EM_WIPE"))
+end
+
+-- Level 60: the grand finale.
+EFFECTS.SIXTY = function(from)
+  Fireworks(14, 520)
+  Rain(70, function(i)
+    local c = COLORS[(i % #COLORS) + 1]
+    local p = Piece(WHITE, math.random(8, 14), math.random(14, 22))
+    p.tex:SetVertexColor(c[1], c[2], c[3], 1)
+    return p
+  end, 560, 2.4)
+  local c = Piece(ns.MEDIA .. "Crown", 180, 180)
+  c:SetPoint("CENTER", 0, 420)
+  Move(c, 0, -230, 1, 0.5)
+  Move(c, 0, 30, 2, 0.14); Move(c, 0, -30, 3, 0.14)
+  Fade(c, 1, 0, 4, 1, 4)
+  Play(c)
+  BigText(ns.T("EM_LEVEL", 60), 84, 1, 0.85, 0.3, 40, 4)
+  Sound("UI_EPICLOOT_TOAST")
+end
+
 -- Ding! from = who, level = the new level (from a message or your own level-up).
 local function Ding(from, level, own)
+  if level and level >= 60 then
+    EFFECTS.SIXTY(from)
+    Say(own and ns.T("EM_SIXTY_ME") or ns.T("EM_SIXTY", Short(from)))
+    return
+  end
   Fireworks(5, 380)
   local t = TextPiece(ns.T("EM_LEVEL", level), 64, 1, 0.85, 0.3)
   t:SetPoint("CENTER", 0, 80)
@@ -511,7 +864,32 @@ end
 -- so the mugs come with /drink (and /cheers where the game has it).
 local ALIAS = { DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
-  CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP" }
+  CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
+  SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
+  THANKS = "THANK", TY = "THANK", CURTSEY = "BOW", KNEEL = "BOW" }
+
+-- Doing the same emote back at each other turns it into something bigger.
+local COMBO = { DANCE = "PARTY", HUG = "GROUPHUG", KISS = "KISSKISS" }
+local COMBO_WINDOW = { KISS = 10 }
+
+-- Effects that aren't an emote to send to someone (they start in other ways).
+local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true }
+
+-- A round of drinks: who in the party drank lately (short name -> when).
+local drinkers = {}
+local ROUND_WINDOW, ROUND_NEEDS = 30, 3
+local function Drank(who)
+  local now, n = GetTime(), 0
+  drinkers[who] = now
+  for name, t in pairs(drinkers) do
+    if now - t > ROUND_WINDOW then drinkers[name] = nil else n = n + 1 end
+  end
+  if n >= ROUND_NEEDS then
+    drinkers = {}
+    lastShown.ROUND = nil
+    Show("ROUND", who)
+  end
+end
 
 -- When you last did an emote at someone, and when someone last danced at you (short
 -- names), for the dance party.
@@ -522,7 +900,13 @@ local function OnEmote(token, unit)
   if type(token) ~= "string" then return end
   token = token:upper()
   token = ALIAS[token] or token
-  if not EFFECTS[token] or ns.db.eggsOff then return end
+  if not EFFECTS[token] or LOCAL_ONLY[token] or ns.db.eggsOff then return end
+  -- A drink in a party counts towards a round, whoever you drink to.
+  if token == "TOAST" and IsInGroup and IsInGroup() and not (IsInRaid and IsInRaid()) then
+    local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+    if send then pcall(send, PREFIX, "R:TOAST", "PARTY") end
+    Drank(UnitName("player"))
+  end
   unit = (type(unit) == "string" and unit ~= "" and unit) or "target"
   if not (UnitExists(unit) and UnitIsPlayer(unit)) or UnitIsUnit(unit, "player") then return end
   local name, realm = UnitName(unit)
@@ -532,14 +916,15 @@ local function OnEmote(token, unit)
   if lastSent[key] and GetTime() - lastSent[key] < 5 then return end
   lastSent[key] = GetTime()
   didAt[token .. Short(full)] = GetTime()
-  -- Dancing back at someone who just danced at you: the party starts for both of you.
-  local got = gotAt[Short(full)]
-  if token == "DANCE" and got and GetTime() - got < PARTY_WINDOW then
-    gotAt[Short(full)] = nil
-    didAt["DANCE" .. Short(full)] = nil
-    lastShown.PARTY = nil
-    Show("PARTY", full)
-    Send("EB:PARTY", full)
+  -- Doing it back at someone who just did it at you: the bigger one starts for both.
+  local combo = COMBO[token]
+  local got = combo and gotAt[token .. Short(full)]
+  if got and GetTime() - got < (COMBO_WINDOW[token] or PARTY_WINDOW) then
+    gotAt[token .. Short(full)] = nil
+    didAt[token .. Short(full)] = nil
+    lastShown[combo] = nil
+    Show(combo, full)
+    Send("EB:" .. combo, full)
     return
   end
   Send(token == "KISS" and "KISS" or ("E:" .. token), full)
@@ -553,26 +938,58 @@ local function OnMessage(msg, sender)
     if Short(sender) ~= UnitName("player") then Ding(sender, tonumber(lvl)) end
     return
   end
-  if msg == "KISS" then
-    Show("KISS", sender); Send("KISSBACK", sender)
-  elseif msg == "KISSBACK" then
-    Show("KISS", sender)
-  else
-    local back, emote = msg:match("^(EB?):(%u+)$")
-    if not emote or not EFFECTS[emote] then return end
-    -- Dance party: they danced at you within 10 seconds of you dancing at them.
-    local mine = didAt["DANCE" .. Short(sender)]
-    if emote == "DANCE" and back == "E" and mine and GetTime() - mine < PARTY_WINDOW then
-      didAt["DANCE" .. Short(sender)] = nil
-      gotAt[Short(sender)] = nil
-      lastShown.PARTY = nil
-      Show("PARTY", sender)
-      Send("EB:PARTY", sender)
-      return
+  if msg == "R:TOAST" then
+    if Short(sender) ~= UnitName("player") then Drank(Short(sender)) end
+    return
+  end
+  -- "KISS"/"KISSBACK" are the old spelling of "E:KISS"/"EB:KISS" (still sent for kisses).
+  local back, emote
+  if msg == "KISS" then back, emote = "E", "KISS"
+  elseif msg == "KISSBACK" then back, emote = "EB", "KISS"
+  else back, emote = msg:match("^(EB?):(%u+)$") end
+  if not emote or not EFFECTS[emote] then return end
+  -- The bigger ones only come as an answer ("EB:"); the rest of the local ones never by message.
+  if LOCAL_ONLY[emote] and not (back == "EB" and (emote == "PARTY" or emote == "GROUPHUG" or emote == "KISSKISS")) then return end
+  -- They did it at you soon after you did it at them: the bigger one, for both.
+  local combo = COMBO[emote]
+  local mine = combo and didAt[emote .. Short(sender)]
+  if back == "E" and mine and GetTime() - mine < (COMBO_WINDOW[emote] or PARTY_WINDOW) then
+    didAt[emote .. Short(sender)] = nil
+    gotAt[emote .. Short(sender)] = nil
+    lastShown[combo] = nil
+    Show(combo, sender)
+    Send("EB:" .. combo, sender)
+    return
+  end
+  if combo and back == "E" then gotAt[emote .. Short(sender)] = GetTime() end
+  Show(emote, sender)
+  if back == "E" then Send(emote == "KISS" and "KISSBACK" or ("EB:" .. emote), sender) end
+end
+
+-- Wipe: you died in a party; look for a while whether everyone else is dead too.
+local lastWipe = 0
+local function WholePartyDead()
+  if not (IsInGroup and IsInGroup()) or (IsInRaid and IsInRaid()) then return false end
+  if not UnitIsDeadOrGhost("player") then return false end
+  local others = 0
+  for i = 1, 4 do
+    local u = "party" .. i
+    if UnitExists(u) then
+      others = others + 1
+      if not UnitIsDeadOrGhost(u) then return false end
     end
-    if emote == "DANCE" and back == "E" then gotAt[Short(sender)] = GetTime() end
-    Show(emote, sender)
-    if back == "E" then Send("EB:" .. emote, sender) end
+  end
+  return others >= 1
+end
+local function WatchForWipe(tries)
+  if ns.db.eggsOff or GetTime() - lastWipe < 60 then return end
+  local ok, wiped = pcall(WholePartyDead)
+  if ok and wiped then
+    lastWipe = GetTime()
+    lastShown.WIPE = nil
+    Show("WIPE")
+  elseif tries > 0 and C_Timer and C_Timer.After then
+    C_Timer.After(1, function() WatchForWipe(tries - 1) end)
   end
 end
 
@@ -605,7 +1022,12 @@ ns.RegisterModule(function()
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("CHAT_MSG_ADDON")
   ev:RegisterEvent("PLAYER_LEVEL_UP")
+  pcall(ev.RegisterEvent, ev, "PLAYER_DEAD")
   ev:SetScript("OnEvent", function(_, event, a1, a2, _, a4)
+    if event == "PLAYER_DEAD" then
+      pcall(WatchForWipe, 20)
+      return
+    end
     if event == "PLAYER_LEVEL_UP" then
       if ns.db.eggsOff then return end
       local level = tonumber(a1)
