@@ -530,8 +530,8 @@ local function CreateConfig()
 end
 
 ---------------------------------------------------------------------------
--- Quick menu: left-click on the minimap icon. Spec, the windows and on/off switches
--- in a small list next to the icon; the big settings window is on right-click.
+-- Quick menu: left-click on the minimap icon. Spec, the windows and a handful of on/off
+-- switches in a small list next to the icon; the big settings window is on right-click.
 ---------------------------------------------------------------------------
 local quick
 local QROW_H, QWIDTH = 18, 236
@@ -540,8 +540,17 @@ local QUICK_TOOLS = {
   { key = "MM_PLAN", func = function() ns.ToggleMain() end },
   { key = "MM_DUNGEONS", func = function() ns.ToggleDungeons() end },
   { key = "MM_CRAFT", func = function() Run("craft") end },
+  { key = "MM_DE", func = function() ns.ToggleBags() end },
   { key = "QM_TRAIN", func = function() Run("train") end },
 }
+
+-- The quick menu only has the switches you reach for while playing; everything else is
+-- in the settings window ("All settings...").
+local QUICK_KEYS = { MM_SHATTER = true, MM_MOVE = true, MM_BUFFS = true, MM_PARTYBUFF = true, MM_LOCK = true }
+local QUICK_TOGGLES = {}
+for _, f in ipairs(FEATURES) do
+  if f.key and QUICK_KEYS[f.key] then table.insert(QUICK_TOGGLES, f) end
+end
 
 local function QuickRow(parent, y)
   local b = CreateFrame("Button", nil, parent)
@@ -650,14 +659,10 @@ local function BuildQuick()
     y = y - QROW_H
   end
 
-  local lastGroup
-  for _, item in ipairs(FEATURES) do
-    if item.group ~= lastGroup then
-      lastGroup = item.group
-      y = y - 4
-      table.insert(quick.headers, QuickHeader(quick, y, item.group))
-      y = y - 16
-    end
+  y = y - 4
+  table.insert(quick.headers, QuickHeader(quick, y, "QM_TOGGLE"))
+  y = y - 16
+  for _, item in ipairs(QUICK_TOGGLES) do
     local r = QuickRow(quick, y)
     r.item = item
     r:SetScript("OnClick", function()
