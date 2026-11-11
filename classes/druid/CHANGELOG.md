@@ -1,3 +1,7 @@
+# DruidPlan 1.9.2
+
+- **Balance gear score:** Intellect and Spirit were valued as if they gave spell power (thanks Ebemidej). They don't in WoW Forever, so Balance now weighs them far lower and spell power, crit, hit and mp5 count for more in the upgrade check.
+
 # DruidPlan 1.10.4
 
 - **Bag check for enchanters, take two:** items stay in the best-price group again (AH, sell or DE), but every row you can disenchant now also offers it: Alt-click disenchants instead (the row says "Sell/DE" or "AH/DE"). Away from a vendor, a plain click disenchants.

@@ -177,7 +177,8 @@ ns.PLAN_STEPS = {
 }
 -- Stat weights per spec: attack power for Feral, spell power for Balance, healing for Restoration.
 ns.PLAN_WEIGHTS = {
-  balance = { sp = 1.0, int = 0.5, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.3, sta = 0.25 },
+  -- Int and Spirit give no spell power in WoW Forever: Int is only mana and a little crit, Spirit only regen.
+  balance = { sp = 1.0, int = 0.2, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.05, sta = 0.25 },
   resto = { heal = 1.0, sp = 1.0, int = 0.8, mp5 = 2.0, spi = 0.6, scrit = 6, sta = 0.25 },
 }
 ns.COMBAT_CMD = "combat"
