@@ -1,6 +1,8 @@
 -- @ADDON@: settings window with the logo.
 -- Opens with right-click on the minimap icon, /@SLASH@ config, or from the game's
--- AddOns settings. Features on the left, plan and look on the right, tools below.
+-- AddOns settings. Grouped by feature, each with its on/off box first and its options
+-- under it: your character on the left, combat and group in the middle, gear and the
+-- addon itself on the right, buttons below.
 local _, ns = ...
 
 local LOGO_FILE = ns.MEDIA .. "Logo"
@@ -50,13 +52,13 @@ local FEATURES = {
   { group = "CAT_ITEMS", key = "MM_BAGAUTO", on = function() return not ns.db.bagAutoOff end, cmd = "bagauto" },
   { group = "CAT_LEVEL", key = "MM_RANKCHAT", on = function() return not ns.db.rankChatOff end, cmd = "rankchat" },
   { group = "CAT_LEVEL", key = "MM_RANKCTRL", on = function() return ns.RankControllerOn and ns.RankControllerOn() end, cmd = "rankcontroller" },
-  { group = "CAT_BUFFS", key = "MM_MARKS", on = function() return not ns.db.marksOff end, cmd = "marks" },
+  { group = "CAT_MARKS", key = "MM_MARKS", on = function() return not ns.db.marksOff end, cmd = "marks" },
   { group = "CAT_LEVEL", key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
   { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
   { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
-  { group = "CAT_WINDOWS", key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
-  { group = "CAT_WINDOWS", key = "CFG_MINIMAP", on = function() return not ns.db.minimapHidden end, cmd = "minimap" },
-  { group = "CAT_FUN", key = "MM_EGGS", on = function() return not ns.db.eggsOff end, cmd = "eggs" },
+  { group = "CAT_LOOK", key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
+  { group = "CAT_LOOK", key = "CFG_MINIMAP", on = function() return not ns.db.minimapHidden end, cmd = "minimap" },
+  { group = "CAT_LOOK", key = "MM_EGGS", on = function() return not ns.db.eggsOff end, cmd = "eggs" },
   -- Secondary skills in the crafting assistant (ticked = shown).
   { group = "CAT_PROFS", key = "MM_SEC_COOK", on = function() return ns.SecondaryShown("Cooking") end, cmd = "cooking" },
   { group = "CAT_PROFS", key = "MM_SEC_FA", on = function() return ns.SecondaryShown("First Aid") end, cmd = "firstaid" },
@@ -223,21 +225,65 @@ local PROFILE_SELECTORS = {
     step = function(dir) ns.StepDungeonProfile(dir) end },
 }
 
+local function Selector(list, key)
+  for _, s in ipairs(list) do if s.key == key then return s end end
+end
+
+-- Combat helper: on/off, the class's own call-outs, "Move", then how it looks and sounds.
+local function CombatRows()
+  local rows, move = {}, nil
+  for _, f in ipairs(Group(FEATURES, "CAT_COMBAT")) do
+    if f.key == "MM_MOVE" then move = f else table.insert(rows, f) end
+  end
+  if move then table.insert(rows, move) end
+  for _, key in ipairs({ "CFG_HELPERSIZE", "CFG_ALERTSTYLE", "CFG_SOUND", "CFG_SOUNDKIT" }) do
+    local sel = Selector(ALERT_SELECTORS, key)
+    if sel then table.insert(rows, sel) end
+  end
+  return rows
+end
+
+-- Buffs and reminders: the watcher and its buffs, the heads-up time, the party buff and
+-- its buffs, then the drink reminder with its "drink at".
+local function BuffRows()
+  local rows = {}
+  local rebuff, drinkAt = Selector(ALERT_SELECTORS, "CFG_REBUFF"), Selector(ALERT_SELECTORS, "CFG_DRINKAT")
+  for _, f in ipairs(Group(FEATURES, "CAT_BUFFS")) do
+    if rebuff and (f.key == "MM_PARTYBUFF" or f.key == "MM_DRINK") then
+      table.insert(rows, rebuff); rebuff = nil
+    end
+    table.insert(rows, f)
+    if f.key == "MM_DRINK" and drinkAt then table.insert(rows, drinkAt) end
+  end
+  if rebuff then table.insert(rows, rebuff) end
+  return rows
+end
+
+local function Concat(a, b)
+  local out = {}
+  for _, v in ipairs(a) do table.insert(out, v) end
+  for _, v in ipairs(b) do table.insert(out, v) end
+  return out
+end
+
+-- Buttons at the bottom: the windows you can open, then things that act right away.
 local TOOLS = {
   { key = "MM_PLAN", func = function() ns.ToggleMain() end },
   { key = "MM_DUNGEONS", func = function() ns.ToggleDungeons() end },
   { key = "MM_CRAFT", func = function() Run("craft") end },
   { key = "MM_RANKS", func = function() Run("ranks") end },
   { key = "MM_DE", func = function() ns.ToggleBags() end },
-  { key = "MM_ALL", func = function() Run("all") end },
-  { key = "MM_RESET", func = function() Run("reset") end },
-  { key = "CFG_HELP", func = function() Run("help") end },
 }
 -- Class-specific tool buttons go after the rank check.
 for i = #(ns.EXTRA_TOOLS or {}), 1, -1 do
   local t = ns.EXTRA_TOOLS[i]
   table.insert(TOOLS, 5, { key = t.key, func = function() Run(t.cmd) end })
 end
+local ACTIONS = {
+  { key = "MM_ALL", func = function() Run("all") end },
+  { key = "MM_RESET", func = function() Run("reset") end },
+  { key = "CFG_HELP", func = function() Run("help") end },
+}
 
 ---------------------------------------------------------------------------
 -- Refresh: texts follow the language, checkboxes follow the saved settings.
@@ -436,13 +482,19 @@ local function CreateConfig()
   local function Column(x, blocks)
     local y = top
     for _, b in ipairs(blocks) do
-      local checks = b.checks or {}
-      local sels = b.sels or {}
-      if #checks > 0 or #sels > 0 or b.after then
+      local rows = b.rows or {}
+      if #rows > 0 or b.after then
         Header(win, b.head, x, y)
         y = y - HEAD_H
-        for _, item in ipairs(sels) do SelectorRow(win, item, x, y); y = y - SEL_H end
-        for _, item in ipairs(checks) do CheckRow(win, item, x - 2 + (item.indent or 0), y); y = y - CHECK_H end
+        -- A row with arrows (step) is a selector, anything else a tick box; they keep
+        -- the order given, so a feature's options sit right under its on/off box.
+        for _, item in ipairs(rows) do
+          if item.step then
+            SelectorRow(win, item, x, y); y = y - SEL_H
+          else
+            CheckRow(win, item, x - 2 + (item.indent or 0), y); y = y - CHECK_H
+          end
+        end
         if b.after then y = b.after(x, y) end
         y = y - 8
       end
@@ -464,22 +516,34 @@ local function CreateConfig()
     table.insert(win.tools, b)
   end
 
+  -- Left: your character (talent plan, professions, leveling help) and the profiles.
   Column(COL[1], {
-    { head = "CAT_COMBAT", checks = Group(FEATURES, "CAT_COMBAT") },
-    { head = "CAT_ITEMS", checks = Group(FEATURES, "CAT_ITEMS") },
-    { head = "CAT_LEVEL", checks = Group(FEATURES, "CAT_LEVEL") },
-    { head = "CAT_WINDOWS", checks = Group(FEATURES, "CAT_WINDOWS") },
-    { head = "CAT_FUN", checks = Group(FEATURES, "CAT_FUN") },
-  })
-  Column(COL[2], {
-    { head = "CAT_PLAN", sels = PLAN_SELECTORS, after = function(x, y)
-      -- Import a build from a wow-forever-forge.com link, or remove it.
+    { head = "CAT_PLAN", rows = PLAN_SELECTORS, after = function(x, y)
+      -- Import a build from a link, or remove it.
       SmallButton("CFG_IMPORT", x, y, function() ns.AskImport() end)
       SmallButton("CFG_IMPORT_CLEAR", x + 121, y, function() ns.ClearImport() end)
       return y - 26
     end },
-    { head = "CAT_PROFS", sels = PROF_SELECTORS, checks = Group(FEATURES, "CAT_PROFS") },
-    { head = "CAT_LOOK", sels = LOOK_SELECTORS, after = function(x, y)
+    { head = "CAT_PROFS", rows = Concat(PROF_SELECTORS, Group(FEATURES, "CAT_PROFS")) },
+    { head = "CAT_LEVEL", rows = Group(FEATURES, "CAT_LEVEL") },
+    -- Profiles are shared by all characters.
+    { head = "CFG_PROFILES", rows = PROFILE_SELECTORS, after = function(x, y)
+      SmallButton("CFG_NEW", x, y, function() ns.AskNewProfile() end)
+      SmallButton("CFG_DELETE", x + 121, y, function() ns.AskDeleteProfile() end)
+      return y - 26
+    end },
+  })
+  -- Middle: combat and group.
+  Column(COL[2], {
+    { head = "CAT_COMBAT", rows = CombatRows() },
+    { head = "CAT_BUFFS", rows = BuffRows() },
+  })
+  -- Right: gear, party marks and the addon's own look.
+  Column(COL[3], {
+    { head = "CAT_ITEMS", rows = Group(FEATURES, "CAT_ITEMS") },
+    -- Party marks: the button's on/off box, then the five marks with the player under each.
+    { head = "CAT_MARKS", rows = Group(FEATURES, "CAT_MARKS"), after = function(x, y) return MarkRow(x, y - 2) end },
+    { head = "CAT_LOOK", rows = Concat(LOOK_SELECTORS, Group(FEATURES, "CAT_LOOK")), after = function(x, y)
       local hint = win:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
       hint:SetPoint("TOPLEFT", x, y - 2)
       hint:SetWidth(236)
@@ -488,42 +552,34 @@ local function CreateConfig()
       table.insert(labels, hint)
       return y - 26
     end },
-    -- Profiles are shared by all characters.
-    { head = "CFG_PROFILES", sels = PROFILE_SELECTORS, after = function(x, y)
-      SmallButton("CFG_NEW", x, y, function() ns.AskNewProfile() end)
-      SmallButton("CFG_DELETE", x + 121, y, function() ns.AskDeleteProfile() end)
-      return y - 26
-    end },
-  })
-  Column(COL[3], {
-    { head = "CAT_ALERTS", sels = ALERT_SELECTORS },
-    { head = "CAT_BUFFS", checks = Group(FEATURES, "CAT_BUFFS") },
-    -- Party marks: the five marks in a row, the player's name under each.
-    { head = "CAT_MARKS", after = function(x, y) return MarkRow(x, y) end },
   })
 
-  -- Bottom: tools, four columns of buttons
+  -- Bottom: one row of windows to open, one row of things that act right away.
   local toolsTop = bottom - 6
   Header(win, "CFG_TOOLS", 16, toolsTop)
   local line = win:CreateTexture(nil, "ARTWORK")
   line:SetColorTexture(0.41, 0.8, 0.94, 0.35)
   line:SetPoint("TOPLEFT", 252, toolsTop - 16)
   line:SetSize(532, 1)
-  for i, t in ipairs(TOOLS) do
-    local b = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
-    b:SetSize(184, 22)
-    local col, row = (i - 1) % 4, math.floor((i - 1) / 4)
-    b:SetPoint("TOPLEFT", 16 + col * 192, toolsTop - 24 - row * 26)
-    b.key = t.key
-    b:SetScript("OnClick", function()
-      local ok, err = pcall(t.func)
-      if not ok then ns.Print(ns.T("ERROR", tostring(err))) end
-      Refresh()
-    end)
-    table.insert(win.tools, b)
+  local function ButtonRow(list, y)
+    local n = math.max(#list, 4)
+    local w = (768 - (n - 1) * 6) / n
+    for i, t in ipairs(list) do
+      local b = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
+      b:SetSize(w, 22)
+      b:SetPoint("TOPLEFT", 16 + (i - 1) * (w + 6), y)
+      b.key = t.key
+      b:SetScript("OnClick", function()
+        local ok, err = pcall(t.func)
+        if not ok then ns.Print(ns.T("ERROR", tostring(err))) end
+        Refresh()
+      end)
+      table.insert(win.tools, b)
+    end
   end
-  local rows = math.ceil(#TOOLS / 4)
-  win:SetHeight(-(toolsTop - 24 - rows * 26) + 12)
+  ButtonRow(TOOLS, toolsTop - 24)
+  ButtonRow(ACTIONS, toolsTop - 50)
+  win:SetHeight(-(toolsTop - 76) + 12)
 
   win:SetScript("OnShow", Refresh)
   win:Hide()

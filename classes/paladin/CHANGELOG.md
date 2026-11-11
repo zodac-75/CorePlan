@@ -1,3 +1,7 @@
+# PaladinPlan 1.14.0
+
+- **Settings window regrouped by feature:** every feature now has its on/off box first and its options right under it. Left: talent plan, professions, leveling and profiles. Middle: the combat helper (with size, alert style and sounds) and buffs and reminders (heads-up time and "drink at" next to their boxes). Right: gear and bags, party marks (button and pickers together) and look and windows. The buttons at the bottom are split into windows to open and actions.
+
 # PaladinPlan 1.13.1
 
 - **Shorter quick menu:** the menu on the minimap icon is now a short list: your spec, the windows to open (now with the bag check), and five switches: combat helper, move, buff watcher, party buffs and lock windows. Everything else is one click away under "All settings...".
