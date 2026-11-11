@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta65
+
+- **Group bar:** in a party a small button trades your best healthstone. Each click opens a trade with your target, or the next party member in range who hasn't had one, and puts the stone in. When a party member opens a trade with you, it goes in by itself. You press Trade. Shift-drag to move, Ctrl + mouse wheel to resize, turn it off in the settings (Party marks) or with /wl groupbar.
+
 # WarlockPlan 1.0.0-beta64
 
 - **Rank check and controllers:** buttons above 180 (the controller's own button sets) are now only checked when "I use a controller" is ticked. It is no longer switched on by itself, so keyboard players stop getting an "old rank" on a button they can't see. When a controller button is flagged, the message now says "controller button 200".

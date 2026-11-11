@@ -1,3 +1,7 @@
+# ShamanPlan 1.16.2
+
+- Groundwork for the group bar (class tools in a party, first for Mage and Warlock). Nothing changes for Shamans yet.
+
 # ShamanPlan 1.16.1
 
 - **Rank check and controllers:** buttons above 180 (the controller's own button sets) are now only checked when "I use a controller" is ticked. It is no longer switched on by itself, so keyboard players stop getting an "old rank" on a button they can't see. When a controller button is flagged, the message now says "controller button 200".

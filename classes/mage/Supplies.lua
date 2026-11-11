@@ -3,6 +3,7 @@ local _, ns = ...
 
 local WATER = { 5350, 2288, 2136, 3772, 8077, 8078, 8079 }
 local FOOD = { 5349, 1113, 1114, 1487, 8075, 8076 }
+ns.CONJURED_WATER, ns.CONJURED_FOOD = WATER, FOOD
 local GEMS = { 5514, 5513, 8007, 8008 }
 local GEM_SPELLS = { "Conjure Mana Agate", "Conjure Mana Jade", "Conjure Mana Citrine", "Conjure Mana Ruby" }
 

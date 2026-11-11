@@ -3,6 +3,8 @@
 local _, ns = ...
 local E, S = ns.LOCALES.enUS, ns.LOCALES.svSE
 
+E.GB_STONE = "Trade healthstone"
+E.GB_STONE_TIP = "Opens a trade with your target, or the next party member in range who hasn't had one, and puts in your healthstone. A party member who opens a trade with you gets one too. You press Trade."
 E.CMD_theme = "change theme (Dark, Fel, Classic, Transparent)"
 E.CMD_move = "unlock the combat helper to move it"
 E.CMD_combat = "turn the combat helper on/off (Shadow Trance, DoTs, Life Tap, pet)"
@@ -41,6 +43,8 @@ E.PLAN_destruction = "Destruction (Shadow Bolt and fire)"
 E.DG_LOOT = "Warlock loot"
 E.DG_NOLOOT = "No warlock loot found."
 
+S.GB_STONE = "Traida healthstone"
+S.GB_STONE_TIP = "Öppnar en trade med ditt target, eller nästa i gruppen inom räckhåll som inte fått, och lägger i din healthstone. Den i gruppen som öppnar en trade med dig får också. Du trycker Trade."
 S.CMD_theme = "byt tema (Mörk, Fel, Klassisk, Genomskinlig)"
 S.CMD_move = "lås upp stridshjälpen för att flytta den"
 S.CMD_combat = "slå på/av stridshjälpen (Shadow Trance, DoTs, Life Tap, pet)"

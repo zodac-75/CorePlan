@@ -203,7 +203,24 @@ end
 ns.COMBAT_CMD = "shatter"
 ns.EXTRA_FEATURES = {
   { key = "MM_POLY", on = function() return not ns.db.polyOff end, cmd = "poly" },
+  { key = "MM_GROUPBAR", group = "CAT_MARKS", on = function() return not ns.db.groupBarOff end, cmd = "groupbar" },
 }
+
+-- Required levels, in case the game doesn't say (water 5350-8079, food 5349-8076).
+ns.ITEM_MIN_LEVEL = {
+  [5350] = 1, [2288] = 5, [2136] = 15, [3772] = 25, [8077] = 35, [8078] = 45, [8079] = 55,
+  [5349] = 1, [1113] = 5, [1114] = 15, [1487] = 25, [8075] = 35, [8076] = 45,
+}
+-- Group bar: conjured water for mana users, food for warriors and rogues (best rank first).
+local function Reversed(t) local r = {} for i = #t, 1, -1 do r[#r + 1] = t[i] end return r end
+ns.GROUP_TRADES = { {
+  key = "GB_WATER", icon = "Interface\\Icons\\INV_Drink_18", spell = "Conjure Water", oncePer = 300,
+  items = function(unit)
+    local _, class = UnitClass(unit)
+    local noMana = class == "WARRIOR" or class == "ROGUE"
+    return Reversed((noMana and ns.CONJURED_FOOD or ns.CONJURED_WATER) or {})
+  end,
+} }
 ns.LOGO = { h = 407 / 512, size = 250, y = 64, panel = 300 }
 
 -- Icy Veins numbers Improved Fire Blast first in the Fire tree (see core/Import.lua).

@@ -1,3 +1,7 @@
+# MagePlan 1.39.0
+
+- **Group bar:** in a party a small button trades water and food. Each click opens a trade with your target, or the next party member in range who hasn't had any, and puts in one stack: water for mana users, food for warriors and rogues, always the best rank their level can use. When a party member opens a trade with you, the stack goes in by itself. You press Trade. Shift-drag to move, Ctrl + mouse wheel to resize, turn it off in the settings (Party marks) or with /mp groupbar.
+
 # MagePlan 1.38.1
 
 - **Rank check and controllers:** buttons above 180 (the controller's own button sets) are now only checked when "I use a controller" is ticked. It is no longer switched on by itself, so keyboard players stop getting an "old rank" on a button they can't see. When a controller button is flagged, the message now says "controller button 200".

@@ -19,7 +19,7 @@ local KEYS = {
   -- look
   "theme", "fontSize",
   -- features
-  "shatterOff", "tooltipOff", "bagAutoOff", "rankChatOff", "rankController", "bagBtnOff", "upgradeOff", "questOff", "polyOff",
+  "shatterOff", "tooltipOff", "bagAutoOff", "rankChatOff", "rankController", "bagBtnOff", "upgradeOff", "questOff", "polyOff", "groupBarOff",
   "drinkOff", "drinkPct", "xpOff", "zoneTipsOff", "locked", "dungeonAutoOpen", "marks",
 }
 

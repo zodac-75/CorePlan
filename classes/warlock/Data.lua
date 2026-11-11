@@ -187,4 +187,17 @@ ns.CLASS_TIPS = {
 ns.COMBAT_CMD = "combat"
 ns.THEME_BG = { 0.06, 0.03, 0.09, 0.92 }
 ns.THEME_BORDER = { 0.58, 0.51, 0.79, 0.9 }
+ns.EXTRA_FEATURES = {
+  { key = "MM_GROUPBAR", group = "CAT_MARKS", on = function() return not ns.db.groupBarOff end, cmd = "groupbar" },
+}
+
+-- Group bar: one healthstone per player (best first; the 19004-19013 ones are the
+-- Improved Healthstone versions).
+ns.GROUP_TRADES = { {
+  key = "GB_STONE", icon = "Interface\\Icons\\INV_Stone_04", spell = "Create Healthstone", oncePer = 120,
+  items = function()
+    return { 19013, 19012, 9421, 19011, 19010, 5510, 19009, 19008, 5509, 19007, 19006, 5511, 19005, 19004, 5512 }
+  end,
+} }
+
 ns.LOGO = { h = 471 / 512, size = 210, y = 62, panel = 260 }

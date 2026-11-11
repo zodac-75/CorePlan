@@ -828,6 +828,39 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
 end
+print("--- Gruppbar: healthstone ---")
+do
+  spells["Create Healthstone"] = { 6201, 1 }; byId[6201] = "Create Healthstone"
+  local saved = { IsInGroup = IsInGroup, UnitExists = UnitExists, UnitName = UnitName, UnitIsPlayer = UnitIsPlayer, C_Container = C_Container }
+  local people = { party1 = "Tank" }
+  local slots = { [3] = { 19011, 1 }, [7] = { 5510, 1 } }
+  local picked, traded = {}, {}
+  IsInGroup = function() return true end
+  UnitExists = function(u) return u == "player" or people[u] ~= nil end
+  UnitIsPlayer = UnitExists
+  UnitName = function(u) return people[u] or "Me" end
+  C_Container = {
+    GetContainerNumSlots = function(b) return b == 0 and 16 or 0 end,
+    GetContainerItemInfo = function(b, i) local x = b == 0 and slots[i]; if x then return { itemID = x[1], stackCount = x[2] } end end,
+    PickupContainerItem = function(b, i) picked[#picked + 1] = slots[i][1] end,
+  }
+  CheckInteractDistance = function() return true end
+  InitiateTrade = function(u) traded[#traded + 1] = u end
+  ClickTradeButton = function() end
+  local oldPrint = ns.Print
+  ns.Print = function() end
+  fire("GROUP_ROSTER_UPDATE")
+  ns.RunCommand("trade", "")
+  people.npc = "Tank"
+  fire("TRADE_SHOW")
+  now = now + 1; runTimers(now)
+  if traded[1] ~= "party1" then table.insert(errors, "healthstone: ingen trade med party1") end
+  if picked[1] ~= 19011 then table.insert(errors, "healthstone: bästa stenen (19011) lades inte i: " .. tostring(picked[1])) end
+  ns.Print = oldPrint
+  for k, v in pairs(saved) do _G[k] = v end
+  CheckInteractDistance, InitiateTrade, ClickTradeButton = nil, nil, nil
+  spells["Create Healthstone"] = nil; byId[6201] = nil
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

@@ -1289,6 +1289,75 @@ do
   end
   GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
 end
+print("--- Gruppbar: vatten och mat till gruppen ---")
+do
+  local saved = { IsInGroup = IsInGroup, UnitExists = UnitExists, UnitName = UnitName, UnitClass = UnitClass,
+    UnitLevel = UnitLevel, UnitIsPlayer = UnitIsPlayer, C_Container = C_Container, C_Item = C_Item, GetItemInfo = GetItemInfo }
+  local people = {
+    party1 = { "Tank", "WARRIOR", 30 }, party2 = { "Jennie", "PRIEST", 20 }, npc = nil,
+  }
+  local bag = { [1] = { 8077, 20 }, [2] = { 3772, 20 }, [3] = { 1487, 20 }, [4] = { 2136, 15 }, [5] = { 2136, 20 } }
+  local picked, placed, traded = {}, {}, {}
+  local cursor = false
+  ERR_TRADE_COMPLETE = "Trade complete."
+  IsInGroup = function() return true end
+  UnitExists = function(u) return u == "player" or people[u] ~= nil end
+  UnitIsPlayer = function(u) return u == "player" or people[u] ~= nil end
+  UnitName = function(u) local p = people[u]; if p then return p[1] end return "Me" end
+  UnitClass = function(u) local p = people[u]; if p then return p[2], p[2] end return "Mage", "MAGE" end
+  UnitLevel = function(u) local p = people[u]; if p then return p[3] end return playerLevel end
+  C_Item, GetItemInfo = nil, nil
+  C_Container = {
+    GetContainerNumSlots = function(b) return b == 0 and 16 or 0 end,
+    GetContainerItemInfo = function(b, slot) local i = b == 0 and bag[slot]; if i then return { itemID = i[1], stackCount = i[2] } end end,
+    PickupContainerItem = function(b, slot) picked[#picked + 1] = bag[slot][1]; cursor = true end,
+  }
+  CheckInteractDistance = function() return true end
+  InitiateTrade = function(u) traded[#traded + 1] = u end
+  GetTradePlayerItemInfo = function(i) if placed[i] then return "x" end end
+  ClickTradeButton = function(i) placed[i] = true; cursor = false end
+  CursorHasItem = function() return cursor end
+  local printed = {}
+  local oldPrint = ns.Print
+  ns.Print = function(m) printed[#printed + 1] = tostring(m) end
+  local function trade(unit)
+    people.npc = people[unit]
+    placed = {}
+    fire("TRADE_SHOW")
+    now = now + 1; runTimers(now)
+    fire("TRADE_CLOSED")
+    fire("UI_INFO_MESSAGE", 0, ERR_TRADE_COMPLETE)
+    people.npc = nil
+  end
+  fire("GROUP_ROSTER_UPDATE")
+  ns.RunCommand("trade", "")
+  if traded[1] ~= "party1" then table.insert(errors, "gruppbar: första klicket traidade inte party1: " .. tostring(traded[1])) end
+  trade("party1")
+  if picked[1] ~= 1487 then table.insert(errors, "warrior fick inte mat (1487): " .. tostring(picked[1])) end
+  ns.RunCommand("trade", "")
+  if traded[2] ~= "party2" then table.insert(errors, "andra klicket traidade inte party2: " .. tostring(traded[2])) end
+  trade("party2")
+  -- Level 20 priest: not the level 25/35 water, the fullest stack of 2136 (level 15).
+  if picked[2] ~= 2136 then table.insert(errors, "fel rank vatten till level 20: " .. tostring(picked[2])) end
+  printed = {}
+  ns.RunCommand("trade", "")
+  if #traded ~= 2 then table.insert(errors, "alla hade fått men en ny trade öppnades") end
+  -- Targeting someone gives them another stack.
+  UnitExists = function(u) return u == "player" or u == "target" or people[u] ~= nil end
+  people.target = people.party2
+  ns.RunCommand("trade", "")
+  if traded[3] ~= "target" then table.insert(errors, "target fick ingen trade: " .. tostring(traded[3])) end
+  people.target = nil
+  -- A party member who opens the trade gets one by itself (after a new round).
+  now = now + 400
+  picked = {}
+  trade("party1")
+  if picked[1] ~= 1487 then table.insert(errors, "trade från gruppmedlem fylldes inte: " .. tostring(picked[1])) end
+  print("  " .. table.concat(printed, " | "):sub(1, 200))
+  ns.Print = oldPrint
+  for k, v in pairs(saved) do _G[k] = v end
+  CheckInteractDistance, InitiateTrade, GetTradePlayerItemInfo, ClickTradeButton, CursorHasItem = nil, nil, nil, nil, nil
+end
 print("--- Rank-koll: knappar över 180 räknas bara med controller ikryssad ---")
 do
   local oldSub, oldActions = GetSpellSubtext, {}
