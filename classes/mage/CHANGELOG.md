@@ -1,3 +1,9 @@
+# MagePlan 1.40.0
+
+- **Two new Frost plans:** *Frost solo questing (18/0/33)*, Maxroll's current build with Ice Lance at 20, Shatter at 25-27 and Ice Barrier at 40, then Arcane for Clearcasting, Missile Barrage and mana regen. *Frost AoE grinding (0/13/38)*, Kargoz's AoE build moved to the live tree (Precision 3/3, Ice Shards in place of the removed Piercing Ice), with Improved Blizzard, Shatter, Improved Cone of Cold and Improved Flamestrike. Pick them with /mp plan or in the settings. The old Frost plan (10/0/41) stays the default.
+
+- **Icy Veins import fixed for every class:** the addon now uses Icy Veins' own numbering for each talent, read straight from their talent calculator. Before, it guessed the numbering row by row, which was wrong for Paladin, Rogue, Warrior, Druid, Shaman and Hunter, so links like a 0/35/16 Paladin build were refused.
+
 # MagePlan 1.39.1
 
 - **Icy Veins import:** links from the newer Icy Veins talent calculator work again. It now numbers the first talent of the first tree as "0", which the import didn't know, so those links were refused.

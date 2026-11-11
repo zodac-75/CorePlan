@@ -182,3 +182,7 @@ ns.PLAN_WEIGHTS = {
   resto = { heal = 1.0, sp = 1.0, int = 0.8, mp5 = 2.0, spi = 0.6, scrit = 6, sta = 0.25 },
 }
 ns.COMBAT_CMD = "combat"
+
+-- Icy Veins link characters, one per talent in TalentIds order (tree, row, column), read
+-- from the data-talenturlid of their talent calculator (2026-11-11). "-" = not on Icy Veins.
+ns.ICY_IDS = "0123456789abcdefghijklmnopsrqtvwyxzuABCDEFGHIJKLMNOP"

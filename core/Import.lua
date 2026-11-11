@@ -10,13 +10,12 @@
 -- ranks are the same as Wowhead's (one digit per talent, "-" between the three trees, a
 -- fourth part after them is not talents), so it is read the same way.
 -- An Icy Veins link is https://www.icy-veins.com/wow-forever/<class>-talent-calculator#tc-<code>~<build>:
--- every talent point is one character (talent number 1, 2, 3 ... over the three trees, in
--- the characters 1-9, a-z, A-Z), in the order the points were spent, so like a forge link
--- it gives the leveling order. The talents are numbered tree by tree, row by row and left
--- to right, except where the class has ns.ICY_FRONT = { [tree] = { names } } (talents the
--- site numbers first in their tree). A link that doesn't fit the class (an unknown
--- character, too many points in a talent, a talent used before its row is open) is
--- refused instead of read wrongly.
+-- every talent point is one character, in the order the points were spent, so like a forge
+-- link it gives the leveling order. Which character is which talent comes from the class's
+-- ns.ICY_IDS (one character per talent in TalentIds order, read from Icy Veins' own
+-- calculator), since Icy Veins doesn't number the talents row by row for every class. A link
+-- that doesn't fit the class (an unknown character, too many points in a talent, a talent
+-- used before its row is open) is refused instead of read wrongly.
 -- The imported plan shows up as "Imported" next to our own plans, and acts like the plan
 -- of ours that spends most in the same tree (stat weights, combat call-outs, buffs).
 local _, ns = ...
@@ -94,9 +93,8 @@ local function FromWowhead(ranks)
   return ids
 end
 
--- Icy Veins characters to talent IDs, one per point, or nil when the link doesn't fit.
-local ICY_CHARS = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-local function FromIcy(code)
+-- Talent IDs in TalentIds order: tree by tree, row by row, left to right.
+local function TalentOrder()
   local list = {}
   for ti = 1, 3 do
     local tree = {}
@@ -108,29 +106,20 @@ local function FromIcy(code)
       if x[4] ~= y[4] then return x[4] < y[4] end
       return x[5] < y[5]
     end)
-    local front = ns.ICY_FRONT and ns.ICY_FRONT[ti]
-    if front then
-      local moved, rest = {}, {}
-      for _, name in ipairs(front) do
-        for _, id in ipairs(tree) do if ns.TALENT_IDS[id][1] == name then table.insert(moved, id) end end
-      end
-      local isMoved = {}
-      for _, id in ipairs(moved) do isMoved[id] = true end
-      for _, id in ipairs(tree) do if not isMoved[id] then table.insert(rest, id) end end
-      tree = moved
-      for _, id in ipairs(rest) do table.insert(tree, id) end
-    end
     for _, id in ipairs(tree) do list[#list + 1] = id end
   end
-  -- Newer Icy Veins links (build 70862 on) number the first tree from 0: "0" is its first
-  -- talent, "1" is a slot we have no talent for, and "2" on are the same as before.
-  local fromZero = code:find("0", 1, true) ~= nil
+  return list
+end
+
+-- Icy Veins characters to talent IDs, one per point, or nil when the link doesn't fit.
+local function FromIcy(code)
+  local map = ns.ICY_IDS
+  if not map then return nil end
+  local list = TalentOrder()
   local ids, have, spent = {}, {}, {}
   for i = 1, #code do
     local ch = code:sub(i, i)
-    local at
-    if ch == "0" then at = 1
-    elseif not (fromZero and ch == "1") then at = ICY_CHARS:find(ch, 1, true) end
+    local at = ch ~= "-" and map:find(ch, 1, true)
     local id = at and list[at]
     local t = id and ns.TALENT_IDS[id]
     if not t then return nil end

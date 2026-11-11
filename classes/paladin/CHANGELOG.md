@@ -1,3 +1,7 @@
+# PaladinPlan 1.15.4
+
+- **Icy Veins import fixed for every class:** the addon now uses Icy Veins' own numbering for each talent, read straight from their talent calculator. Before, it guessed the numbering row by row, which was wrong for Paladin, Rogue, Warrior, Druid, Shaman and Hunter, so links like a 0/35/16 Paladin build were refused.
+
 # PaladinPlan 1.15.3
 
 - **Icy Veins import:** links from the newer Icy Veins talent calculator work again. It now numbers the first talent of the first tree as "0", which the import didn't know, so those links were refused.

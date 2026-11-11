@@ -181,3 +181,7 @@ ns.CLASS_TIPS = {
 ns.COMBAT_CMD = "combat"
 ns.THEME_BG = { 0.07, 0.06, 0.09, 0.92 }
 ns.THEME_BORDER = { 0.92, 0.82, 0.55, 0.9 }
+
+-- Icy Veins link characters, one per talent in TalentIds order (tree, row, column), read
+-- from the data-talenturlid of their talent calculator (2026-11-11). "-" = not on Icy Veins.
+ns.ICY_IDS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP"

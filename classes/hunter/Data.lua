@@ -157,3 +157,7 @@ ns.THEME_BORDER = { 0.67, 0.83, 0.45, 0.9 }
 ns.EXTRA_FEATURES = {
   { group = "CAT_ITEMS", key = "MM_AMMO", on = function() return not ns.db.ammoOff end, cmd = "ammo" },
 }
+
+-- Icy Veins link characters, one per talent in TalentIds order (tree, row, column), read
+-- from the data-talenturlid of their talent calculator (2026-11-11). "-" = not on Icy Veins.
+ns.ICY_IDS = "0123546789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM-N"

@@ -171,8 +171,33 @@ ns.CLASS_TIPS = {
 }
 
 -- Talent plans: the first is ns.talents above; the others are built from these steps.
-ns.PLAN_ORDER = { "frost", "fire", "arcane" }
+ns.PLAN_ORDER = { "frost", "frostsolo", "frostaoe", "fire", "arcane" }
 ns.PLAN_STEPS = {
+  -- Frost solo questing, 18/0/33: Maxroll's build (updated 2026-11-04). Maxroll's level
+  -- order isn't published, so the Frost core comes first (Ice Lance at 20, Shatter at 25-27,
+  -- Ice Barrier at 40), then Arcane for Clearcasting, Missile Barrage and mana regen.
+  frostsolo = {
+    { "Improved Frostbolt", 5 }, { "Frostbite", 3 }, { "Ice Shards", 5, 2 }, { "Ice Lance", 1 },
+    { "Frost Channeling", 3 }, { "Ice Shards", 5, 1 }, { "Shatter", 3 }, { "Ice Block", 1 },
+    { "Arctic Reach", 2 }, { "Fingers of Frost", 2 }, { "Cold Snap", 1 }, { "Ice Shards", 5, 2 },
+    { "Precision", 3 }, { "Permafrost", 3, 1 }, { "Ice Barrier", 1 }, { "Permafrost", 3, 2 },
+    { "Improved Channeling", 5 }, { "Arcane Concentration", 5 }, { "Arcane Subtlety", 2 },
+    { "Missile Barrage", 2 }, { "Arcane Blast", 1 }, { "Arcane Meditation", 3 },
+  },
+  -- Frost AoE grinding, 0/13/38: Kargoz's AoE guide (Mobalytics, 2026-10-11) and its
+  -- level order, moved to the live tree: Elemental Precision 5/5 is now Precision 3/3
+  -- (2 points back) and Piercing Ice is gone (3 points back); those 5 go to Ice Shards,
+  -- his own pick for Shatter AoE. Incineration fills the first Fire row (his Improved
+  -- Fireball) to open Impact and Improved Flamestrike.
+  frostaoe = {
+    { "Precision", 3 }, { "Improved Frostbolt", 5, 2 }, { "Improved Frost Nova", 2 },
+    { "Permafrost", 3 }, { "Improved Blizzard", 3 }, { "Ice Lance", 1 }, { "Frost Channeling", 3, 1 },
+    { "Ice Block", 1 }, { "Arctic Reach", 2 }, { "Shatter", 3, 2 }, { "Cold Snap", 1 },
+    { "Shatter", 3, 1 }, { "Frost Channeling", 3, 2 }, { "Improved Cone of Cold", 3 },
+    { "Ice Shards", 5, 3 }, { "Ice Barrier", 1 },
+    { "Incineration", 5 }, { "Flame Throwing", 2 }, { "Impact", 3 }, { "Improved Flamestrike", 3 },
+    { "Improved Frostbolt", 5, 3 }, { "Ice Shards", 5, 2 }, { "Frost Warding", 2 },
+  },
   -- Fire leveling. 10-37 follows the most common community order; 38-60 is adapted
   -- for launch (Precision has 3 ranks, Piercing Ice is gone, Incineration was buffed).
   fire = {
@@ -223,5 +248,6 @@ ns.GROUP_TRADES = { {
 } }
 ns.LOGO = { h = 407 / 512, size = 250, y = 64, panel = 300 }
 
--- Icy Veins numbers Improved Fire Blast first in the Fire tree (see core/Import.lua).
-ns.ICY_FRONT = { [2] = { "Improved Fire Blast" } }
+-- Icy Veins link characters, one per talent in TalentIds order (tree, row, column), read
+-- from the data-talenturlid of their talent calculator (2026-11-11). "-" = not on Icy Veins.
+ns.ICY_IDS = "023456789abcdefghiklmnopqrjstuvwxyzABCDEFGHIJKLMNOPQR"

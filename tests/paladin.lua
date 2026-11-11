@@ -880,6 +880,17 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
 end
+print("--- Importera Icy Veins-länk (Paladin, egen numrering) ---")
+do
+  local function count() local n = 0 for _ in pairs(ns.talents) do n = n + 1 end return n end
+  local ok = ns.ImportTalents("https://www.icy-veins.com/wow-forever/paladin-talent-calculator#tc-yyyyyBBBzzFFiiiiijjjppoothhqnnnlwuuuuuvvvlmlllDDDHh~70755-d1899b7d")
+  if not ok or count() ~= 51 then table.insert(errors, "Icy Paladin gav " .. count() .. " poäng, inte 51") end
+  print("  10: " .. tostring(ns.talents[10]) .. ", 25: " .. tostring(ns.talents[25]) .. ", 60: " .. tostring(ns.talents[60]))
+  if ns.talents[10] ~= "Benediction 1/5" or ns.talents[15] ~= "Conviction 1/3" or ns.talents[60] ~= "Toughness 3/5" then
+    table.insert(errors, "Icy Paladin: ordningen stämmer inte: " .. tostring(ns.talents[10]) .. ", " .. tostring(ns.talents[15]) .. ", " .. tostring(ns.talents[60]))
+  end
+  ns.ImportTalents("clear")
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

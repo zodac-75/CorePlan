@@ -188,3 +188,7 @@ ns.COMBAT_CMD = "combat"
 ns.EXTRA_FEATURES = {
   { group = "CAT_COMBAT", key = "MM_STORMSTRIKE", on = function() return not ns.db.stormstrikeOff end, cmd = "stormstrike" },
 }
+
+-- Icy Veins link characters, one per talent in TalentIds order (tree, row, column), read
+-- from the data-talenturlid of their talent calculator (2026-11-11). "-" = not on Icy Veins.
+ns.ICY_IDS = "0123456789abcdefghijkmnopqrsltuvwxyzABCDEFGHIJKLMN"

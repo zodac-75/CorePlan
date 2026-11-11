@@ -201,3 +201,7 @@ ns.GROUP_TRADES = { {
 } }
 
 ns.LOGO = { h = 471 / 512, size = 210, y = 62, panel = 260 }
+
+-- Icy Veins link characters, one per talent in TalentIds order (tree, row, column), read
+-- from the data-talenturlid of their talent calculator (2026-11-11). "-" = not on Icy Veins.
+ns.ICY_IDS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP"
