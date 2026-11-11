@@ -510,7 +510,9 @@ local function Create()
   local close = CreateFrame("Button", nil, win, "UIPanelCloseButton")
   close:SetPoint("TOPRIGHT", 2, 2)
   close:SetScale(0.7)
-  close:SetScript("OnClick", function() if not InCombatLockdown() then win:Hide() end end)
+  close:SetScript("OnClick", function()
+    if not InCombatLockdown() then win:Hide(); ns.db.bagShown = nil end
+  end)
   sellAll = CreateFrame("Button", "@ADDON@BagSellAll", win, "SecureActionButtonTemplate,UIPanelButtonTemplate")
   sellAll:SetSize(WIDTH - 40, 24)
   sellAll:RegisterForClicks("AnyUp", "AnyDown")
@@ -525,7 +527,9 @@ local function Create()
   win:Hide()
 end
 
-function ns.ToggleBags(show)
+-- auto: opened by the addon (at a vendor, after combat, after a reload), so it doesn't
+-- change whether the window comes back after a /reload or a loading screen.
+function ns.ToggleBags(show, auto)
   if InCombatLockdown() then
     ns.Print(ns.T("BAG_COMBAT"))
     return
@@ -533,6 +537,7 @@ function ns.ToggleBags(show)
   Create()
   if show == nil then show = not win:IsShown() end
   autoOpened = false
+  if not auto then ns.db.bagShown = show or nil end
   if show then
     win:Show()
     win:Raise()
@@ -565,7 +570,7 @@ ns.RegisterModule(function()
   end
 
   local ev = CreateFrame("Frame")
-  for _, e in ipairs({ "MERCHANT_SHOW", "MERCHANT_CLOSED", "BAG_UPDATE_DELAYED", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" }) do
+  for _, e in ipairs({ "MERCHANT_SHOW", "MERCHANT_CLOSED", "BAG_UPDATE_DELAYED", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_ENTERING_WORLD" }) do
     pcall(ev.RegisterEvent, ev, e)
   end
   ev:SetScript("OnEvent", function(_, event)
@@ -575,7 +580,7 @@ ns.RegisterModule(function()
         if win and win:IsShown() then
           Refresh()
         elseif not ns.db.bagAutoOff and not InCombatLockdown() and WorthOpening() then
-          ns.ToggleBags(true)
+          ns.ToggleBags(true, true)
           autoOpened = true
         end
       elseif event == "MERCHANT_CLOSED" then
@@ -584,6 +589,14 @@ ns.RegisterModule(function()
           if autoOpened then win:Hide() else Refresh() end
         end
         autoOpened = false
+      elseif event == "PLAYER_ENTERING_WORLD" then
+        -- Open before the reload or loading screen: open it again once the bags are read.
+        if ns.db.bagShown and not (win and win:IsShown()) then
+          local function Reopen()
+            if ns.db.bagShown and not InCombatLockdown() then ns.ToggleBags(true, true) end
+          end
+          if C_Timer and C_Timer.After then C_Timer.After(1, Reopen) else Reopen() end
+        end
       elseif event == "BAG_UPDATE_DELAYED" then
         QueueRefresh()
       elseif event == "PLAYER_REGEN_DISABLED" then
@@ -597,7 +610,7 @@ ns.RegisterModule(function()
       elseif event == "PLAYER_REGEN_ENABLED" then
         if reopenAfterCombat then
           reopenAfterCombat = false
-          ns.ToggleBags(true)
+          ns.ToggleBags(true, true)
         end
       end
     end)

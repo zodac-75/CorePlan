@@ -1,3 +1,7 @@
+# ShamanPlan 1.16.7
+
+- **Bag check window stays open:** if you had it open, it comes back after a /reload or a loading screen. Closing it with the X keeps it closed.
+
 # ShamanPlan 1.16.6
 
 - **Materials in bags/bank:** hovering over cloth, ore, herbs or leather in the profession window now shows the split, for example "40 in all (12 in bags, 28 in the bank)".

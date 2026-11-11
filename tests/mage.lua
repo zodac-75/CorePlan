@@ -1300,6 +1300,20 @@ do
   end
   GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
 end
+print("--- Väskfönstret öppnas igen efter reload/laddningsskärm ---")
+do
+  ns.ToggleBags(true)
+  local w = _G.MagePlanBags
+  w:Hide() -- a /reload or loading screen starts with it closed
+  fire("PLAYER_ENTERING_WORLD")
+  now = now + 2; runTimers(now)
+  if not w:IsShown() then table.insert(errors, "väskfönstret kom inte tillbaka efter reload") end
+  ns.ToggleBags(false)
+  w:Hide()
+  fire("PLAYER_ENTERING_WORLD")
+  now = now + 2; runTimers(now)
+  if w:IsShown() then table.insert(errors, "väskfönstret öppnades fast det var stängt") end
+end
 print("--- Gruppbar: vatten och mat till gruppen ---")
 do
   local saved = { IsInGroup = IsInGroup, UnitExists = UnitExists, UnitName = UnitName, UnitClass = UnitClass,
