@@ -1173,6 +1173,22 @@ do
   if ns.ImportTalents("https://talentsforever.com/priest/60/0550-55") then table.insert(errors, "tog emot en priest-länk (talentsforever)") end
   ns.ClearImport()
 end
+print("--- Importera Icy Veins-länk ---")
+do
+  local function count() local n = 0 for _ in pairs(ns.talents) do n = n + 1 end return n end
+  local ok = ns.ImportTalents("https://www.icy-veins.com/wow-forever/mage-talent-calculator#tc-CCCBBBBBDDDDDEEEFFGHIJMMMLKKONNPPNQQQQQ222224477HHR~70755-d1899b7d")
+  print("  frost+arcane: " .. tostring(ok) .. ", " .. count() .. " poäng, 10 = " .. tostring(ns.talents[10]) .. ", 60 = " .. tostring(ns.talents[60]))
+  if not ok or count() ~= 51 then table.insert(errors, "Icy Veins-importen gav " .. count() .. " poäng, inte 51") end
+  if ns.talents[10] ~= "Precision 1/3" then table.insert(errors, "Icy: första poängen: " .. tostring(ns.talents[10])) end
+  if ns.talents[60] ~= "Ice Barrier 1/1" and ns.talents[60] ~= "Arcane Wrath 1/1" and not ns.talents[60] then table.insert(errors, "Icy: sista poängen saknas") end
+  ok = ns.ImportTalents("https://www.icy-veins.com/wow-forever/mage-talent-calculator#tc-kkkkklllllmmmmmnnooopppqqqrjj~70755-d1899b7d")
+  print("  fire: " .. tostring(ok) .. ", " .. count() .. " poäng, 10 = " .. tostring(ns.talents[10]) .. ", 38 = " .. tostring(ns.talents[38]))
+  if not ok or count() ~= 29 then table.insert(errors, "Icy Fire gav " .. count() .. " poäng, inte 29") end
+  if ns.talents[10] ~= "Incineration 1/5" or ns.talents[38] ~= "Improved Fire Blast 2/2" then table.insert(errors, "Icy Fire: ordningen stämmer inte") end
+  if ns.ImportTalents("https://www.icy-veins.com/wow-forever/priest-talent-calculator#tc-CCC~1") then table.insert(errors, "tog emot en priest-länk (Icy)") end
+  if ns.ImportTalents("https://www.icy-veins.com/wow-forever/mage-talent-calculator#tc-ZZZZZ~1") then table.insert(errors, "tog emot en felaktig Icy-länk") end
+  ns.ClearImport()
+end
 print("--- Walk on Air ---")
 do
   local oldC, oldU = C_UnitAuras, UnitAura

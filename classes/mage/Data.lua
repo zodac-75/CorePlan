@@ -205,3 +205,6 @@ ns.EXTRA_FEATURES = {
   { key = "MM_POLY", on = function() return not ns.db.polyOff end, cmd = "poly" },
 }
 ns.LOGO = { h = 407 / 512, size = 250, y = 64, panel = 300 }
+
+-- Icy Veins numbers Improved Fire Blast first in the Fire tree (see core/Import.lua).
+ns.ICY_FRONT = { [2] = { "Improved Fire Blast" } }

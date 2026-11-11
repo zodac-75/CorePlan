@@ -9,6 +9,14 @@
 -- A talentsforever.com link is https://talentsforever.com/<class>/<level>/<ranks>?...: the
 -- ranks are the same as Wowhead's (one digit per talent, "-" between the three trees, a
 -- fourth part after them is not talents), so it is read the same way.
+-- An Icy Veins link is https://www.icy-veins.com/wow-forever/<class>-talent-calculator#tc-<code>~<build>:
+-- every talent point is one character (talent number 1, 2, 3 ... over the three trees, in
+-- the characters 1-9, a-z, A-Z), in the order the points were spent, so like a forge link
+-- it gives the leveling order. The talents are numbered tree by tree, row by row and left
+-- to right, except where the class has ns.ICY_FRONT = { [tree] = { names } } (talents the
+-- site numbers first in their tree). A link that doesn't fit the class (an unknown
+-- character, too many points in a talent, a talent used before its row is open) is
+-- refused instead of read wrongly.
 -- The imported plan shows up as "Imported" next to our own plans, and acts like the plan
 -- of ours that spends most in the same tree (stat weights, combat call-outs, buffs).
 local _, ns = ...
@@ -30,6 +38,8 @@ end
 -- The class slug and code from a link, or just a code. kind is "forge" or "wowhead".
 local function Parse(text)
   text = (text or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  local icls, icode = text:match("icy%-veins%.com/wow%-forever/(%a+)%-talent%-calculator#tc%-([%w]+)")
+  if icode then return icls:lower(), icode, "icy" end
   local tcls, tlevel, tranks = text:match("talentsforever%.com/(%a+)/(%d+)/([%d%-]+)")
   if not tranks then tcls, tranks = text:match("talentsforever%.com/(%a+)/([%d%-]+)") end
   if tranks then return tcls:lower(), tranks, "wowhead" end
@@ -84,6 +94,49 @@ local function FromWowhead(ranks)
   return ids
 end
 
+-- Icy Veins characters to talent IDs, one per point, or nil when the link doesn't fit.
+local ICY_CHARS = "123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+local function FromIcy(code)
+  local list = {}
+  for ti = 1, 3 do
+    local tree = {}
+    for id, t in pairs(ns.TALENT_IDS or {}) do
+      if t[3] == ti then table.insert(tree, id) end
+    end
+    table.sort(tree, function(a, b)
+      local x, y = ns.TALENT_IDS[a], ns.TALENT_IDS[b]
+      if x[4] ~= y[4] then return x[4] < y[4] end
+      return x[5] < y[5]
+    end)
+    local front = ns.ICY_FRONT and ns.ICY_FRONT[ti]
+    if front then
+      local moved, rest = {}, {}
+      for _, name in ipairs(front) do
+        for _, id in ipairs(tree) do if ns.TALENT_IDS[id][1] == name then table.insert(moved, id) end end
+      end
+      local isMoved = {}
+      for _, id in ipairs(moved) do isMoved[id] = true end
+      for _, id in ipairs(tree) do if not isMoved[id] then table.insert(rest, id) end end
+      tree = moved
+      for _, id in ipairs(rest) do table.insert(tree, id) end
+    end
+    for _, id in ipairs(tree) do list[#list + 1] = id end
+  end
+  local ids, have, spent = {}, {}, {}
+  for i = 1, #code do
+    local at = ICY_CHARS:find(code:sub(i, i), 1, true)
+    local id = at and list[at]
+    local t = id and ns.TALENT_IDS[id]
+    if not t then return nil end
+    have[id] = (have[id] or 0) + 1
+    if have[id] > t[2] then return nil end
+    if (spent[t[3]] or 0) < 5 * t[4] then return nil end -- the row isn't open yet
+    spent[t[3]] = (spent[t[3]] or 0) + 1
+    ids[#ids + 1] = id
+  end
+  return ids
+end
+
 -- Which tree a plan spends most in (1-3), from talent names.
 local function MainTree(talents)
   local byName = {}
@@ -126,7 +179,13 @@ function ns.ImportTalents(text)
   local mine = ("@CLASS@"):lower()
   if not code or #code < 3 then ns.Print(ns.T("IMP_BAD")) return false end
   if cls and cls ~= mine then ns.Print(ns.T("IMP_CLASS", cls)) return false end
-  local ids = kind == "wowhead" and FromWowhead(code) or Decode(code)
+  local ids
+  if kind == "icy" then
+    ids = FromIcy(code)
+    if not ids then ns.Print(ns.T("IMP_ICY")) return false end
+  else
+    ids = kind == "wowhead" and FromWowhead(code) or Decode(code)
+  end
   local talents, have, level, unknown = {}, {}, 10, 0
   for _, id in ipairs(ids) do
     local t = ns.TALENT_IDS and ns.TALENT_IDS[id]
