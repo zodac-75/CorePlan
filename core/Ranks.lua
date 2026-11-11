@@ -108,16 +108,11 @@ end
 
 -- The normal bars (main, pages, bars 2-8) end at button 180. Above that are the controller's
 -- own button sets: they can keep an old rank you can't see, so they only count when a
--- controller is in use. Auto-detected, or forced with "/@SLASH@ ranks controller on|off".
+-- controller is in use: off unless "I use a controller" is ticked ("/@SLASH@ ranks controller on|off").
 local NORMAL_BAR_SLOTS = 180
 
 local function ControllerBars()
-  if ns.db.rankController ~= nil then return ns.db.rankController end
-  local on = Call(C_GamePad and C_GamePad.IsEnabled)
-  if type(on) == "boolean" then return on end
-  on = Call(GetCVarBool, "GamePadEnable")
-  if type(on) == "boolean" then return on end
-  return true -- can't tell: look everywhere
+  return ns.db.rankController == true
 end
 
 function ns.RankControllerOn() return ControllerBars() end
@@ -244,9 +239,9 @@ local function Scan(force)
             local old, r, best = OlderRank(s.id, bestId)
             if old then
               if r and best then
-                table.insert(newOutdated, ns.T("RANKS_OLD_LINE", name, r, s.slot, best))
+                table.insert(newOutdated, ns.T(s.slot > NORMAL_BAR_SLOTS and "RANKS_OLD_LINE_CTRL" or "RANKS_OLD_LINE", name, r, s.slot, best))
               else
-                table.insert(newOutdated, ns.T("RANKS_OLD_NORANK", name, s.slot))
+                table.insert(newOutdated, ns.T(s.slot > NORMAL_BAR_SLOTS and "RANKS_OLD_NORANK_CTRL" or "RANKS_OLD_NORANK", name, s.slot))
               end
             end
             if debugScan then
@@ -322,15 +317,14 @@ end)
 
 ns.RegisterCommand("ranks", true, function(arg)
   arg = type(arg) == "string" and arg or ""
-  -- "/@SLASH@ ranks controller on|off|auto": count the controller's button sets or not.
+  -- "/@SLASH@ ranks controller on|off": count the controller's button sets or not.
   local sub, val = arg:match("^(%S+)%s*(%S*)")
   if sub == "controller" then
     val = val:lower()
     if val == "on" then ns.db.rankController = true
     elseif val == "off" then ns.db.rankController = false
-    elseif val == "auto" then ns.db.rankController = nil end
-    ns.Print(ns.T(ControllerBars() and "RANKS_CTRL_ON" or "RANKS_CTRL_OFF",
-      ns.db.rankController == nil and ns.T("RANKS_CTRL_AUTO") or ""))
+    end
+    ns.Print(ns.T(ControllerBars() and "RANKS_CTRL_ON" or "RANKS_CTRL_OFF", ""))
     lastPrinted = ""
     Scan(true)
     return

@@ -1289,6 +1289,36 @@ do
   end
   GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
 end
+print("--- Rank-koll: knappar över 180 räknas bara med controller ikryssad ---")
+do
+  local oldSub, oldActions = GetSpellSubtext, {}
+  GetSpellSubtext = function() return "" end
+  GetSpellLevelLearned = function(id) return ({ [116] = 4, [7322] = 26 })[id] or 0 end
+  for k, v in pairs(actions) do oldActions[k] = v end
+  for k in pairs(actions) do actions[k] = nil end
+  actions[200] = 116 -- old Frostbolt only on a controller button
+  local function Scan()
+    local printed = {}
+    local oldPrint = ns.Print
+    ns.Print = function(m) table.insert(printed, tostring(m)) end
+    ns.RunCommand("ranks", "")
+    ns.Print = oldPrint
+    return table.concat(printed, " | ")
+  end
+  ns.db.rankController = nil
+  if ns.RankControllerOn() then table.insert(errors, "controller är på utan att vara ikryssad") end
+  if Scan():find("Frostbolt rank", 1, true) then table.insert(errors, "knapp 200 kollades utan controller") end
+  ns.db.rankController = true
+  local all = Scan()
+  print("  " .. all:sub(1, 160))
+  if not (all:find("controller button 200", 1, true) or all:find("controller-knapp 200", 1, true)) then
+    table.insert(errors, "gammal rank på controller-knapp 200 hittades inte: " .. all)
+  end
+  ns.db.rankController = nil
+  for k in pairs(actions) do actions[k] = nil end
+  for k, v in pairs(oldActions) do actions[k] = v end
+  GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
+end
 print("--- Rank-koll med handkontroll (spells bundna direkt) ---")
 do
   local printed = {}

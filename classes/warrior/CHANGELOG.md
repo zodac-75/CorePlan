@@ -1,3 +1,7 @@
+# WarriorPlan 1.15.1
+
+- **Rank check and controllers:** buttons above 180 (the controller's own button sets) are now only checked when "I use a controller" is ticked. It is no longer switched on by itself, so keyboard players stop getting an "old rank" on a button they can't see. When a controller button is flagged, the message now says "controller button 200".
+
 # WarriorPlan 1.15.0
 
 - **Ten new easter eggs** for friends who also run a Plan addon: /fart (a green cloud), /sing (music notes), /gasp or /surprised (a huge "!!"), /moo (bigger if one of you is a Tauren), /thank (hearts and gold stars), /charge ("LEEEROY!"), /violin (the world's smallest violin), /bow (a crown), /slap (a big fish) and /eat or /hungry (a cake).
