@@ -309,7 +309,9 @@ local function MatsSummary(out)
     for _, e in ipairs(g[2]) do
       local n = ns.ItemCount(e[g[3]])
       if n > 0 then
-        table.insert(items, { id = e[g[3]], count = n, extra = e[g[4]] })
+        local bags = math.min(ns.BagCount(e[g[3]]), n)
+        table.insert(items, { id = e[g[3]], count = n,
+          extra = e[g[4]] .. ": " .. ns.T("CR_SPLIT", n, bags, n - bags) })
         table.insert(names, e[g[4]] .. " " .. n)
       end
     end

@@ -1,3 +1,7 @@
+# MagePlan 1.40.2
+
+- **Materials in bags/bank:** hovering over cloth, ore, herbs or leather in the profession window now shows the split, for example "40 in all (12 in bags, 28 in the bank)".
+
 # MagePlan 1.40.1
 
 - **Quick menu:** the group bar (trade water and food) can now be turned on and off from the minimap quick menu.

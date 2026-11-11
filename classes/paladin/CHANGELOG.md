@@ -1,3 +1,7 @@
+# PaladinPlan 1.15.6
+
+- **Materials in bags/bank:** hovering over cloth, ore, herbs or leather in the profession window now shows the split, for example "40 in all (12 in bags, 28 in the bank)".
+
 # PaladinPlan 1.15.5
 
 - Small quick menu update (no change for PaladinPlan).

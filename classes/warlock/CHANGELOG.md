@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta69
+
+- **Materials in bags/bank:** hovering over cloth, ore, herbs or leather in the profession window now shows the split, for example "40 in all (12 in bags, 28 in the bank)".
+
 # WarlockPlan 1.0.0-beta68
 
 - **Quick menu:** the group bar (trade healthstones) can now be turned on and off from the minimap quick menu.

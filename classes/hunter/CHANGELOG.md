@@ -1,3 +1,7 @@
+# HunterPlan 1.0.0-beta48
+
+- **Materials in bags/bank:** hovering over cloth, ore, herbs or leather in the profession window now shows the split, for example "40 in all (12 in bags, 28 in the bank)".
+
 # HunterPlan 1.0.0-beta47
 
 - Small quick menu update (no change for HunterPlan).

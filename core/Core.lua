@@ -81,6 +81,14 @@ function ns.ItemCount(id)
   return (ok and n) or 0
 end
 
+-- Only what's in the bags (not the bank).
+function ns.BagCount(id)
+  local f = (C_Item and C_Item.GetItemCount) or GetItemCount
+  if not f then return 0 end
+  local ok, n = pcall(f, id, false)
+  return (ok and n) or 0
+end
+
 -- Går igenom auras; fn(name, spellId) returnerar true för att stoppa.
 -- Returnerar true om fn någon gång returnerade true.
 -- Calls fn(name, spellId) for each aura until it returns true. Returns found, unsure:
