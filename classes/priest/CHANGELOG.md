@@ -1,3 +1,7 @@
+# PriestPlan 1.0.0-beta47
+
+- **Easter egg /drink:** the two mugs now clink glass to glass, with the handles pointing outwards (they used to bump handles).
+
 # PriestPlan 1.0.0-beta46
 
 - **Settings window regrouped by feature:** every feature now has its on/off box first and its options right under it. Left: talent plan, professions, leveling and profiles. Middle: the combat helper (with size, alert style and sounds) and buffs and reminders (heads-up time and "drink at" next to their boxes). Right: gear and bags, party marks (button and pickers together) and look and windows. The buttons at the bottom are split into windows to open and actions.

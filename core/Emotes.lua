@@ -227,7 +227,9 @@ EFFECTS.TOAST = function(from)
   for side = -1, 1, 2 do
     local m = Piece(ns.MEDIA .. "Mug", 170, 170)
     m:SetPoint("CENTER", side * 260, 60)
-    if side > 0 then m.tex:SetTexCoord(1, 0, 0, 1) else m.tex:SetTexCoord(0, 1, 0, 1) end
+    -- The picture has the handle on the right: mirror the left mug, so both handles point
+    -- outwards and the glass sides are what clink.
+    if side < 0 then m.tex:SetTexCoord(1, 0, 0, 1) else m.tex:SetTexCoord(0, 1, 0, 1) end
     Fade(m, 0, 1, 1, 0.3)
     Move(m, -side * 170, 0, 2, 0.5)
     Spin(m, side * 15, 3, 0.12); Spin(m, -side * 15, 4, 0.12)
