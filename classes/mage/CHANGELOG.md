@@ -1,3 +1,9 @@
+# MagePlan 1.36.0
+
+- **Buff watcher is off during boss fights:** the game hides buffs while a boss is engaged, so the buff row now shows nothing (no icons, no alerts) for the whole fight and comes back when it ends. Outside boss fights a missing party buff shows as before.
+- **Stronger buff with another name:** a higher group buff from someone else (Gift of the Wild over your Mark of the Wild, Arcane Brilliance over Arcane Intellect, Prayer of Fortitude over Fortitude) is left alone until it runs out, like a higher rank of the same buff already was.
+- **Bag check keeps white gear worth wearing:** white armor or a white weapon you can use is no longer listed for sale when the slot is empty, or when it has more armor (or weapon damage) than what you wear.
+
 # MagePlan 1.35.2
 
 - **Talent window with Daylight UI (and similar):** the yellow plan frames, green ticks and the next-talent glow now follow the window when you move it. They were anchored to Blizzard's hidden copy of the talent tree, which Daylight leaves at alpha 0 in the old spot; invisible buttons and windows are now skipped. `/mp talentui` also shows where the next talent's button is and which window holds it.

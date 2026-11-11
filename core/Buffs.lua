@@ -138,10 +138,29 @@ local function StrongerThanMine(auraId, spell)
   return ok and older == true
 end
 
+-- The same for a buff with another name that counts as yours (Arcane Brilliance over your
+-- Arcane Intellect, Gift of the Wild over Mark of the Wild): rank numbers of two different
+-- spells can't be compared, so go by the level each is learned at.
+local function StrongerOtherSpell(auraId, spell)
+  if not (auraId and spell and ns.SpellLevelLearned) then return false end
+  local _, myId = ns.SpellInfo(spell)
+  if not myId then return false end
+  local okA, theirs = pcall(ns.SpellLevelLearned, auraId)
+  local okM, mine = pcall(ns.SpellLevelLearned, myId)
+  return okA and okM and type(theirs) == "number" and type(mine) == "number"
+    and mine > 0 and theirs > mine
+end
+
 -- Is one of the buffs that count a stronger one from someone else?
 local function Outranked(names, ids, spell)
   for _, n in ipairs(names or {}) do
-    if n == spell and StrongerThanMine(ids[n], spell) then return true end
+    if ids[n] then
+      if n == spell then
+        if StrongerThanMine(ids[n], spell) then return true end
+      elseif StrongerOtherSpell(ids[n], spell) then
+        return true
+      end
+    end
   end
   return false
 end
@@ -174,7 +193,8 @@ end
 
 -- During a boss fight the game hides other players' buffs (and sometimes yours): the list
 -- comes back empty or secret and a lookup by name finds nothing, which looked like
--- "everyone is missing Arcane Intellect" at the pull. Then "not found" means "can't tell".
+-- "everyone is missing Arcane Intellect" at the pull. So the buff watcher is off for the
+-- whole boss fight (no icons, no alerts) and comes back when the fight ends.
 local bossFight = false -- ENCOUNTER_START .. ENCOUNTER_END, for clients without IsEncounterInProgress
 local function InEncounter()
   if bossFight then return true end
@@ -190,8 +210,6 @@ local function Needed()
   local buffs, unsure, durs, ids = PlayerBuffs()
   local out = {}
   local combat = InCombatLockdown and InCombatLockdown()
-  local boss = InEncounter()
-  if boss and next(buffs) == nil then unsure = true end
   for idx, e in ipairs(ns.BUFF_WATCH or {}) do
     local spell = Spells(e)
     if spell and not Hidden(EntryKey(e, idx, false)) and (not e.only or e.only()) then
@@ -213,7 +231,6 @@ local function Needed()
         end
         if best then left = best elseif not unsure then left = 0
         elseif not e.match then left = LookupByName("player", e.buffs) end
-        if left == 0 and unsure and boss then left = nil end
         if best and Outranked(e.buffs, ids, spell) then left = nil end
       end
       local warn = e.warn or WARN
@@ -239,7 +256,6 @@ local function Needed()
       if not okV then visible = true end
       if UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) and visible then
         local theirs, unsureP, _, theirIds = PlayerBuffs(unit)
-        if boss and next(theirs) == nil then unsureP = true end
         local isMana
         local okP, pt = pcall(UnitPowerType, unit)
         if okP and not (issecretvalue and issecretvalue(pt)) then isMana = (pt == 0) end
@@ -258,8 +274,6 @@ local function Needed()
             end
             local left = best or (not unsureP and 0 or nil)
             if left == nil and not e.match then left = LookupByName(unit, e.buffs) end
-            -- Their list is hidden: a name lookup that finds nothing isn't proof it's gone.
-            if left == 0 and unsureP then left = nil end
             if best and Outranked(e.buffs, theirIds, spell) then left = nil end
             local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
             -- Out of buff range: no icon until they come closer (checked every second).
@@ -374,7 +388,8 @@ end
 local function Update()
   if not holder then return end
   local combat = InCombatLockdown and InCombatLockdown()
-  local list = (ns.db.buffsOff or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))) and {} or Needed()
+  local boss = InEncounter()
+  local list = (ns.db.buffsOff or boss or (UnitIsDeadOrGhost and UnitIsDeadOrGhost("player"))) and {} or Needed()
   -- Moved together with the combat helper ("Move" switch), not with the window lock.
   local unlocked = ns.db.shatterUnlocked and not ns.db.buffsOff
 
@@ -387,7 +402,8 @@ local function Update()
         local still
         for _, n in ipairs(list) do if n.key == b.key then still = n end end
         -- A party icon whose player went out of range is hidden (alpha only: secure button in combat).
-        b:SetAlpha(still and (InRange(still.unit, still.spell) and 1 or 0.4) or (b.unit and 0 or 0.25))
+        -- Boss fight: everything invisible (secure buttons can't be hidden in combat).
+        b:SetAlpha(boss and 0 or (still and (InRange(still.unit, still.spell) and 1 or 0.4) or (b.unit and 0 or 0.25)))
         b.time:SetText(still and still.left > 0 and Short(still.left) or "")
       end
     end

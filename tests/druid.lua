@@ -769,6 +769,14 @@ do
   items[2901] = { "Mining Pick", 1, 5, "INVTYPE_WEAPON", 20, 2, nil, nil, 0 }
   bag[4] = 9990
   bag[5], bag[6], bag[7] = 9991, 6256, 2901
+  -- Vita saker värda att behålla: fyller en tom plats (stövlar), mer rustning än det man bär.
+  items[9993] = { "Plain Boots", 1, 5, "INVTYPE_FEET", 10, 4, nil, nil, 1 }
+  items[9994] = { "Thick Tunic", 1, 8, "INVTYPE_CHEST", 15, 4, nil, nil, 1 }
+  TOOLTIP_TEXT[6001] = { "Old Robe", "+3 Intellect", "10 Armor" }
+  TOOLTIP_TEXT[9991] = { "Worn Tunic", "8 Armor" }
+  TOOLTIP_TEXT[9993] = { "Plain Boots", "5 Armor" }
+  TOOLTIP_TEXT[9994] = { "Thick Tunic", "14 Armor" }
+  bag[8], bag[9] = 9993, 9994
   local ok, err = pcall(function()
     ns.db.bagAutoOff = nil
     fire("MERCHANT_SHOW")
@@ -788,6 +796,8 @@ do
     for i = 1, 40 do
       local b = rawget(_G, "DruidPlanBagLine" .. i)
       if b and b.__shown and b.entry then
+        if b.entry.id == 9993 then table.insert(errors, "vita stövlar till en tom plats erbjöds till försäljning") end
+        if b.entry.id == 9994 then table.insert(errors, "vit tunika med mer rustning erbjöds till försäljning") end
         if b.entry.id == 9991 then white = b.entry end
         if b.entry.id == 6256 then pole = true end
         if b.entry.id == 2901 then pick = true end
@@ -821,6 +831,8 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
   bag[5], bag[6], bag[7] = nil, nil, nil
+  bag[8], bag[9] = nil, nil
+  TOOLTIP_TEXT[6001] = { "Old Robe", "+3 Intellect" }
 end
 print("--- Buffar med dold auralista ---")
 if MODE == "modern" then
@@ -878,6 +890,30 @@ do
   slash("buffdebug")
   auraId = 5232 -- min egen rank 2 som tar slut: då ska den visas
   if not motwShown() then table.insert(errors, "egen Mark of the Wild som tar slut visas inte") end
+  -- Gift of the Wild (annat namn, lärs på 50) över min Mark of the Wild rank 2 (lärs på 10).
+  local oldLevel, oldCL = GetSpellLevelLearned, C_Spell and C_Spell.GetSpellLevelLearned
+  local lv = function(id) if id == 21849 then return 50 end if id == 5232 then return 10 end return 0 end
+  GetSpellLevelLearned = lv
+  if C_Spell then C_Spell.GetSpellLevelLearned = lv end
+  local gift = true
+  local function giftAura(u, i)
+    if u == "player" and i == 1 and gift then return "Gift of the Wild", 21849 end
+    if u == "player" and i == (gift and 2 or 1) then return "Thorns", 782 end
+  end
+  if C_UnitAuras then
+    C_UnitAuras = { GetAuraDataByIndex = function(u, i)
+      local n, id = giftAura(u, i)
+      if n then return { name = n, spellId = id, expirationTime = n == "Thorns" and 0 or now + 30, duration = 1800 } end
+    end }
+  else
+    UnitAura = function(u, i)
+      local n, id = giftAura(u, i)
+      if n then return n, 0, 0, nil, 1800, n == "Thorns" and 0 or now + 30, "party1", false, false, id end
+    end
+  end
+  if motwShown() then table.insert(errors, "Gift of the Wild från någon annan: Mark of the Wild visas ändå") end
+  GetSpellLevelLearned = oldLevel
+  if C_Spell then C_Spell.GetSpellLevelLearned = oldCL end
   C_UnitAuras, UnitAura = oldC, oldU
   ns.RefreshBuffWatch()
 end

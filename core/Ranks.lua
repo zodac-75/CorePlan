@@ -59,6 +59,7 @@ local function OlderRank(id, bestId)
   return false, r, best, nil
 end
 ns.OlderRank = OlderRank -- the buff watcher asks: is someone else's buff a higher rank?
+ns.SpellLevelLearned = LevelOf
 
 -- Spells a macro casts: { {name = "Frostbolt", rank = 1 or nil}, ... }.
 -- Reads /cast, /use, /castsequence, /castrandom and #showtooltip lines; drops

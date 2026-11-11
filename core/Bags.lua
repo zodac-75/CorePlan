@@ -170,7 +170,8 @@ local TOOLS = {
   [19901] = true, -- Zulian Slicer
 }
 
--- White (common) gear from drops: vendor it, unless it would be an upgrade for you,
+-- White (common) gear from drops: vendor it, unless it would be an upgrade for you
+-- (also: fills an empty slot, or more armor / weapon damage than what you wear),
 -- it's a fishing pole or a profession tool, or a shirt or tabard.
 local function WhiteGear(link)
   local ok, name, _, quality, _, _, _, _, _, equipLoc, _, sell, classID, subclassID = pcall(ns.ItemInfo, link)
@@ -183,6 +184,11 @@ local function WhiteGear(link)
   if ns.CompareToEquipped then
     local okC, delta = pcall(ns.CompareToEquipped, link)
     if okC and type(delta) == "number" and delta > 0 then return nil end
+  end
+  -- No stats to score: keep it when it fills an empty slot or beats what you wear.
+  if ns.PlainGearBetter then
+    local okB, better = pcall(ns.PlainGearBetter, link)
+    if okB and better then return nil end
   end
   return sell
 end

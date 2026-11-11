@@ -153,6 +153,43 @@ function ns.CompareToEquipped(link)
   return newScore - oldScore, minLevel
 end
 
+-- White gear has no stats, so the score above can't tell if it's worth wearing. Worth
+-- keeping when you can use it and the slot is empty, or it has more armor (or weapon
+-- damage per second) than what you wear there.
+local function ArmorAndDps(link)
+  local armor, dps = 0, 0
+  for _, line in ipairs(TooltipLines(link)) do
+    local a = line:match("^(%d+) Armor$")
+    if a then armor = tonumber(a) or armor end
+    local d = line:match("%((%d+%.?%d*) damage per second%)")
+    if d then dps = tonumber(d) or dps end
+  end
+  return armor, dps
+end
+
+function ns.PlainGearBetter(link)
+  local ok, name, _, _, _, _, _, _, _, equipLoc, _, _, classID, subclassID = pcall(ns.ItemInfo, link)
+  if not ok or not name or not equipLoc then return false end
+  local slots = SLOTS[equipLoc]
+  if not slots then return false end
+  if classID == 4 and not USABLE_ARMOR[subclassID] then return false end
+  if classID == 2 and not USABLE_WEAPON[subclassID] then return false end
+  if classID ~= 2 and classID ~= 4 then return false end
+  -- An off-hand item is no use next to a two-hander.
+  if slots[1] == 17 and IsTwoHander(Equipped(16)) then return false end
+  local armor, dps = ArmorAndDps(link)
+  for _, slot in ipairs(slots) do
+    local cur = Equipped(slot)
+    if not cur then return true end
+    if cur ~= link then
+      local curArmor, curDps = ArmorAndDps(cur)
+      if classID == 4 and armor > curArmor then return true end
+      if classID == 2 and dps > curDps then return true end
+    end
+  end
+  return false
+end
+
 local function OnTooltip(tt)
   if ns.db and ns.db.upgradeOff then return end
   if not tt or tt == scanTip or not tt.GetItem then return end
