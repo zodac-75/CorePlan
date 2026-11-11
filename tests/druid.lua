@@ -842,6 +842,11 @@ if MODE == "modern" then
   slash("buffdebug")
   issecretvalue, SIM_BUFFS, C_UnitAuras.GetAuraDataBySpellName = oldSecret, oldBuffs, oldByName
 end
+print("--- /dp talentui ---")
+do
+  local ok, err = pcall(slash, "talentui")
+  if not ok then table.insert(errors, "talentui: " .. tostring(err)) end
+end
 print("--- Högre rank från någon annan ---")
 do
   -- Bengan (högre level) har lagt Mark of the Wild rank 6 på mig; jag kan bara rank 2.

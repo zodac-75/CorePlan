@@ -1,3 +1,7 @@
+# ShamanPlan 1.13.2
+
+- **Talent window with Daylight UI (and similar):** the yellow plan frames, green ticks and the next-talent glow now follow the window when you move it. They were anchored to Blizzard's hidden copy of the talent tree, which Daylight leaves at alpha 0 in the old spot; invisible buttons and windows are now skipped. `/sp talentui` also shows where the next talent's button is and which window holds it.
+
 # ShamanPlan 1.13.1
 
 - **Talent import:** Icy Veins and wow-forever-forge.com links are now the recommended ones in the import window, since they keep the order you clicked the talents in. The Icy Veins reading is verified for the whole Mage tree.

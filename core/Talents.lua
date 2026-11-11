@@ -242,11 +242,26 @@ local function FindRoots()
   return found
 end
 
+-- Shown AND drawn: replacement windows (Daylight UI) can leave Blizzard's talent frame
+-- shown but at alpha 0, parked where it was. Marks anchored to those buttons stay behind
+-- when you move the window you actually see.
+local function Seen(f)
+  local okV, vis = pcall(f.IsVisible, f)
+  if not (okV and vis) then return false end
+  local okA, a = pcall(f.GetEffectiveAlpha, f)
+  return not (okA and type(a) == "number" and a < 0.05)
+end
+
 local function ShownRoot()
+  local fallback
   for f in pairs(roots) do
     local ok, shown = pcall(f.IsShown, f)
-    if ok and shown then return f end
+    if ok and shown then
+      if Seen(f) then return f end
+      fallback = fallback or f
+    end
   end
+  return fallback
 end
 
 local function SameIcon(a, b)
@@ -319,14 +334,16 @@ local function FindButton(root, t)
   local tf = rawget(root, "TalentsFrame") or root
   if t.nodeID and tf.GetTalentButtonByNodeID then
     local ok, btn = pcall(tf.GetTalentButtonByNodeID, tf, t.nodeID)
-    if ok and btn then return btn end
+    if ok and btn and Seen(btn) then return btn end
   end
   local forms = IconForms(t.icon)
   local function walk(f, depth)
     if depth > 10 then return nil end
     for _, c in ipairs({ f:GetChildren() }) do
       local okS, shown = pcall(c.IsShown, c)
-      if okS and shown then
+      local okA, a = pcall(c.GetAlpha, c)
+      -- Skip invisible (alpha 0) parts: a hidden copy of the tree that doesn't move.
+      if okS and shown and not (okA and type(a) == "number" and a < 0.05) then
         -- One odd frame must not stop the search.
         local okF, byFields = pcall(FieldsMatch, c, t)
         if okF and byFields then return c end
@@ -383,7 +400,7 @@ local function GetCheck(i)
   tex:SetTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
   c:SetScript("OnUpdate", function(self)
     local b = self.btn
-    if not b or not b:IsVisible() then self:Hide(); self.btn = nil end
+    if not b or not Seen(b) then self:Hide(); self.btn = nil end
   end)
   c:Hide()
   checks[i] = c
@@ -441,7 +458,7 @@ local function GetMark(i)
   -- Hide right away when the button scrolls away or the window closes.
   m:SetScript("OnUpdate", function(self)
     local b = self.btn
-    if not b or not b:IsVisible() then self:Hide(); self.btn = nil end
+    if not b or not Seen(b) then self:Hide(); self.btn = nil end
   end)
   m:Hide()
   marks[i] = m
@@ -494,7 +511,7 @@ local function UpdateMarks(root)
     local okB, btn = pcall(function()
       if not TabOk(root, p.t) then return nil end
       local b = FindButton(root, p.t)
-      if b and b:IsVisible() and InWindow(win, b) then return b end
+      if b and Seen(b) and InWindow(win, b) then return b end
     end)
     return okB and btn or nil
   end
@@ -565,7 +582,7 @@ local function UpdateGlow()
   if not TabOk(root, t) then HideGlow(); return end
 
   local btn = FindButton(root, t)
-  if not btn or not btn:IsVisible() then HideGlow(); return end
+  if not btn or not Seen(btn) then HideGlow(); return end
   if glow.btn == btn and glow:IsShown() then return end -- already there: don't restart the animation
   glow.btn = btn
   -- Our own frame on top of the window, only anchored to the button (not parented).
@@ -596,7 +613,7 @@ local function SetupTalentUI()
   -- Hide right away when the button scrolls away or the window closes.
   glow:SetScript("OnUpdate", function(self)
     local b = self.btn
-    if not b or not b:IsVisible() then HideGlow() end
+    if not b or not Seen(b) then HideGlow() end
   end)
   local G = { 0.25, 1, 0.35 }
   local border = CreateFrame("Frame", nil, glow)
@@ -672,7 +689,10 @@ local function DebugTalentUI()
   for f in pairs(roots) do
     local ok, n = pcall(f.GetName, f)
     local okS, shown = pcall(f.IsShown, f)
-    table.insert(names, tostring(ok and n or "?") .. (okS and shown and " (open)" or ""))
+    local okA, a = pcall(f.GetEffectiveAlpha, f)
+    local okR, l, b = pcall(f.GetRect, f)
+    table.insert(names, tostring(ok and n or "?") .. (okS and shown and (" (open, alpha " ..
+      string.format("%.2f", okA and a or -1) .. (okR and l and string.format(", at %d,%d", l, b) or "") .. ")") or ""))
   end
   ns.Print("talent windows: " .. (#names > 0 and table.concat(names, ", ") or "none"))
   local name, t = ns.NextTalent()
@@ -688,6 +708,22 @@ local function DebugTalentUI()
       tostring(tf and tf.GetTalentButtonByNodeID ~= nil) .. "  nodeID: " .. tostring(t.nodeID))
     local btn = FindButton(root, t)
     ns.Print("button: " .. (btn and tostring(btn:GetName() or "found (no name)") or "not found"))
+    if btn then
+      -- Where the button sits and which window it belongs to: if this doesn't change when
+      -- you drag the window, the button is in a copy the window doesn't move.
+      local okR, l, b = pcall(btn.GetRect, btn)
+      local okA, a = pcall(btn.GetEffectiveAlpha, btn)
+      local chain, f = {}, btn
+      for _ = 1, 12 do
+        local okP, parent = pcall(f.GetParent, f)
+        if not okP or not parent or parent == UIParent then break end
+        f = parent
+        local okN, n = pcall(f.GetName, f)
+        if okN and n then table.insert(chain, n) end
+      end
+      ns.Print(string.format("  at %s, alpha %.2f, in %s", okR and l and string.format("%d,%d", l, b) or "?",
+        okA and a or -1, #chain > 0 and table.concat(chain, " < ") or "?"))
+    end
   else
     ns.Print("open the talent window and run this again.")
   end
