@@ -102,14 +102,15 @@ const COMMON = {
   ],
   plan: (slash) => [
     "Talent plan for every level from 10 to 60. When you get a point, a green arrow and a glowing frame point at the next talent in WoW Forever's talent window.",
+    "Your talent window shows the whole plan: the next talent gets the green arrow and frame, every talent still left in your plan gets a yellow frame, and a small green tick in the corner marks the ones you have finished. It also works in replacement UIs like Daylight UI.",
     `Pick your spec in the settings window or with <code>/${slash} plan</code>. The talent plan, the upgrade check and the combat helper switch with it.`,
     "Every plan is checked against the live WoW Forever talent tree, so no talent is planned before its row or its prerequisite is open.",
-    `<b>Your own build:</b> make it in Wowhead's WoW Forever talent calculator, on Icy Veins, on talentsforever.com or on wow-forever-forge.com, copy the link and paste it with "Import talents" in the settings (or <code>/${slash} import</code>). It becomes your leveling plan (forge and Icy Veins links keep the order you clicked the talents in).`,
+    `<b>Your own build:</b> make it in Icy Veins' WoW Forever talent calculator (or on wow-forever-forge.com), copy the address of your build and paste it with "Import talents" in the settings (or <code>/${slash} import</code>). These links keep the order you clicked the talents in, so it becomes your leveling plan from level 10 exactly as you built it. Links from Wowhead's calculator and talentsforever.com work too (they fill your main tree first).`,
     `Put your points somewhere else? Right-click "Next talent" (or <code>/${slash} skip</code>) to skip a talent in the plan.`,
   ],
   train: (slash) => [
     `Trainer list: tells you at login and on level-up which new spells and ranks your class trainer has for you (<code>/${slash} train</code>).`,
-    `Rank check: finds old spell ranks on your action bars, also inside macros, and new spells that aren't on a button yet (<code>/${slash} ranks</code>). Spells bound straight to a key or a controller button count too, and you can turn its chat messages off.`,
+    `Rank check: finds old spell ranks on your action bars, also inside macros, and new spells that aren't on a button yet (<code>/${slash} ranks</code>). Spells bound straight to a key or a controller button count too, the controller's extra button sets are counted when you play with a controller (automatic, or a tick box in the settings), and you can turn its chat messages off.`,
   ],
   gear: [
     "Upgrade check in item tooltips: about how much better or worse an item is than what you wear, using weights for your spec.",
@@ -405,7 +406,8 @@ function postText(a) {
     `I build ${a.name} while I level on WoW Forever, and it gets updates almost every day. Your feedback decides what comes next.`,
     ``,
     `New lately:`,
-    `- Your own talent build: paste a link from Wowhead's WoW Forever talent calculator, Icy Veins, talentsforever.com or wow-forever-forge.com with "Import talents" in the settings (or /${a.slash} import). Right-click "Next talent" (or /${a.slash} skip) to skip a talent.`,
+    `- Your own talent build: paste a link from Icy Veins' or wow-forever-forge.com's talent calculator (they keep your click order, so it becomes your leveling plan exactly as you built it) or from Wowhead or talentsforever.com with "Import talents" in the settings (or /${a.slash} import). Right-click "Next talent" (or /${a.slash} skip) to skip a talent.`,
+    `- Talent window: the whole plan on the tree. Yellow frames on the talents still to take, a green tick on the finished ones, and the green arrow on the next one.`,
     `- Dungeon guide for Alliance and Horde, with Ragefire Chasm and the nine new WoW Forever dungeons.`,
     `- Profession routes made for WoW Forever, with trainers and vendors for your faction.`,
     `- Bag check window: sell or disenchant from one window when you're at a vendor.`,
