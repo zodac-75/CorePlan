@@ -1161,6 +1161,18 @@ do
   if ns.ImportTalents("https://www.wowhead.com/forever/talent-calc/priest/0550-55") then table.insert(errors, "tog emot en priest-länk") end
   ns.ClearImport()
 end
+print("--- Importera talentsforever-länk ---")
+do
+  local link = "https://talentsforever.com/mage/60/--053532333121331251-12?b=70888h&d=261111"
+  local ok = ns.ImportTalents(link)
+  local n = 0
+  for _ in pairs(ns.talents) do n = n + 1 end
+  print("  import: " .. tostring(ok) .. ", " .. n .. " poäng, 10 = " .. tostring(ns.talents[10]) .. ", 55 = " .. tostring(ns.talents[55]))
+  if not ok or n ~= 46 then table.insert(errors, "talentsforever-importen gav " .. n .. " poäng, inte 46") end
+  if ns.talents[10] ~= "Improved Frostbolt 1/5" then table.insert(errors, "talentsforever: första poängen: " .. tostring(ns.talents[10])) end
+  if ns.ImportTalents("https://talentsforever.com/priest/60/0550-55") then table.insert(errors, "tog emot en priest-länk (talentsforever)") end
+  ns.ClearImport()
+end
 print("--- Walk on Air ---")
 do
   local oldC, oldU = C_UnitAuras, UnitAura

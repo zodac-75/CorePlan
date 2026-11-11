@@ -6,6 +6,9 @@
 -- ranks are one digit per talent, tree by tree ("-" between trees), talents row by row and
 -- left to right. It has no order we can read, so the plan fills the tree with the most
 -- points first, row by row, then the next tree.
+-- A talentsforever.com link is https://talentsforever.com/<class>/<level>/<ranks>?...: the
+-- ranks are the same as Wowhead's (one digit per talent, "-" between the three trees, a
+-- fourth part after them is not talents), so it is read the same way.
 -- The imported plan shows up as "Imported" next to our own plans, and acts like the plan
 -- of ours that spends most in the same tree (stat weights, combat call-outs, buffs).
 local _, ns = ...
@@ -27,6 +30,9 @@ end
 -- The class slug and code from a link, or just a code. kind is "forge" or "wowhead".
 local function Parse(text)
   text = (text or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  local tcls, tlevel, tranks = text:match("talentsforever%.com/(%a+)/(%d+)/([%d%-]+)")
+  if not tranks then tcls, tranks = text:match("talentsforever%.com/(%a+)/([%d%-]+)") end
+  if tranks then return tcls:lower(), tranks, "wowhead" end
   local cls, ranks = text:match("talent%-calc/(%a+)/([^/%s]+)")
   if ranks then
     ranks = ranks:gsub("_.*$", ""):gsub("^%a+", "") -- drop "_t0..." and the letters in front

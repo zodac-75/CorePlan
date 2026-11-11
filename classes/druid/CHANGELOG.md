@@ -1,3 +1,8 @@
+# DruidPlan 1.10.0
+
+- **Import from talentsforever.com:** paste the link from "Copy link" on talentsforever.com into "Import talents" (or `/<slash> import <link>`) and it becomes your leveling plan, the same way as a Wowhead link: the tree with the most points is filled first, row by row.
+- Fixed the `/<slash> rankcontroller` command showing as "CMD_rankcontroller" in the command list.
+
 # DruidPlan 1.9.2
 
 - **Balance gear score:** Intellect and Spirit were valued as if they gave spell power (thanks Ebemidej). They don't in WoW Forever, so Balance now weighs them far lower and spell power, crit, hit and mp5 count for more in the upgrade check.

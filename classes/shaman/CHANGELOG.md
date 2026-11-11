@@ -1,3 +1,8 @@
+# ShamanPlan 1.12.0
+
+- **Import from talentsforever.com:** paste the link from "Copy link" on talentsforever.com into "Import talents" (or `/<slash> import <link>`) and it becomes your leveling plan, the same way as a Wowhead link: the tree with the most points is filled first, row by row.
+- Fixed the `/<slash> rankcontroller` command showing as "CMD_rankcontroller" in the command list.
+
 # ShamanPlan 1.11.4
 
 - **Bag check for enchanters, take two:** items stay in the best-price group again (AH, sell or DE), but every row you can disenchant now also offers it: Alt-click disenchants instead (the row says "Sell/DE" or "AH/DE"). Away from a vendor, a plain click disenchants.
