@@ -1,3 +1,7 @@
+# RoguePlan 1.0.0-beta46
+
+- Small quick menu update (no change for RoguePlan).
+
 # RoguePlan 1.0.0-beta45
 
 - **Icy Veins import fixed for every class:** the addon now uses Icy Veins' own numbering for each talent, read straight from their talent calculator. Before, it guessed the numbering row by row, which was wrong for Paladin, Rogue, Warrior, Druid, Shaman and Hunter, so links like a 0/35/16 Paladin build were refused.

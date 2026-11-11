@@ -1,3 +1,7 @@
+# MagePlan 1.40.1
+
+- **Quick menu:** the group bar (trade water and food) can now be turned on and off from the minimap quick menu.
+
 # MagePlan 1.40.0
 
 - **Two new Frost plans:** *Frost solo questing (18/0/33)*, Maxroll's current build with Ice Lance at 20, Shatter at 25-27 and Ice Barrier at 40, then Arcane for Clearcasting, Missile Barrage and mana regen. *Frost AoE grinding (0/13/38)*, Kargoz's AoE build moved to the live tree (Precision 3/3, Ice Shards in place of the removed Piercing Ice), with Improved Blizzard, Shatter, Improved Cone of Cold and Improved Flamestrike. Pick them with /mp plan or in the settings. The old Frost plan (10/0/41) stays the default.

@@ -602,7 +602,7 @@ local QUICK_TOOLS = {
 
 -- The quick menu only has the switches you reach for while playing; everything else is
 -- in the settings window ("All settings...").
-local QUICK_KEYS = { MM_SHATTER = true, MM_MOVE = true, MM_BUFFS = true, MM_PARTYBUFF = true, MM_LOCK = true }
+local QUICK_KEYS = { MM_SHATTER = true, MM_MOVE = true, MM_BUFFS = true, MM_PARTYBUFF = true, MM_GROUPBAR = true, MM_LOCK = true }
 local QUICK_TOGGLES = {}
 for _, f in ipairs(FEATURES) do
   if f.key and QUICK_KEYS[f.key] then table.insert(QUICK_TOGGLES, f) end
