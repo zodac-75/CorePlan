@@ -903,6 +903,7 @@ end
 -- names), for the dance party.
 local didAt, gotAt = {}, {}
 local partySeen = {} -- emote -> names who answered your party emote
+local partyShownAt = {} -- emote -> when its "who saw it" was shown (late answers are ignored)
 local PARTY_WINDOW = 30
 
 local function OnEmote(token, unit)
@@ -973,12 +974,16 @@ local function OnMessage(msg, sender)
   pe = msg:match("^PB:(%u+)$")
   if pe then
     if not EFFECTS[pe] or LOCAL_ONLY[pe] then return end
+    if partyShownAt[pe] and GetTime() - partyShownAt[pe] < 6 then return end
     partySeen[pe] = partySeen[pe] or {}
-    table.insert(partySeen[pe], Short(sender))
+    local name = Short(sender)
+    for _, n in ipairs(partySeen[pe]) do if n == name then return end end
+    table.insert(partySeen[pe], name)
     ns.Debounce("partyseen" .. pe, 1, function()
       local who = partySeen[pe] or {}
       partySeen[pe] = nil
       if #who == 0 then return end
+      partyShownAt[pe] = GetTime()
       local line = #who == 1 and ns.T("EM_SEEN", who[1], "/" .. pe:lower())
         or ns.T("EM_SEEN_MANY", ns.T("EM_AND_MORE", who[1], #who - 1), "/" .. pe:lower())
       lastShown[pe] = nil

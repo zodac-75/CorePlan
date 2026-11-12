@@ -1,3 +1,7 @@
+# PriestPlan 1.0.0-beta64
+
+- **Easter eggs:** the one who starts a party emote no longer sometimes sees the show twice (a late or repeated answer from the party started it again).
+
 # PriestPlan 1.0.0-beta63
 
 - **Easter eggs for the whole party:** do an easter-egg emote (/cheer, /dance, /wave, ...) with nobody targeted while in a party or raid, and everyone there with a Plan addon gets the show. You see it once too, with who saw it ("Buddy and 2 more have Plan addons too and saw your /cheer!").
