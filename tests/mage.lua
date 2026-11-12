@@ -540,6 +540,32 @@ do
       if #opened ~= 1 then table.insert(errors, "kartan öppnades i strid") end
     end
     InCombatLockdown = oldCombat
+    -- A pre-quest that is already in the log points at who you hand it in to (the giver of the
+    -- next quest in the chain): The Defias Brotherhood (65) is handed in to Wiley in Redridge.
+    local oldDone, oldLog = SIM_DONE, SIM_LOG
+    SIM_DONE, SIM_LOG = {}, { 65 }
+    fire("QUEST_LOG_UPDATE")
+    now = now + 2; runTimers(now)
+    for _, b in ipairs(listed) do
+      if b.dungeon.name == "The Deadmines" then b.__scripts.OnClick(b) end
+    end
+    local bandanas
+    for _, w in ipairs(allFrames) do
+      if w.__kind == "Button" and w.__shown and w.sub and w.text and w.__scripts.OnClick
+        and (w.text.__text or ""):find("Red Silk", 1, true) then bandanas = w end
+    end
+    if not bandanas then
+      table.insert(errors, "Red Silk Bandanas-raden hittades inte")
+    else
+      print("  förquest i loggen: " .. ((bandanas.sub.__text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
+      opened = {}
+      bandanas.__scripts.OnClick(bandanas, "RightButton")
+      if opened[1] ~= 1433 then table.insert(errors, "förquest i loggen: kartan öppnades inte i Redridge: " .. tostring(opened[1])) end
+      if not (bandanas.sub.__text or ""):find("Wiley", 1, true) then table.insert(errors, "förquest i loggen: visar inte vem man lämnar in till") end
+    end
+    SIM_DONE, SIM_LOG = oldDone, oldLog
+    fire("QUEST_LOG_UPDATE")
+    now = now + 2; runTimers(now)
     OpenWorldMap = oldOpen
   end
   -- Ctrl + wheel resizes the window, also over the scroll areas; a plain wheel doesn't.

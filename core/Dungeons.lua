@@ -90,17 +90,18 @@ local function ForMe(id)
   return true
 end
 
--- The next thing to do on the way to a quest: returns kind, questID.
+-- The next thing to do on the way to a quest: returns kind, questID, and the quest that needs
+-- it (its giver is usually who you hand the step in to).
 -- kind: "done", "inlog", "pickup" (quest to grab, maybe level-locked).
-local function NextStep(id, depth)
+local function NextStep(id, depth, parent)
   depth = depth or 0
-  if IsCompleted(id) then return "done", id end
-  if inLog[id] then return "inlog", id end
+  if IsCompleted(id) then return "done", id, parent end
+  if inLog[id] then return "inlog", id, parent end
   local q = ns.DQUESTS[id]
   if q and depth < 15 then
     if q.all then
       for _, p in ipairs(q.all) do
-        if ForMe(p) and not IsCompleted(p) then return NextStep(p, depth + 1) end
+        if ForMe(p) and not IsCompleted(p) then return NextStep(p, depth + 1, id) end
       end
     end
     if q.any then
@@ -108,26 +109,27 @@ local function NextStep(id, depth)
       for _, p in ipairs(q.any) do
         if IsCompleted(p) then anyDone = true break end
         if ForMe(p) then
-          if inLog[p] then return "inlog", p end
+          if inLog[p] then return "inlog", p, id end
           first = first or p
         end
       end
-      if not anyDone and first then return NextStep(first, depth + 1) end
+      if not anyDone and first then return NextStep(first, depth + 1, id) end
     end
   end
-  return "pickup", id
+  return "pickup", id, parent
 end
 
 -- Status for a quest row: status, short label, detail line (or nil), quest to show the way to.
 local function Status(id)
   local q = ns.DQUESTS[id]
-  local kind, step = NextStep(id)
+  local kind, step, parent = NextStep(id)
   local level = UnitLevel("player") or 1
   if kind == "done" and step == id then return "done", ns.T("DG_S_DONE") end
   if kind == "inlog" and step == id then return "inlog", ns.T("DG_S_INLOG") end
   if step ~= id then
     if kind == "inlog" then
-      return "pre", ns.T("DG_S_PRE"), ns.T("DG_PRE_INLOG", QuestName(step)), nil
+      -- Point at the giver of the quest that comes after it: that's normally who you hand it in to.
+      return "pre", ns.T("DG_S_PRE"), ns.T("DG_PRE_INLOG", QuestName(step)), parent
     end
     local sq = ns.DQUESTS[step]
     local extra = (sq and level < sq.req) and (" " .. ns.T("DG_AT_LEVEL", sq.req)) or ""

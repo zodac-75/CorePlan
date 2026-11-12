@@ -1,3 +1,7 @@
+# ShamanPlan 1.16.12
+
+- **Dungeon guide:** when a pre-quest is already in your log, the row now shows who you hand it in to and the arrow and map point there (for example Wiley the Black in Redridge for The Defias Brotherhood), instead of the dungeon quest's own giver.
+
 # ShamanPlan 1.16.11
 
 - **Dungeon guide:** right-click a quest, pre-quest or the entrance to also open the world map on that zone (left-click still just sets the arrow and the map pin). Not in combat.
