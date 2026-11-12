@@ -1,3 +1,7 @@
+# ShamanPlan 1.16.10
+
+- **Dungeon guide:** Esc no longer closes it, so closing a quest dialog with Esc keeps the guide open. Close it with the X.
+
 # ShamanPlan 1.16.9
 
 - **Rank check, you choose what to check:** two tick boxes in the settings, "standard bars (buttons 1-180)" and "controller buttons (181-360)". Tick one or both; at least one stays on. Controller players who also use the normal bars keep both ticked.

@@ -525,7 +525,7 @@ local function CreateWindow()
   win.CtrlResize = CtrlResize
   table.insert(ns.themedFrames, win)
   ns.ApplyTheme(win)
-  table.insert(UISpecialFrames, "@ADDON@Dungeons")
+  -- Not in UISpecialFrames: Esc is for closing quest dialogs, so it must not close the guide too.
 
   local logo = win:CreateTexture(nil, "ARTWORK")
   logo:SetTexture(ns.MEDIA .. "Icon")

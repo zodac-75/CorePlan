@@ -474,6 +474,9 @@ if btn then
   ns.db.plan, ns.db.theme, ns.db.fontSize = before.plan, before.theme, before.font
   -- The two rank boxes refuse to both be off, so the double click is not a net no-op: reset them.
   ns.db.rankStdOff, ns.db.rankController = nil, nil
+  for _, name in ipairs(UISpecialFrames) do
+    if name == "MagePlanDungeons" then table.insert(errors, "Esc stänger dungeon-guiden") end
+  end
   -- The clicks may have left the bag check open (it's in the quick menu too): close it.
   if ns.ToggleBags then pcall(ns.ToggleBags, false) end
   ns.ApplyPlan()
