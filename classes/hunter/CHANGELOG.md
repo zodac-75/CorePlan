@@ -1,3 +1,7 @@
+# HunterPlan 1.0.0-beta50
+
+- Internal update shared by all the Plan addons; nothing changes for your class.
+
 # HunterPlan 1.0.0-beta49
 
 - **Bag check window stays open:** if you had it open, it comes back after a /reload or a loading screen. Closing it with the X keeps it closed.

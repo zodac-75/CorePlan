@@ -1,3 +1,7 @@
+# MagePlan 1.40.4
+
+- **Group bar:** new setting "Group bar fills trades others open with me" (also `/mp groupbarauto`). Turn it off and a trade a party member opens with you stays empty, so you can trade them other things (like linen) without removing the water or healthstone each time. Trades you start with the bar's buttons are still filled.
+
 # MagePlan 1.40.3
 
 - **Bag check window stays open:** if you had it open, it comes back after a /reload or a loading screen. Closing it with the X keeps it closed.

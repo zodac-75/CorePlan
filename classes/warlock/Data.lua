@@ -189,6 +189,7 @@ ns.THEME_BG = { 0.06, 0.03, 0.09, 0.92 }
 ns.THEME_BORDER = { 0.58, 0.51, 0.79, 0.9 }
 ns.EXTRA_FEATURES = {
   { key = "MM_GROUPBAR", group = "CAT_MARKS", on = function() return not ns.db.groupBarOff end, cmd = "groupbar" },
+  { key = "MM_GROUPAUTO", group = "CAT_MARKS", on = function() return not ns.db.groupBarManual end, cmd = "groupbarauto", indent = 16 },
 }
 
 -- Group bar: one healthstone per player (best first; the 19004-19013 ones are the

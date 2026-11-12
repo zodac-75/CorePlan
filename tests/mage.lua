@@ -1378,6 +1378,25 @@ do
   picked = {}
   trade("party1")
   if picked[1] ~= 1487 then table.insert(errors, "trade från gruppmedlem fylldes inte: " .. tostring(picked[1])) end
+  -- With "fill incoming trades" off, a trade someone else opens stays empty, but a trade
+  -- started with the bar's button is still filled.
+  ns.RunCommand("groupbarauto", "")
+  if not ns.db.groupBarManual then table.insert(errors, "groupbarauto slog inte om") end
+  now = now + 400
+  picked = {}
+  trade("party1")
+  if picked[1] then table.insert(errors, "manuellt läge: inkommande trade fylldes ändå") end
+  ns.RunCommand("trade", "")
+  local before = #traded
+  people.npc = people.party1
+  placed = {}
+  fire("TRADE_SHOW")
+  now = now + 1; runTimers(now)
+  if not picked[1] then table.insert(errors, "manuellt läge: trade startad med knappen fylldes inte") end
+  fire("TRADE_CLOSED")
+  people.npc = nil
+  ns.RunCommand("groupbarauto", "")
+  if ns.db.groupBarManual then table.insert(errors, "groupbarauto slog inte tillbaka") end
   print("  " .. table.concat(printed, " | "):sub(1, 200))
   ns.Print = oldPrint
   for k, v in pairs(saved) do _G[k] = v end

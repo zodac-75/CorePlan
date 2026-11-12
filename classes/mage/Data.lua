@@ -229,6 +229,7 @@ ns.COMBAT_CMD = "shatter"
 ns.EXTRA_FEATURES = {
   { key = "MM_POLY", on = function() return not ns.db.polyOff end, cmd = "poly" },
   { key = "MM_GROUPBAR", group = "CAT_MARKS", on = function() return not ns.db.groupBarOff end, cmd = "groupbar" },
+  { key = "MM_GROUPAUTO", group = "CAT_MARKS", on = function() return not ns.db.groupBarManual end, cmd = "groupbarauto", indent = 16 },
 }
 
 -- Required levels, in case the game doesn't say (water 5350-8079, food 5349-8076).

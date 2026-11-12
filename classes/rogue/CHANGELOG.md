@@ -1,3 +1,7 @@
+# RoguePlan 1.0.0-beta49
+
+- Internal update shared by all the Plan addons; nothing changes for your class.
+
 # RoguePlan 1.0.0-beta48
 
 - **Bag check window stays open:** if you had it open, it comes back after a /reload or a loading screen. Closing it with the X keeps it closed.

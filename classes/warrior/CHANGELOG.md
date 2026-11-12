@@ -1,3 +1,7 @@
+# WarriorPlan 1.15.8
+
+- Internal update shared by all the Plan addons; nothing changes for your class.
+
 # WarriorPlan 1.15.7
 
 - **Bag check window stays open:** if you had it open, it comes back after a /reload or a loading screen. Closing it with the X keeps it closed.

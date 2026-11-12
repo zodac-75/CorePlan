@@ -180,7 +180,7 @@ end
 -- haven't had lately (a party member who opens a trade with you).
 local function ToolFor(name)
   if pending and pending.name == name and Now() - pending.time < 20 then return pending.tool end
-  if ns.db.groupBarOff then return nil end
+  if ns.db.groupBarOff or ns.db.groupBarManual then return nil end
   for _, t in ipairs(Tools()) do
     if not Recent(t, name) then return t end
   end
@@ -357,6 +357,13 @@ ns.RegisterModule(function()
     end
   end)
   Update()
+end)
+
+-- "/@SLASH@ groupbarauto": fill party members' own trades automatically, or only trades
+-- you start with the bar.
+ns.RegisterCommand("groupbarauto", true, function()
+  ns.db.groupBarManual = not ns.db.groupBarManual
+  ns.Print(ns.T(ns.db.groupBarManual and "GB_AUTO_OFF" or "GB_AUTO_ON"))
 end)
 
 -- "/@SLASH@ trade": the first tool's next hand-out (for a key binding or a macro).
