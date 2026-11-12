@@ -1,3 +1,7 @@
+# WarlockPlan 1.0.0-beta72
+
+- **Rank check, you choose what to check:** two tick boxes in the settings, "standard bars (buttons 1-180)" and "controller buttons (181-360)". Tick one or both; at least one stays on. Controller players who also use the normal bars keep both ticked.
+
 # WarlockPlan 1.0.0-beta71
 
 - **Group bar:** new setting "Group bar fills trades others open with me" (also `/wl groupbarauto`). Turn it off and a trade a party member opens with you stays empty, so you can trade them other things (like linen) without removing the water or healthstone each time. Trades you start with the bar's buttons are still filled.

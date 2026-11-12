@@ -472,6 +472,8 @@ if btn then
   if (not ns.db.drinkOff) ~= (not before.drink) then table.insert(errors, "drink-toggle ändrades netto") end
   table.insert(chat, "[sim] klickade " .. clicked .. " knappar i inställningarna")
   ns.db.plan, ns.db.theme, ns.db.fontSize = before.plan, before.theme, before.font
+  -- The two rank boxes refuse to both be off, so the double click is not a net no-op: reset them.
+  ns.db.rankStdOff, ns.db.rankController = nil, nil
   -- The clicks may have left the bag check open (it's in the quick menu too): close it.
   if ns.ToggleBags then pcall(ns.ToggleBags, false) end
   ns.ApplyPlan()
@@ -1427,6 +1429,20 @@ do
   if not (all:find("controller button 200", 1, true) or all:find("controller-knapp 200", 1, true)) then
     table.insert(errors, "gammal rank på controller-knapp 200 hittades inte: " .. all)
   end
+  -- Standard bars off, controller on: only 181-360 count. Both off is refused.
+  actions[2] = 116
+  ns.RunCommand("rankstandard", "")
+  if ns.RankStandardOn() then table.insert(errors, "rankstandard slog inte av") end
+  local only = Scan()
+  if only:find("button 2 ", 1, true) or only:find("knapp 2 ", 1, true) then table.insert(errors, "knapp 2 kollades fast vanliga bars var av") end
+  if not (only:find("controller button 200", 1, true) or only:find("controller-knapp 200", 1, true)) then
+    table.insert(errors, "controller-knapp 200 kollades inte med bara controller: " .. only)
+  end
+  ns.RunCommand("rankcontroller", "")
+  if not ns.RankControllerOn() then table.insert(errors, "controller stängdes av fast vanliga bars var av") end
+  ns.RunCommand("rankstandard", "")
+  if not ns.RankStandardOn() then table.insert(errors, "rankstandard slog inte på") end
+  actions[2] = nil
   ns.db.rankController = nil
   for k in pairs(actions) do actions[k] = nil end
   for k, v in pairs(oldActions) do actions[k] = v end

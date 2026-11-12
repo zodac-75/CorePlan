@@ -467,6 +467,7 @@ if btn then
   if (not ns.db.drinkOff) ~= (not before.drink) then table.insert(errors, "drink-toggle ändrades netto") end
   table.insert(chat, "[sim] klickade " .. clicked .. " knappar i inställningarna")
   ns.db.plan, ns.db.theme, ns.db.fontSize = before.plan, before.theme, before.font
+  ns.db.rankStdOff, ns.db.rankController = nil, nil
   -- The clicks may have left the bag check open (it's in the quick menu too): close it.
   if ns.ToggleBags then pcall(ns.ToggleBags, false) end
   ns.ApplyPlan()

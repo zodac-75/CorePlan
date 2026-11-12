@@ -117,9 +117,18 @@ end
 
 function ns.RankControllerOn() return ControllerBars() end
 
+-- The normal bars (1-180) can be left out too, for someone who only plays on the
+-- controller's sets. At least one of the two always stays on.
+local function StandardBars()
+  return not ns.db.rankStdOff
+end
+
+function ns.RankStandardOn() return StandardBars() end
+
 local function SpellsOnBars()
   local onBar = {}
   if not GetActionInfo then return onBar end
+  local firstSlot = StandardBars() and 1 or NORMAL_BAR_SLOTS + 1
   local lastSlot = ControllerBars() and 360 or NORMAL_BAR_SLOTS
   local wanted = {} -- lower-case name -> spell name, for the spells we check
   for _, spell in ipairs(CHECK) do
@@ -131,7 +140,7 @@ local function SpellsOnBars()
     table.insert(onBar[name], entry)
   end
   -- 1-180: the normal bars and the extra pages bar addons use; up to 360 the controller's sets.
-  for slot = 1, lastSlot do
+  for slot = firstSlot, lastSlot do
     local ok, kind, id = pcall(GetActionInfo, slot)
     if ok and kind == "spell" and id then
       local name = ns.SpellInfo(id)
@@ -309,8 +318,24 @@ end)
 
 -- The "I use a controller" tick box: switches to the opposite of what is used now.
 ns.RegisterCommand("rankcontroller", true, function()
+  if ControllerBars() and not StandardBars() then
+    ns.Print(ns.T("RANKS_KEEP_ONE"))
+    return
+  end
   ns.db.rankController = not ControllerBars()
   ns.Print(ns.T(ns.db.rankController and "RANKS_CTRL_ON" or "RANKS_CTRL_OFF", ""))
+  lastPrinted = ""
+  Scan(true)
+end)
+
+-- The "standard bars" tick box.
+ns.RegisterCommand("rankstandard", true, function()
+  if StandardBars() and not ControllerBars() then
+    ns.Print(ns.T("RANKS_KEEP_ONE"))
+    return
+  end
+  ns.db.rankStdOff = StandardBars() or nil
+  ns.Print(ns.T(StandardBars() and "RANKS_STD_ON" or "RANKS_STD_OFF"))
   lastPrinted = ""
   Scan(true)
 end)
@@ -322,7 +347,8 @@ ns.RegisterCommand("ranks", true, function(arg)
   if sub == "controller" then
     val = val:lower()
     if val == "on" then ns.db.rankController = true
-    elseif val == "off" then ns.db.rankController = false
+    elseif val == "off" and StandardBars() then ns.db.rankController = false
+    elseif val == "off" then ns.Print(ns.T("RANKS_KEEP_ONE")) return
     end
     ns.Print(ns.T(ControllerBars() and "RANKS_CTRL_ON" or "RANKS_CTRL_OFF", ""))
     lastPrinted = ""

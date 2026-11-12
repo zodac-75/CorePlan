@@ -1,3 +1,7 @@
+# DruidPlan 1.14.9
+
+- **Rank check, you choose what to check:** two tick boxes in the settings, "standard bars (buttons 1-180)" and "controller buttons (181-360)". Tick one or both; at least one stays on. Controller players who also use the normal bars keep both ticked.
+
 # DruidPlan 1.14.8
 
 - Internal update shared by all the Plan addons; nothing changes for your class.
