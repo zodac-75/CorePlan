@@ -148,13 +148,34 @@ local function GiverText(id)
   return g[1] .. ", " .. ns.MapName(g[2])
 end
 
-local function WayTo(id)
+-- Right-click on a row: open the world map on that zone. The player clicks, so this is their own
+-- action, but opening Blizzard's map from addon code can still taint it, so never in combat.
+local function OpenMap(map)
+  if not map then return end
+  if InCombatLockdown() then
+    ns.Print(ns.T("DG_MAP_COMBAT"))
+    return
+  end
+  if OpenWorldMap then
+    pcall(OpenWorldMap, map)
+  elseif ToggleWorldMap and not (WorldMapFrame and WorldMapFrame:IsShown()) then
+    pcall(ToggleWorldMap)
+  end
+  if WorldMapFrame and WorldMapFrame:IsShown() and WorldMapFrame.SetMapID
+    and WorldMapFrame.GetMapID and WorldMapFrame:GetMapID() ~= map then
+    pcall(WorldMapFrame.SetMapID, WorldMapFrame, map)
+  end
+end
+
+local function WayTo(id, button)
   local g = Giver(ns.DQUESTS[id])
   if g and g.item and g.from and g[2] then
     -- Item quest: point at the mob (or chest) that drops the item.
     ns.SetWaypoint(g[2], g[3], g[4], g.from .. " – " .. ns.ItemName(g.item, g[1]))
+    if button == "RightButton" then OpenMap(g[2]) end
   elseif g and g[2] then
     ns.SetWaypoint(g[2], g[3], g[4], g[1] .. " – " .. QuestName(id))
+    if button == "RightButton" then OpenMap(g[2]) end
   elseif g and g.inside then
     ns.Print(ns.T("DG_INSIDE", g[1]))
   elseif g and g.item then
@@ -199,7 +220,7 @@ local function GetRow()
   if not r then
     r = CreateFrame("Button", nil, content)
     r:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-    r:RegisterForClicks("LeftButtonUp")
+    r:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     r.icon = r:CreateTexture(nil, "ARTWORK")
     r.icon:SetSize(16, 16)
     r.icon:SetPoint("TOPLEFT", 4, -3)
@@ -304,7 +325,10 @@ local function ShowDetail()
     r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     r.text:SetText(ns.T("DG_ENTRANCE") .. (#d.ent > 1 and (" " .. i) or ""))
     r.sub:SetText(ns.MapName(e[1]) .. string.format(" (%.0f, %.0f) – ", e[2], e[3]) .. ns.T("DG_CLICK"))
-    r:SetScript("OnClick", function() ns.SetWaypoint(e[1], e[2], e[3], d.name) end)
+    r:SetScript("OnClick", function(_, button)
+      ns.SetWaypoint(e[1], e[2], e[3], d.name)
+      if button == "RightButton" then OpenMap(e[1]) end
+    end)
     y = y - ROW_H
   end
 
@@ -358,14 +382,15 @@ local function ShowDetail()
     else
       r.sub:SetText(GiverText(id))
     end
-    r:SetScript("OnClick", function()
-      if e.way then WayTo(e.way) else WayTo(id) end
+    r:SetScript("OnClick", function(_, button)
+      WayTo(e.way or id, button)
     end)
     r:SetScript("OnEnter", function(self)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:AddLine(QuestName(id))
       GameTooltip:AddLine(ns.T("DG_TT_LEVEL", q.lvl, q.req), 1, 1, 1)
       GameTooltip:AddLine(GiverText(id), 0.8, 0.8, 0.8)
+      GameTooltip:AddLine(ns.T("DG_TT_CLICK"), 0.41, 0.8, 0.94)
       if q.any or q.all then
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(ns.T("DG_TT_PRE"), 0.41, 0.8, 0.94)

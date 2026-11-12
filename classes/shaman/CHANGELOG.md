@@ -1,3 +1,7 @@
+# ShamanPlan 1.16.11
+
+- **Dungeon guide:** right-click a quest, pre-quest or the entrance to also open the world map on that zone (left-click still just sets the arrow and the map pin). Not in combat.
+
 # ShamanPlan 1.16.10
 
 - **Dungeon guide:** Esc no longer closes it, so closing a quest dialog with Esc keeps the guide open. Close it with the X.

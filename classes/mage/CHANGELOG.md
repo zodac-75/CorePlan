@@ -1,3 +1,7 @@
+# MagePlan 1.40.7
+
+- **Dungeon guide:** right-click a quest, pre-quest or the entrance to also open the world map on that zone (left-click still just sets the arrow and the map pin). Not in combat.
+
 # MagePlan 1.40.6
 
 - **Dungeon guide:** Esc no longer closes it, so closing a quest dialog with Esc keeps the guide open. Close it with the X.

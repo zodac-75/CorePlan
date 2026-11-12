@@ -515,6 +515,33 @@ do
     end
   end
   table.insert(chat, "[sim] dungeons i listan: " .. #listed)
+  -- Right-click on a row opens the world map on that zone (not in combat); left-click doesn't.
+  do
+    local opened = {}
+    local oldOpen, oldCombat = rawget(_G, "OpenWorldMap"), InCombatLockdown
+    OpenWorldMap = function(map) opened[#opened + 1] = map end
+    for _, b in ipairs(listed) do
+      if b.dungeon.name == "The Deadmines" then b.__scripts.OnClick(b) end
+    end
+    local entrance
+    for _, w in ipairs(allFrames) do
+      if w.__kind == "Button" and w.__shown and w.sub and w.__scripts.OnClick
+        and (w.sub.__text or ""):find("(42, 72)", 1, true) then entrance = w end
+    end
+    if not entrance then
+      table.insert(errors, "Deadmines-ingången hittades inte")
+    else
+      entrance.__scripts.OnClick(entrance, "LeftButton")
+      if #opened > 0 then table.insert(errors, "vänsterklick öppnade kartan") end
+      entrance.__scripts.OnClick(entrance, "RightButton")
+      if opened[1] ~= 1436 then table.insert(errors, "högerklick öppnade inte kartan på Westfall: " .. tostring(opened[1])) end
+      InCombatLockdown = function() return true end
+      entrance.__scripts.OnClick(entrance, "RightButton")
+      if #opened ~= 1 then table.insert(errors, "kartan öppnades i strid") end
+    end
+    InCombatLockdown = oldCombat
+    OpenWorldMap = oldOpen
+  end
   -- Ctrl + wheel resizes the window, also over the scroll areas; a plain wheel doesn't.
   do
     local w = rawget(_G, "MagePlanDungeons")
