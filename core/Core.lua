@@ -524,7 +524,56 @@ function ns.MakeWindow(name, width, posKey, defaultPoint)
   f.defaultWidth = width
   f.posKey = posKey
 
-  local t = ns.FontString(f, "small", nil, posKey)
+  -- The content sits in a scroll frame. Normally the window is as tall as the content; with
+  -- "free window height" on (ns.db.freeHeight) you drag the height yourself and the mouse
+  -- wheel scrolls what doesn't fit.
+  local sf = CreateFrame("ScrollFrame", nil, f)
+  sf:SetPoint("TOPLEFT", 0, -2)
+  sf:SetPoint("BOTTOMRIGHT", 0, 2)
+  local body = CreateFrame("Frame", nil, sf)
+  body:SetSize(f:GetWidth(), 60)
+  sf:SetScrollChild(body)
+  f.scroll, f.body = sf, body
+  local bar = f:CreateTexture(nil, "OVERLAY")
+  bar:SetColorTexture(1, 1, 1, 0.3)
+  bar:SetWidth(3)
+  bar:Hide()
+  f.scrollBar = bar
+
+  -- h: the content's height. Sets the window's height and the scroll range.
+  function f:FitHeight(h)
+    self.inSize = true
+    body:SetWidth(self:GetWidth())
+    body:SetHeight(h)
+    if ns.db.freeHeight then
+      -- While you drag the corner the height is yours; after that the saved one.
+      if not self.sizing then self:SetHeight(ns.db[posKey .. "H"] or math.min(h, 420)) end
+    else
+      self:SetHeight(h)
+    end
+    self.inSize = false
+    self:UpdateScroll()
+  end
+
+  function f:UpdateScroll(delta)
+    local view = self:GetHeight() - 4
+    local max = math.max(0, (body:GetHeight() or 0) - view)
+    local cur = sf:GetVerticalScroll() or 0
+    if delta then cur = cur - delta * ns.TS(30, posKey) end
+    cur = math.max(0, math.min(max, cur))
+    sf:SetVerticalScroll(cur)
+    if max > 0 then
+      local bh = math.max(16, view * view / (view + max))
+      bar:ClearAllPoints()
+      bar:SetPoint("TOPRIGHT", self, "TOPRIGHT", -3, -4 - (view - bh) * (cur / max))
+      bar:SetHeight(bh)
+      bar:Show()
+    else
+      bar:Hide()
+    end
+  end
+
+  local t = ns.FontString(body, "small", nil, posKey)
   t:SetPoint("TOPLEFT", 10, -10)
   t:SetWidth(f:GetWidth() - 20)
   t:SetJustifyH("LEFT")
@@ -539,7 +588,7 @@ function ns.MakeWindow(name, width, posKey, defaultPoint)
   function f:SetContent(str)
     self.text:SetWidth(self:GetWidth() - 20)
     self.text:SetText(str)
-    self:SetHeight(self.text:GetStringHeight() + 22)
+    self:FitHeight(self.text:GetStringHeight() + 22)
   end
 
   -- Bredd: dra i hörnet nere till höger. Höjden följer innehållet.
@@ -558,30 +607,41 @@ function ns.MakeWindow(name, width, posKey, defaultPoint)
   grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
   grip:SetScript("OnMouseDown", function(self, button)
     if button == "RightButton" then ns.ShowTextSizeMenu(self, posKey) return end
-    if not ns.db.locked then f:StartSizing("RIGHT") end
+    if not ns.db.locked then
+      f.sizing = true
+      f:StartSizing(ns.db.freeHeight and "BOTTOMRIGHT" or "RIGHT")
+    end
   end)
   ns.GripTooltip(grip)
   grip:SetScript("OnMouseUp", function(_, button)
     if button == "RightButton" then return end
     f:StopMovingOrSizing()
+    f.sizing = nil
     ns.db[posKey .. "W"] = f:GetWidth()
+    if ns.db.freeHeight then ns.db[posKey .. "H"] = f:GetHeight() end
     local point, _, relPoint, x, y = f:GetPoint()
     ns.db[posKey] = { point, relPoint, x, y }
     f:SetContent(f.text:GetText() or "")
   end)
   f.grip = grip
+  -- Keep the close button and the corner above the scrolling content.
+  sf:SetFrameLevel(f:GetFrameLevel() + 1)
+  close:SetFrameLevel(f:GetFrameLevel() + 5)
+  grip:SetFrameLevel(f:GetFrameLevel() + 5)
   f:SetScript("OnSizeChanged", function(self, w)
     if self.inSize then return end
-    self.inSize = true
     self.text:SetWidth((w or self:GetWidth()) - 20)
-    self:SetHeight(self.text:GetStringHeight() + 22)
-    self.inSize = false
+    self:FitHeight(self.text:GetStringHeight() + 22)
   end)
 
-  -- Skala: Ctrl + mushjul över fönstret.
+  -- Ctrl + mouse wheel: the window's scale. Plain wheel: scroll, when the content doesn't fit.
   f:EnableMouseWheel(true)
   f:SetScript("OnMouseWheel", function(self, delta)
-    if not IsControlKeyDown() or ns.db.locked then return end
+    if not IsControlKeyDown() then
+      if ns.db.freeHeight then self:UpdateScroll(delta) end
+      return
+    end
+    if ns.db.locked then return end
     local s = math.max(0.6, math.min(1.8, self:GetScale() + delta * 0.05))
     self:SetScale(s)
     ns.db[posKey .. "S"] = s
@@ -593,6 +653,7 @@ function ns.ResetWindow(f)
   ns.db[f.posKey] = nil
   ns.db[f.posKey .. "W"] = nil
   ns.db[f.posKey .. "S"] = nil
+  ns.db[f.posKey .. "H"] = nil
   f:SetScale(1)
   if f.defaultWidth then
     f:SetWidth(f.defaultWidth)
@@ -891,6 +952,14 @@ ns.RegisterCommand("reset", true, function()
   if ns.windows then for _, w in ipairs(ns.windows) do ns.ResetWindow(w) end end
   for _, fn in ipairs(ns.resetHooks) do pcall(fn) end
   Print(ns.T("RESET_DONE"))
+end)
+
+-- "/@SLASH@ height": drag the plan and crafting windows to any height and scroll inside them,
+-- or let the height follow the content again.
+ns.RegisterCommand("height", true, function()
+  ns.db.freeHeight = not ns.db.freeHeight or nil
+  ns.Print(ns.T(ns.db.freeHeight and "FREEH_ON" or "FREEH_OFF"))
+  ns.ApplyFontAll() -- redraws the windows at their new height
 end)
 
 ns.RegisterCommand("theme", true, function() ns.CycleTheme() end)

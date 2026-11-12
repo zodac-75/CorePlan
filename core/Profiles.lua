@@ -11,8 +11,8 @@ local DEFAULT = "Default"
 -- Everything a profile remembers (all live in ns.db).
 local KEYS = {
   -- windows
-  "pos", "posW", "posS", "hidden",
-  "craftPos", "craftPosW", "craftPosS",
+  "pos", "posW", "posS", "posH", "hidden", "freeHeight",
+  "craftPos", "craftPosW", "craftPosS", "craftPosH",
   "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "bagPos", "bagScale", "bagW", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
   "arrowPos", "dungeonPos", "dungeonScale", "dungeonW", "dungeonH", "configPos", "configScale", "quickScale", "marksOff", "markPos", "markScale", "stormstrikeOff",
   "minimapAngle", "minimapHidden",

@@ -698,7 +698,7 @@ ns.RefreshMain(); ns.mainFrame:Show(); ns.RefreshMain()
 do
   local mf, rows, clicked = ns.mainFrame, 0, 0
   for _, w in ipairs(allFrames) do
-    if w.__parent == mf and w.__kind == "Button" and w.__shown then
+    if (w.__parent == mf or w.__parent == mf.body) and w.__kind == "Button" and w.__shown then
       rows = rows + 1
       if w.__scripts.OnClick then
         local ok, err = pcall(w.__scripts.OnClick, w, "LeftButton")
@@ -726,7 +726,7 @@ do
     for _, w in ipairs(allFrames) do if w.__scripts.OnUpdate and w ~= cf then pcall(w.__scripts.OnUpdate, w, 0.2) end end
     local texts = {}
     for _, w in ipairs(allFrames) do
-      if w.__kind == "FontString" and w.__parent == cf and w.__text and w.__text ~= "" then
+      if w.__kind == "FontString" and (w.__parent == cf or w.__parent == cf.body) and w.__text and w.__text ~= "" then
         table.insert(texts, (w.__text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
       end
     end

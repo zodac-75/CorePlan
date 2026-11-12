@@ -53,14 +53,16 @@ end
 
 local function HideTip() if GameTooltip then GameTooltip:Hide() end end
 
+-- frame: a window from ns.MakeWindow; the rows go in its scrolling body.
 function ns.RowRenderer(frame)
   local rowPool, iconPool, headPool = {}, {}, {}
+  local host = frame.body or frame
   local ROW_ICON, SMALL_ICON = BASE_ROW_ICON, BASE_SMALL_ICON
 
   local function GetRow(i)
     local r = rowPool[i]
     if r then return r end
-    r = CreateFrame("Button", nil, frame)
+    r = CreateFrame("Button", nil, host)
     r:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     r.hl = r:CreateTexture(nil, "HIGHLIGHT")
     r.hl:SetAllPoints()
@@ -103,7 +105,7 @@ function ns.RowRenderer(frame)
   local function GetIcon(i)
     local b = iconPool[i]
     if b then return b end
-    b = CreateFrame("Button", nil, frame)
+    b = CreateFrame("Button", nil, host)
     b:SetSize(SMALL_ICON, SMALL_ICON)
     b.tex = b:CreateTexture(nil, "ARTWORK")
     b.tex:SetAllPoints()
@@ -130,7 +132,7 @@ function ns.RowRenderer(frame)
   local function GetHead(i)
     local h = headPool[i]
     if h then return h end
-    h = CreateFrame("Button", nil, frame)
+    h = CreateFrame("Button", nil, host)
     h.text = h:CreateFontString(nil, "OVERLAY")
     h.text:SetPoint("LEFT", 0, 0)
     h.text:SetJustifyH("LEFT")
@@ -142,7 +144,7 @@ function ns.RowRenderer(frame)
   return function(entries)
     local fontObj = ns.Font("small", frame.posKey)
     ROW_ICON, SMALL_ICON = ns.TS(BASE_ROW_ICON, frame.posKey), ns.TS(BASE_SMALL_ICON, frame.posKey)
-    local width = frame:GetWidth() - 20
+    local width = frame:GetWidth() - 20 - (ns.db.freeHeight and 6 or 0)
     local y = -8
     local nRow, nIcon, nHead = 0, 0, 0
 
@@ -154,7 +156,7 @@ function ns.RowRenderer(frame)
       h.click = e.click
       h:EnableMouse(e.click ~= nil)
       h:ClearAllPoints()
-      h:SetPoint("TOPLEFT", frame, "TOPLEFT", 10 + (e.indent or 0), y)
+      h:SetPoint("TOPLEFT", host, "TOPLEFT", 10 + (e.indent or 0), y)
       h:SetSize(width - (e.indent or 0), h.text:GetStringHeight() + 2)
       h:Show()
       y = y - h.text:GetStringHeight() - 4
@@ -213,7 +215,7 @@ function ns.RowRenderer(frame)
 
       local h = (text ~= "") and math.max(ROW_ICON + 2, r.text:GetStringHeight() + 4) or (item.icon and ROW_ICON + 2 or 0)
       r:ClearAllPoints()
-      r:SetPoint("TOPLEFT", frame, "TOPLEFT", 10 + indent, y)
+      r:SetPoint("TOPLEFT", host, "TOPLEFT", 10 + indent, y)
 
       if item.bar and item.bar.max and item.bar.max > 0 then
         local w = width - indent - left
@@ -284,7 +286,7 @@ function ns.RowRenderer(frame)
     for i = nIcon + 1, #iconPool do iconPool[i]:Hide() end
     for i = nHead + 1, #headPool do headPool[i]:Hide() end
     frame.rendering = true
-    frame:SetHeight(-y + 8)
+    if frame.FitHeight then frame:FitHeight(-y + 8) else frame:SetHeight(-y + 8) end
     frame.rendering = false
   end
 end

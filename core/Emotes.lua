@@ -19,6 +19,8 @@
 -- Seasonal: snow with /wave in December, a pumpkin from /chicken around Halloween.
 -- Ding party: when a Plan user in your group or guild levels up, everyone with a Plan
 -- addon gets fireworks. Your own ding and finishing the talent plan get one too.
+-- Bags full: try to loot with full bags and your bag bursts, junk flies everywhere (just for
+-- you, at most every two minutes).
 -- The whole party: an emote with no player targeted, in a party or raid, goes to everyone
 -- there with a Plan addon ("P:<EMOTE>"). They see the effect and answer ("PB:<EMOTE>"), and
 -- you see it once, with who saw it.
@@ -37,8 +39,17 @@ local COLORS = {
   { 0.3, 0.6, 1 }, { 0.7, 0.4, 1 }, { 1, 0.4, 0.8 },
 }
 
+-- "Name-Realm", and on WoW Forever also "Name Realm": just the name.
 local function Short(name)
-  return (name or ""):match("^([^%-]+)") or name or "?"
+  return (name or ""):match("^([^%-%s]+)") or name or "?"
+end
+
+-- Is this sender you? Addon messages to the party come back to yourself, with the realm added.
+local function IsMe(sender)
+  local me = UnitName("player")
+  if type(sender) ~= "string" or type(me) ~= "string" then return false end
+  if sender == me then return true end
+  return sender:sub(1, #me) == me and not sender:sub(#me + 1, #me + 1):match("%a")
 end
 
 local function Sound(kit)
@@ -700,6 +711,49 @@ EFFECTS.EAT = function(from)
   Sound("UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE")
 end
 
+-- Bags full: the bag shakes, bursts, and junk flies out in every direction.
+local JUNK = {
+  "Interface\\Icons\\INV_Misc_Bone_01", "Interface\\Icons\\INV_Misc_Food_19", "Interface\\Icons\\INV_Misc_Pelt_Wolf_Ruin_02",
+  "Interface\\Icons\\INV_Misc_Coin_01", "Interface\\Icons\\INV_Misc_Bone_HumanSkull_01", "Interface\\Icons\\INV_Boots_01",
+  "Interface\\Icons\\INV_Misc_Fish_02", "Interface\\Icons\\INV_Misc_Gem_Variety_01", "Interface\\Icons\\INV_Fabric_Linen_01",
+  "Interface\\Icons\\INV_Misc_Food_15", "Interface\\Icons\\INV_Misc_Ear_NightElf_01", "Interface\\Icons\\INV_Shirt_05",
+}
+EFFECTS.BAGSFULL = function()
+  local bag = Piece("Interface\\Icons\\INV_Misc_Bag_08", 110, 110)
+  bag:SetPoint("CENTER", 0, 40)
+  for k = 1, 6 do
+    Spin(bag, (k % 2 == 0) and 14 or -14, k, 0.07)
+  end
+  Grow(bag, 1.35, 1.35, 7, 0.15)
+  Fade(bag, 1, 0, 8, 0.25)
+  Play(bag)
+  for i = 1, 24 do
+    local p = Piece(JUNK[(i % #JUNK) + 1], 34, 34)
+    p:SetPoint("CENTER", 0, 40)
+    p:SetAlpha(0)
+    local dx, up = math.random(-420, 420), math.random(120, 300)
+    Fade(p, 0, 1, 1, 0.05, 0.45)
+    Move(p, dx * 0.45, up, 2, 0.35)
+    Move(p, dx * 0.55, -up - math.random(300, 500), 3, 1.3)
+    Spin(p, math.random(-900, 900), 3, 1.3)
+    Fade(p, 1, 0, 4, 0.3)
+    Play(p)
+  end
+  BigText(ns.T("EM_BAGSFULL_BIG"), 40, 1, 0.5, 0.2, 150, 1.6)
+  Say(ns.T("EM_BAGSFULL"))
+  Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
+end
+
+local lastBagsFull = -1000
+local function OnUIError(_, msg)
+  if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
+  if not (ERR_INV_FULL and msg == ERR_INV_FULL) then return end
+  if GetTime() - lastBagsFull < 120 then return end
+  lastBagsFull = GetTime()
+  lastShown.BAGSFULL = nil
+  ns.ShowEmoteEgg("BAGSFULL", UnitName("player"))
+end
+
 -- Both hugged each other: hearts everywhere.
 EFFECTS.GROUPHUG = function(from)
   for i = 1, 40 do
@@ -870,7 +924,7 @@ end
 
 -- Emotes that trigger another effect. Forever has no /toast like later expansions,
 -- so the mugs come with /drink (and /cheers where the game has it).
-local ALIAS = { DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
+local ALIAS = { FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
   SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
@@ -881,7 +935,7 @@ local COMBO = { DANCE = "PARTY", HUG = "GROUPHUG", KISS = "KISSKISS" }
 local COMBO_WINDOW = { KISS = 10 }
 
 -- Effects that aren't an emote to send to someone (they start in other ways).
-local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true }
+local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true }
 
 -- A round of drinks: who in the party drank lately (short name -> when).
 local drinkers = {}
@@ -965,7 +1019,7 @@ local function OnMessage(msg, sender)
   -- An emote to the whole party: show it, and tell them you saw it.
   local pe = msg:match("^P:(%u+)$")
   if pe then
-    if Short(sender) == UnitName("player") or not EFFECTS[pe] or LOCAL_ONLY[pe] then return end
+    if IsMe(sender) or not EFFECTS[pe] or LOCAL_ONLY[pe] then return end
     Show(pe, sender)
     Send("PB:" .. pe, sender)
     return
@@ -973,7 +1027,7 @@ local function OnMessage(msg, sender)
   -- Answers to your party emote: collect them for a moment, then show it once.
   pe = msg:match("^PB:(%u+)$")
   if pe then
-    if not EFFECTS[pe] or LOCAL_ONLY[pe] then return end
+    if IsMe(sender) or not EFFECTS[pe] or LOCAL_ONLY[pe] then return end
     if partyShownAt[pe] and GetTime() - partyShownAt[pe] < 6 then return end
     partySeen[pe] = partySeen[pe] or {}
     local name = Short(sender)
@@ -1072,8 +1126,13 @@ ns.RegisterModule(function()
   local ev = CreateFrame("Frame")
   ev:RegisterEvent("CHAT_MSG_ADDON")
   ev:RegisterEvent("PLAYER_LEVEL_UP")
+  pcall(ev.RegisterEvent, ev, "UI_ERROR_MESSAGE")
   pcall(ev.RegisterEvent, ev, "PLAYER_DEAD")
   ev:SetScript("OnEvent", function(_, event, a1, a2, _, a4)
+    if event == "UI_ERROR_MESSAGE" then
+      pcall(OnUIError, a1, a2)
+      return
+    end
     if event == "PLAYER_DEAD" then
       pcall(WatchForWipe, 20)
       return

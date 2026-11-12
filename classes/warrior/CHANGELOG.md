@@ -1,3 +1,9 @@
+# WarriorPlan 1.16.3
+
+- **Free window height:** new setting "Free window height (scroll inside)" (also `/war height`). With it on, drag the corner of the plan or crafting window to any height and scroll inside with the mouse wheel. Off, the height follows the content as before.
+- **New easter egg:** try to loot with full bags and your bag bursts, with junk flying everywhere (only you see it, at most every two minutes).
+- **Easter eggs:** the one who starts a party emote no longer sees it twice (your own message came back to you).
+
 # WarriorPlan 1.16.2
 
 - **Easter eggs:** the one who starts a party emote no longer sometimes sees the show twice (a late or repeated answer from the party started it again).

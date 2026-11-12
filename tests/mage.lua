@@ -760,6 +760,28 @@ do
   end
   ns.ToggleBags(false)
   ns.db.bagShown = nil
+  -- Free window height: the plan window keeps the height you dragged, the wheel scrolls.
+  local mf = ns.mainFrame
+  ns.RefreshMain()
+  local auto = mf:GetHeight()
+  ns.RunCommand("height", "")
+  if not ns.db.freeHeight then table.insert(errors, "/mp height slog inte på") end
+  ns.db.posH = 120
+  ns.RefreshMain()
+  if mf:GetHeight() ~= 120 then table.insert(errors, "fri höjd: planfönstret blev " .. tostring(mf:GetHeight())) end
+  local pos = 0
+  mf.scroll.SetVerticalScroll = function(_, v) pos = v end
+  mf.scroll.GetVerticalScroll = function() return pos end
+  local oldCtrl = IsControlKeyDown
+  IsControlKeyDown = function() return false end
+  mf.__scripts.OnMouseWheel(mf, -1)
+  IsControlKeyDown = oldCtrl
+  if auto > 130 and pos <= 0 then table.insert(errors, "mushjulet scrollar inte i fri höjd") end
+  print("  fri höjd: innehåll " .. tostring(auto) .. " px, fönster " .. tostring(mf:GetHeight()) .. ", scroll " .. tostring(pos))
+  ns.RunCommand("height", "")
+  ns.RefreshMain()
+  if ns.db.freeHeight or mf:GetHeight() ~= auto then table.insert(errors, "höjden följer inte innehållet igen: " .. tostring(mf:GetHeight())) end
+  ns.db.posH = nil
   ns.db.textScale = before
   CreateFont = oldCreate
 end
@@ -781,6 +803,19 @@ do
     table.insert(errors, "svaret på din egen emote: " .. tostring(ns.lastEggLine))
   end
   print("  svar på egen /hug: " .. tostring(ns.lastEggLine))
+  -- Full bags when looting: the bag bursts (once, then not again for a while).
+  do
+    ERR_INV_FULL = "Inventory is full."
+    ns.lastEggLine = nil
+    fire("UI_ERROR_MESSAGE", 3, "Inventory is full.")
+    if not (ns.lastEggLine or ""):find("junk", 1, true) and not (ns.lastEggLine or ""):find("skräp", 1, true) then
+      table.insert(errors, "fulla väskor gav ingen easter egg: " .. tostring(ns.lastEggLine)) end
+    ns.lastEggLine = nil
+    fire("UI_ERROR_MESSAGE", 3, "Inventory is full.")
+    if ns.lastEggLine then table.insert(errors, "fulla väskor visades igen direkt") end
+    fire("UI_ERROR_MESSAGE", 3, "You can't do that yet.")
+    if ns.lastEggLine then table.insert(errors, "annat felmeddelande gav fulla väskor") end
+  end
   -- The whole party: no player targeted, in a party.
   do
     local oldGroup, oldExists = rawget(_G, "IsInGroup"), UnitExists
@@ -791,6 +826,11 @@ do
     if SIM_ADDONMSG[n0 + 1] ~= "ZodacPlan:P:CHEER>nil" then table.insert(errors, "party-emote skickades inte: " .. tostring(SIM_ADDONMSG[n0 + 1])) end
     DoEmote("CHEER") -- throttled
     if #SIM_ADDONMSG ~= n0 + 1 then table.insert(errors, "party-emote spammades") end
+    -- Your own party emote comes back to you too ("Name Realm" on WoW Forever): not shown twice.
+    local mine = UnitName("player")
+    ns.lastEggLine = nil
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "P:TRAIN", "PARTY", mine .. " Afvredesmod")
+    if ns.lastEggLine or #SIM_ADDONMSG ~= n0 + 1 then table.insert(errors, "egen party-emote kom tillbaka och visades/besvarades") end
     -- A party member's emote: shown, and answered.
     fire("CHAT_MSG_ADDON", "ZodacPlan", "P:WAVE", "PARTY", "Buddy-Realm")
     if SIM_ADDONMSG[n0 + 2] ~= "ZodacPlan:PB:WAVE>Buddy-Realm" then table.insert(errors, "party-emote besvarades inte: " .. tostring(SIM_ADDONMSG[n0 + 2])) end
@@ -798,8 +838,14 @@ do
     fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Buddy-Realm")
     fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Pal-Realm")
     fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Tank-Realm")
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Tank-Realm") -- the same answer twice
     now = now + 2; runTimers(now)
     local line = ns.lastEggLine or ""
+    -- A late answer doesn't start it again.
+    ns.lastEggLine = nil
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Late-Realm")
+    now = now + 2; runTimers(now)
+    if ns.lastEggLine then table.insert(errors, "party-emote visades två gånger: " .. ns.lastEggLine) end
     print("  party-emote: " .. line)
     if not (line:find("Buddy", 1, true) and line:find("2", 1, true)) then table.insert(errors, "party-svaren visas inte: " .. line) end
     IsInGroup, UnitExists = oldGroup, oldExists
@@ -1059,7 +1105,7 @@ ns.RefreshMain(); ns.mainFrame:Show(); ns.RefreshMain()
 do
   local mf, rows, clicked = ns.mainFrame, 0, 0
   for _, w in ipairs(allFrames) do
-    if w.__parent == mf and w.__kind == "Button" and w.__shown then
+    if (w.__parent == mf or w.__parent == mf.body) and w.__kind == "Button" and w.__shown then
       rows = rows + 1
       if w.__scripts.OnClick then
         local ok, err = pcall(w.__scripts.OnClick, w, "LeftButton")
