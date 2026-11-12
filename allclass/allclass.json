@@ -1,5 +1,6 @@
 {
   "name": "AllClassPlan",
   "slash": "acp",
-  "notes": "Leveling companion for every class in one install: talent plans, upgrade check, rank check, combat call-outs, dungeon guide, professions and more. Loads the part for the class you log in on."
+  "notes": "Leveling companion for every class in one install: talent plans, upgrade check, rank check, combat call-outs, dungeon guide, professions and more. Loads the part for the class you log in on.",
+  "logo": "{ h = 408 / 512, size = 270, y = 64, panel = 310 }"
 }

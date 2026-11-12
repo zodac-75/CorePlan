@@ -77,6 +77,9 @@ def build_part(cls, out, ver):
         if os.path.isdir(media):
             for f in os.listdir(media):
                 shutil.copy(os.path.join(media, f), os.path.join(dest, "Media", f))
+    # The AllClassPlan logo and icon instead of the class's.
+    for f in os.listdir(os.path.join(HERE, "Media")):
+        shutil.copy(os.path.join(HERE, "Media", f), os.path.join(dest, "Media", f))
 
     files = []
     for f in build.ORDER:
@@ -93,6 +96,8 @@ def build_part(cls, out, ver):
             text = build.fill(src.read(), m)
         if re.search(r"@[A-Z]+@", re.sub(r"@project-version@", "", text)):
             sys.exit("%s: unfilled placeholder in %s" % (cls, f))
+        if f == "Data.lua" and acp.get("logo"):
+            text += "\n-- AllClassPlan logo layout (allclass/allclass.json)\nns.LOGO = %s\n" % acp["logo"]
         if f == "Core.lua":
             # /acp next to the class's own command (/mp, /pal, ...).
             line = 'SLASH_%s2 = "/%s"\n' % (slash_up, m["slash"])
@@ -129,7 +134,7 @@ def build_loader(out, ver, parts):
     dest = os.path.join(out, acp["name"])
     if os.path.exists(dest):
         shutil.rmtree(dest)
-    os.makedirs(dest)
+    shutil.copytree(os.path.join(HERE, "Media"), os.path.join(dest, "Media"))
     rows = []
     for cls, standalone in parts:
         m = build.meta(cls)
@@ -147,7 +152,7 @@ def build_loader(out, ver, parts):
         "## Title: " + acp["name"],
         "## Notes: " + acp["notes"],
         "## Author: zodac",
-        "## IconTexture: Interface\\Icons\\INV_Misc_Book_09",
+        "## IconTexture: Interface\\AddOns\\%s\\Media\\Icon" % acp["name"],
         "## Version: " + ver,
         "## SavedVariables: %sGlobal" % acp["name"],
         # The stand-alone class addons load first, so the loader can see them and step aside.
