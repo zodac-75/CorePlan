@@ -1,4 +1,6 @@
-# MagePlan 1.41.5
+# MagePlan 1.41.6
+
+- **Polymorph alerts:** the "Polymorph ends in 5 seconds" warning works again on clients that give addons no combat log: it now also goes by your own cast (checks the target, focus or mouseover for the sheep so a resist or immune doesn't warn). New `/mp polydebug` shows what the alert can see.
 
 - **Buff bar:** a buff that someone else's stronger buff blocks (Mark of the Wild on a player with Might of Stormwind, "a more powerful spell is already active") no longer shows an icon. If the game refuses a click for that reason, the icon is hidden for that player for 10 minutes.
 
