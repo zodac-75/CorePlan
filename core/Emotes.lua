@@ -718,7 +718,7 @@ local JUNK = {
   "Interface\\Icons\\INV_Misc_Fish_02", "Interface\\Icons\\INV_Misc_Gem_Variety_01", "Interface\\Icons\\INV_Fabric_Linen_01",
   "Interface\\Icons\\INV_Misc_Food_15", "Interface\\Icons\\INV_Misc_Ear_NightElf_01", "Interface\\Icons\\INV_Shirt_05",
 }
-EFFECTS.BAGSFULL = function()
+local function BagsBurst()
   local bag = Piece("Interface\\Icons\\INV_Misc_Bag_08", 110, 110)
   bag:SetPoint("CENTER", 0, 40)
   for k = 1, 6 do
@@ -742,6 +742,51 @@ EFFECTS.BAGSFULL = function()
   BigText(ns.T("EM_BAGSFULL_BIG"), 40, 1, 0.5, 0.2, 150, 1.6)
   Say(ns.T("EM_BAGSFULL"))
   Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
+end
+
+-- The bag eats too much: it swells, burps, and a little junk rains down.
+local function BagsBurp()
+  local bag = Piece("Interface\\Icons\\INV_Misc_Bag_08", 90, 90)
+  bag:SetPoint("CENTER", 0, 40)
+  for k = 1, 4 do
+    Grow(bag, 1.3, 1.3, k, 0.35)
+    Spin(bag, (k % 2 == 0) and 8 or -8, k, 0.35)
+  end
+  Grow(bag, 0.55, 0.55, 5, 0.12)
+  Fade(bag, 1, 0, 6, 0.4)
+  Play(bag)
+  for i = 1, 10 do
+    local p = Piece(JUNK[(i % #JUNK) + 1], 30, 30)
+    p:SetPoint("CENTER", math.random(-160, 160), 340)
+    p:SetAlpha(0)
+    Fade(p, 0, 1, 1, 0.05, 1.6 + math.random() * 0.8)
+    Move(p, math.random(-40, 40), -420, 2, 1.1)
+    Spin(p, math.random(-400, 400), 2, 1.1)
+    Fade(p, 1, 0, 3, 0.3)
+    Play(p)
+  end
+  BigText(ns.T("EM_BAGSFULL2_BIG"), 60, 0.6, 1, 0.3, 150, 1.4)
+  Say(ns.T("EM_BAGSFULL2"))
+  Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
+end
+
+-- The bag refuses more loot and hops off across the screen.
+local function BagsRun()
+  local bag = Piece("Interface\\Icons\\INV_Misc_Bag_08", 100, 100)
+  bag:SetPoint("CENTER", -520, -20)
+  for k = 1, 6 do
+    Move(bag, 170, (k % 2 == 1) and 70 or -70, k, 0.25)
+  end
+  Fade(bag, 1, 0, 7, 0.3)
+  Play(bag)
+  BigText(ns.T("EM_BAGSFULL3_BIG"), 50, 1, 0.8, 0.3, 150, 1.6)
+  Say(ns.T("EM_BAGSFULL3"))
+  Sound("UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE")
+end
+
+EFFECTS.BAGSFULL = function()
+  local pick = math.random(3)
+  if pick == 1 then BagsBurst() elseif pick == 2 then BagsBurp() else BagsRun() end
 end
 
 local lastBagsFull = -1000

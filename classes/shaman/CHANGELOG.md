@@ -1,4 +1,6 @@
-# ShamanPlan 1.17.3
+# ShamanPlan 1.17.4
+
+- **Easter eggs:** the full-bags egg now has three versions (the bag bursts, the bag burps, or the bag runs away), picked at random. Preview with `/sp egg full`.
 
 - **Free window height:** new setting "Free window height (scroll inside)" (also `/sp height`). With it on, drag the corner of the plan or crafting window to any height and scroll inside with the mouse wheel. Off, the height follows the content as before.
 - **New easter egg:** try to loot with full bags and your bag bursts, with junk flying everywhere (only you see it, at most every two minutes).
