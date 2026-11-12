@@ -1837,6 +1837,26 @@ do
   bag[4] = nil
   ns.GetProfSkill = oldSkill
 end
+-- Easter egg: need på en roll
+-- Someone needs on a roll: a die tumbles in (once, then a pause).
+do
+  LOOT_ROLL_NEED = "%s has selected Need for: %s"
+  LOOT_ROLL_NEED_SELF = "You have selected Need for: %s"
+  now = now + 20; runTimers(now)
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_LOOT", "Bob Realm has selected Need for: [Sword]")
+  if not (ns.lastEggLine or ""):find("Bob", 1, true) then table.insert(errors, "need-roll gav ingen easter egg: " .. tostring(ns.lastEggLine)) end
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_LOOT", "Ann has selected Need for: [Axe]")
+  if ns.lastEggLine then table.insert(errors, "need-roll visades igen direkt") end
+  now = now + 20; runTimers(now)
+  fire("CHAT_MSG_LOOT", "Ann has selected Greed for: [Axe]")
+  if ns.lastEggLine then table.insert(errors, "greed gav easter egg") end
+  fire("CHAT_MSG_LOOT", "You have selected Need for: [Axe]")
+  if not ns.lastEggLine then table.insert(errors, "egen need gav ingen easter egg") end
+  print("  need-rad: " .. tostring(ns.lastEggLine))
+end
+
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

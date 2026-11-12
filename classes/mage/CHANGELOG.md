@@ -1,4 +1,6 @@
-# MagePlan 1.41.6
+# MagePlan 1.41.7
+
+- **New easter egg:** when somebody in your group rolls Need on an item, a die tumbles in with "NEED!" and a line about the greedy one (at most every 15 seconds, only you see it). Preview with `/mp egg need`.
 
 - **Polymorph alerts:** the "Polymorph ends in 5 seconds" warning works again on clients that give addons no combat log: it now also goes by your own cast (checks the target, focus or mouseover for the sheep so a resist or immune doesn't warn). New `/mp polydebug` shows what the alert can see.
 

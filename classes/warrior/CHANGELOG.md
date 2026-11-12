@@ -1,4 +1,6 @@
-# WarriorPlan 1.16.5
+# WarriorPlan 1.16.6
+
+- **New easter egg:** when somebody in your group rolls Need on an item, a die tumbles in with "NEED!" and a line about the greedy one (at most every 15 seconds, only you see it). Preview with `/war egg need`.
 
 - **Buff bar:** a buff that someone else's stronger buff blocks (Mark of the Wild on a player with Might of Stormwind, "a more powerful spell is already active") no longer shows an icon. If the game refuses a click for that reason, the icon is hidden for that player for 10 minutes.
 

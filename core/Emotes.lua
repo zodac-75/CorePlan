@@ -789,6 +789,45 @@ EFFECTS.BAGSFULL = function()
   if pick == 1 then BagsBurst() elseif pick == 2 then BagsBurp() else BagsRun() end
 end
 
+-- Somebody needs on a roll: a die tumbles in and lands, with a line about the greedy one.
+EFFECTS.NEED = function(from)
+  local die = Piece("Interface\\Icons\\INV_Misc_Dice_02", 120, 120)
+  die:SetPoint("CENTER", 0, 380)
+  Move(die, 0, -380, 1, 0.45)
+  Spin(die, 540, 1, 0.45)
+  Move(die, 0, 90, 2, 0.18); Move(die, 0, -90, 3, 0.18)
+  Spin(die, 90, 2, 0.18); Spin(die, -90, 3, 0.18)
+  Move(die, 0, 40, 4, 0.12); Move(die, 0, -40, 5, 0.12)
+  Grow(die, 1.3, 1.3, 6, 0.15); Grow(die, 1 / 1.3, 1 / 1.3, 7, 0.15)
+  Fade(die, 1, 0, 8, 0.5, 0.6)
+  Play(die)
+  BigText(ns.T("EM_NEED_BIG"), 56, 1, 0.82, 0.1, 150, 1.8)
+  Say(ns.T("EM_NEED_" .. math.random(3), Short(from)))
+  Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
+end
+
+local lastNeed = -1000
+local needPatterns
+local function Pat(g)
+  if type(g) ~= "string" then return nil end
+  local p = g:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1")
+  p = p:gsub("%%%d%%%$s", "(.-)")
+  p = p:gsub("%%s", "(.-)")
+  return "^" .. p .. "$"
+end
+local function OnLootMsg(msg)
+  if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
+  if GetTime() - lastNeed < 15 then return end
+  needPatterns = needPatterns or { selfP = Pat(LOOT_ROLL_NEED_SELF), otherP = Pat(LOOT_ROLL_NEED) }
+  local who
+  if needPatterns.otherP then who = msg:match(needPatterns.otherP) end
+  if not who and needPatterns.selfP and msg:match(needPatterns.selfP) then who = UnitName("player") end
+  if not who or who == "" then return end
+  lastNeed = GetTime()
+  lastShown.NEED = nil
+  ns.ShowEmoteEgg("NEED", who)
+end
+
 local lastBagsFull = -1000
 local function OnUIError(_, msg)
   if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
@@ -969,7 +1008,7 @@ end
 
 -- Emotes that trigger another effect. Forever has no /toast like later expansions,
 -- so the mugs come with /drink (and /cheers where the game has it).
-local ALIAS = { FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
+local ALIAS = { ROLL = "NEED", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
   SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
@@ -980,7 +1019,7 @@ local COMBO = { DANCE = "PARTY", HUG = "GROUPHUG", KISS = "KISSKISS" }
 local COMBO_WINDOW = { KISS = 10 }
 
 -- Effects that aren't an emote to send to someone (they start in other ways).
-local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true }
+local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true }
 
 -- A round of drinks: who in the party drank lately (short name -> when).
 local drinkers = {}
@@ -1172,10 +1211,15 @@ ns.RegisterModule(function()
   ev:RegisterEvent("CHAT_MSG_ADDON")
   ev:RegisterEvent("PLAYER_LEVEL_UP")
   pcall(ev.RegisterEvent, ev, "UI_ERROR_MESSAGE")
+  pcall(ev.RegisterEvent, ev, "CHAT_MSG_LOOT")
   pcall(ev.RegisterEvent, ev, "PLAYER_DEAD")
   ev:SetScript("OnEvent", function(_, event, a1, a2, _, a4)
     if event == "UI_ERROR_MESSAGE" then
       pcall(OnUIError, a1, a2)
+      return
+    end
+    if event == "CHAT_MSG_LOOT" then
+      pcall(OnLootMsg, a1)
       return
     end
     if event == "PLAYER_DEAD" then
