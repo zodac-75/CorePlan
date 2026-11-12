@@ -1,4 +1,4 @@
-"""Makes allclass/Media/Logo.tga (512x512, badge at the top, h = 408/512) and Icon.tga (64x64)
+"""Makes allclass/Media/Logo.tga (512x512, badge at the top, h = 405/512) and Icon.tga (64x64)
 from AllClassPlan-original.png: the dark background outside the badge becomes transparent.
 
     python3 allclass/art/make_logo.py
@@ -10,7 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 im = Image.open(os.path.join(HERE, 'AllClassPlan-original.png')).convert('RGBA')
 W, H = im.size
 px = im.load()
-CX, CY, RX, RY = 408, 282, 318, 250
+CX, CY, RX, RY = 0.5 * W, 0.515 * H, 0.36 * W, 0.44 * H  # an ellipse inside the badge is always kept
 def bg(p, x, y):
     if ((x - CX) / RX) ** 2 + ((y - CY) / RY) ** 2 < 1: return False
     r, g, b, a = p
