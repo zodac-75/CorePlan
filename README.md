@@ -56,6 +56,21 @@ lua5.3 tests/druid.lua dist/DruidPlan modern enUS   # ends with "--- FEL (0) ---
 
 Use a version like `1.0.1-beta1` to upload a beta. Needs the repository secret `CF_API_KEY`.
 
+## AllClassPlan (all classes in one install, not released)
+
+`allclass/` holds AllClassPlan: a small loader (`allclass/Loader.lua`) plus one load-on-demand
+part per class, `AllClassPlan_Mage`, `AllClassPlan_Paladin`, ... Each part is the normal class
+build under the name AllClassPlan. The loader loads the part for the class you log in on, and
+steps aside when the stand-alone addon for that class (MagePlan, ...) is installed.
+Language and profiles are shared by all characters (`AllClassPlanGlobal`, saved by the loader).
+
+```sh
+python3 tools/buildall.py              # dist/AllClassPlan + dist/AllClassPlan_<Class>
+python3 tests/allclass.py              # every class test against its part + the loader test
+```
+
+It is outside `classes/`, so CI never uploads it. Install = copy all ten folders to AddOns.
+
 ## Adding a class
 
 Copy a class folder, change `class.json` (name, color, slash, class token, CurseForge ID),
