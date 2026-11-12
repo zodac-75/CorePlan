@@ -14,7 +14,8 @@
 --     click = fn, tip = "..." }                    click and hover help
 local _, ns = ...
 
-local ROW_ICON, SMALL_ICON = 16, 18
+-- Icon sizes at 100% text size; they grow and shrink with the text size (ns.TS).
+local BASE_ROW_ICON, BASE_SMALL_ICON = 16, 18
 
 function ns.SpellIcon(name)
   local tex
@@ -54,6 +55,7 @@ local function HideTip() if GameTooltip then GameTooltip:Hide() end end
 
 function ns.RowRenderer(frame)
   local rowPool, iconPool, headPool = {}, {}, {}
+  local ROW_ICON, SMALL_ICON = BASE_ROW_ICON, BASE_SMALL_ICON
 
   local function GetRow(i)
     local r = rowPool[i]
@@ -106,7 +108,7 @@ function ns.RowRenderer(frame)
     b.tex = b:CreateTexture(nil, "ARTWORK")
     b.tex:SetAllPoints()
     b.tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    b.count = b:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+    b.count = ns.FontString(b, "num", nil, frame.posKey)
     b.count:SetPoint("BOTTOMRIGHT", 2, -1)
     b:SetScript("OnEnter", function(self)
       ShowTip(self, function(tt)
@@ -138,7 +140,8 @@ function ns.RowRenderer(frame)
   end
 
   return function(entries)
-    local fontObj = _G[ns.CurrentFont().font] or GameFontHighlightSmall
+    local fontObj = ns.Font("small", frame.posKey)
+    ROW_ICON, SMALL_ICON = ns.TS(BASE_ROW_ICON, frame.posKey), ns.TS(BASE_SMALL_ICON, frame.posKey)
     local width = frame:GetWidth() - 20
     local y = -8
     local nRow, nIcon, nHead = 0, 0, 0
@@ -161,6 +164,7 @@ function ns.RowRenderer(frame)
       nIcon = nIcon + 1
       local b = GetIcon(nIcon)
       b.tex:SetTexture(tex)
+      b:SetSize(SMALL_ICON, SMALL_ICON)
       b:ClearAllPoints()
       b:SetPoint("TOPLEFT", r, "TOPLEFT", x + (k - 1) * (SMALL_ICON + 3), -iconsY)
       b:SetFrameLevel(r:GetFrameLevel() + 2)
@@ -176,6 +180,7 @@ function ns.RowRenderer(frame)
       r.item = item
       local indent = item.indent or 0
       local left = item.icon and (ROW_ICON + 6) or 0
+      r.icon:SetSize(ROW_ICON, ROW_ICON)
       r.icon:SetTexture(item.icon)
       r.icon:SetShown(item.icon ~= nil)
       r.text:ClearAllPoints()
@@ -251,7 +256,7 @@ function ns.RowRenderer(frame)
       end
       if k > 0 then
         -- Item icons with counts need a bit more room per icon.
-        local per = (item.items and #item.items > 0) and 40 or (SMALL_ICON + 3)
+        local per = (item.items and #item.items > 0) and ns.TS(40, frame.posKey) or (SMALL_ICON + 3)
         if per > SMALL_ICON + 3 then
           for i = nIcon - k + 1, nIcon do
             local b = iconPool[i]

@@ -308,12 +308,168 @@ function ns.ApplyThemeAll()
   for _, f in ipairs(ns.themedFrames) do ns.ApplyTheme(f) end
 end
 
+---------------------------------------------------------------------------
+-- Text size: one factor (80% to 160%) for the text in every window. The windows use our own
+-- font objects (ns.Font), copies of Blizzard's with the size scaled, so changing the factor
+-- resizes all their text at once. Row heights and icons follow through ns.TS.
+---------------------------------------------------------------------------
+ns.TEXT_MIN, ns.TEXT_MAX = 0.8, 1.6
+local OLD_FONT_SIZE = { small = 1, normal = 1.2, large = 1.4 } -- the old Small/Normal/Large
+
+-- key: a window ("pos" = plan window, "craftPos", "dungeon", "bags") can have its own text
+-- size (db.textScales, picked by right-clicking its corner); without one it uses the setting.
+function ns.TextScale(key)
+  if key and db and db.textScales and db.textScales[key] then return db.textScales[key] end
+  local s = db and db.textScale
+  if not s and db and db.fontSize then s = OLD_FONT_SIZE[db.fontSize] end
+  return s or 1
+end
+
+-- A size in pixels at a window's text size.
+function ns.TS(px, key) return math.floor(px * ns.TextScale(key) + 0.5) end
+
+local FONT_BASE = {
+  small = { "GameFontHighlightSmall", 10 }, normal = { "GameFontHighlight", 12 },
+  head = { "GameFontNormal", 12 }, headSmall = { "GameFontNormalSmall", 10 },
+  large = { "GameFontNormalLarge", 16 }, dim = { "GameFontDisableSmall", 10 },
+  num = { "NumberFontNormalSmall", 12 },
+}
+local fonts = {} -- [key .. ":" .. kind] = { font, kind, key }
+
+local function SizeFont(entry)
+  local f, b = entry[1], FONT_BASE[entry[2]]
+  local base = _G[b[1]]
+  local file, size, flags
+  if base and base.GetFont then file, size, flags = base:GetFont() end
+  file = file or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
+  f:SetFont(file, (size and size > 0 and size or b[2]) * ns.TextScale(entry[3]), flags or "")
+end
+
+-- kind: "small" (most text), "normal", "head" (yellow), "headSmall", "large", "dim" (grey), "num".
+-- key: the window it is for (see ns.TextScale).
+function ns.Font(kind, key)
+  if not FONT_BASE[kind] then kind = "small" end
+  local id = (key or "") .. ":" .. kind
+  if fonts[id] then return fonts[id][1] end
+  local base = _G[FONT_BASE[kind][1]] or GameFontHighlightSmall
+  if not CreateFont then return base end
+  local ok, f = pcall(CreateFont, "@ADDON@Font_" .. (key or "all") .. "_" .. kind)
+  if not ok or not f then return base end
+  if base and f.CopyFontObject then pcall(f.CopyFontObject, f, base) end
+  fonts[id] = { f, kind, key }
+  pcall(SizeFont, fonts[id])
+  return f
+end
+
+-- A font string with one of our fonts.
+function ns.FontString(parent, kind, layer, key)
+  local fs = parent:CreateFontString(nil, layer or "OVERLAY")
+  fs:SetFontObject(ns.Font(kind, key))
+  return fs
+end
+
+ns.textScaleHooks = {}
+function ns.OnTextScale(fn) table.insert(ns.textScaleHooks, fn) end
+
 function ns.ApplyFontAll()
-  local font = ns.CurrentFont().font
+  for _, entry in pairs(fonts) do pcall(SizeFont, entry) end
   for _, f in ipairs(ns.textWindows) do
-    if _G[font] then f.text:SetFontObject(_G[font]) end
+    f.text:SetFontObject(ns.Font("small", f.posKey))
     f:SetContent(f.text:GetText() or "")
   end
+  for _, fn in ipairs(ns.textScaleHooks) do pcall(fn) end
+  if ns.RefreshMain then pcall(ns.RefreshMain) end
+  if ns.RefreshCraft then pcall(ns.RefreshCraft) end
+end
+
+local function Clamp(s) return math.floor(math.max(ns.TEXT_MIN, math.min(ns.TEXT_MAX, s)) * 10 + 0.5) / 10 end
+
+-- Without key: the setting, for every window (and windows' own sizes are cleared).
+-- With key: that window only; nil as s goes back to the setting.
+function ns.SetTextScale(s, key)
+  if key then
+    db.textScales = db.textScales or {}
+    db.textScales[key] = s and Clamp(s) or nil
+  else
+    db.textScale = Clamp(s)
+    db.fontSize = nil
+    db.textScales = nil
+  end
+  ns.ApplyFontAll()
+end
+
+function ns.TextScaleLabel(key) return math.floor(ns.TextScale(key) * 100 + 0.5) .. "%" end
+
+-- Right-click on a window's resize corner: a small menu to pick that window's text size. Its
+-- own text doesn't scale, so the choices stay put under the mouse.
+local sizeMenu
+function ns.ShowTextSizeMenu(anchor, key)
+  if not sizeMenu then
+    sizeMenu = CreateFrame("Frame", "@ADDON@TextSizeMenu", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    sizeMenu:SetFrameStrata("FULLSCREEN_DIALOG")
+    sizeMenu:SetClampedToScreen(true)
+    sizeMenu:EnableMouse(true)
+    table.insert(ns.themedFrames, sizeMenu)
+    ns.ApplyTheme(sizeMenu)
+    table.insert(UISpecialFrames, "@ADDON@TextSizeMenu")
+    local title = sizeMenu:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    title:SetPoint("TOPLEFT", 10, -8)
+    title:SetText(ns.T("TS_MENU"))
+    sizeMenu.buttons = {}
+    local y = -24
+    for i = 0, 9 do
+      local v = i <= 8 and (8 + i) / 10 or false -- the last one: back to the setting
+      local b = CreateFrame("Button", nil, sizeMenu)
+      b:SetSize(150, 16)
+      b:SetPoint("TOPLEFT", 8, y)
+      b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+      b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      b.text:SetPoint("LEFT", 4, 0)
+      b.value = v
+      b:SetScript("OnClick", function()
+        ns.SetTextScale(v or nil, sizeMenu.key)
+        sizeMenu:Hide()
+      end)
+      sizeMenu.buttons[#sizeMenu.buttons + 1] = b
+      y = y - (v and 16 or 18)
+    end
+    sizeMenu:SetSize(166, -y + 8)
+    -- Closes by itself a moment after the mouse leaves it.
+    sizeMenu:SetScript("OnUpdate", function(self, e)
+      if self:IsMouseOver() then self.away = 0 return end
+      self.away = (self.away or 0) + e
+      if self.away > 1.5 then self:Hide() end
+    end)
+  end
+  sizeMenu.key = key
+  local own = key and db.textScales and db.textScales[key]
+  local cur = ns.TextScale(key)
+  for _, b in ipairs(sizeMenu.buttons) do
+    if b.value then
+      local on = own and math.abs(b.value - cur) < 0.01
+      b.text:SetText((on and "|cff33ff33> " or "|cffffffff  ") .. math.floor(b.value * 100 + 0.5) .. "%|r")
+    else
+      b.text:SetText((own and "|cffffffff  " or "|cff33ff33> ") .. ns.T("TS_DEFAULT", ns.TextScaleLabel()) .. "|r")
+    end
+  end
+  sizeMenu.away = 0
+  sizeMenu:ClearAllPoints()
+  if anchor then
+    sizeMenu:SetPoint("TOPLEFT", anchor, "BOTTOMRIGHT", 0, 0)
+  else
+    sizeMenu:SetPoint("CENTER")
+  end
+  sizeMenu:Show()
+end
+
+-- The tooltip on every resize corner.
+function ns.GripTooltip(grip)
+  grip:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText(ns.T("GRIP_TIP"), 1, 1, 1, 1, true)
+    GameTooltip:Show()
+  end)
+  grip:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
 function ns.CycleTheme()
@@ -323,11 +479,17 @@ function ns.CycleTheme()
   ns.Print(ns.T("THEME_SET", ns.T("THEME_" .. ns.CurrentTheme().key)))
 end
 
-function ns.CycleFontSize()
-  local _, i = ns.CurrentFont()
-  ns.db.fontSize = ns.FONTS[(i % #ns.FONTS) + 1].key
-  ns.ApplyFontAll()
-  ns.Print(ns.T("FONT_SET", ns.T("FONT_" .. ns.CurrentFont().key)))
+-- "/@SLASH@ font" steps up and starts over at 80% after 160%; "/@SLASH@ font 120" sets it.
+function ns.CycleFontSize(arg)
+  local want = tonumber(arg)
+  if want then
+    ns.SetTextScale(want > 5 and want / 100 or want)
+  else
+    local s = ns.TextScale() + 0.1
+    if s > ns.TEXT_MAX + 0.01 then s = ns.TEXT_MIN end
+    ns.SetTextScale(s)
+  end
+  ns.Print(ns.T("FONT_SET", ns.TextScaleLabel()))
 end
 
 -- Gemensam stil för fönster: tema, flyttbart, ändringsbar bredd och skala.
@@ -359,9 +521,10 @@ function ns.MakeWindow(name, width, posKey, defaultPoint)
     ns.db[posKey] = { point, relPoint, x, y }
   end)
   f.defaultPoint = defaultPoint
+  f.defaultWidth = width
   f.posKey = posKey
 
-  local t = f:CreateFontString(nil, "OVERLAY", ns.CurrentFont().font)
+  local t = ns.FontString(f, "small", nil, posKey)
   t:SetPoint("TOPLEFT", 10, -10)
   t:SetWidth(f:GetWidth() - 20)
   t:SetJustifyH("LEFT")
@@ -393,10 +556,13 @@ function ns.MakeWindow(name, width, posKey, defaultPoint)
   grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
   grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
   grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-  grip:SetScript("OnMouseDown", function()
+  grip:SetScript("OnMouseDown", function(self, button)
+    if button == "RightButton" then ns.ShowTextSizeMenu(self, posKey) return end
     if not ns.db.locked then f:StartSizing("RIGHT") end
   end)
-  grip:SetScript("OnMouseUp", function()
+  ns.GripTooltip(grip)
+  grip:SetScript("OnMouseUp", function(_, button)
+    if button == "RightButton" then return end
     f:StopMovingOrSizing()
     ns.db[posKey .. "W"] = f:GetWidth()
     local point, _, relPoint, x, y = f:GetPoint()
@@ -428,6 +594,10 @@ function ns.ResetWindow(f)
   ns.db[f.posKey .. "W"] = nil
   ns.db[f.posKey .. "S"] = nil
   f:SetScale(1)
+  if f.defaultWidth then
+    f:SetWidth(f.defaultWidth)
+    f:SetContent(f.text:GetText() or "")
+  end
   f:ClearAllPoints()
   local d = f.defaultPoint
   f:SetPoint(d[1], UIParent, d[2], d[3], d[4])
@@ -712,14 +882,19 @@ ns.RegisterCommand("lock", true, function()
   if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
 end)
 
+-- Other windows (dungeon guide, bag check, settings, ...) add how they go back to default.
+ns.resetHooks = {}
+function ns.OnResetWindows(fn) table.insert(ns.resetHooks, fn) end
+
 ns.RegisterCommand("reset", true, function()
   ns.ResetWindow(frame)
   if ns.windows then for _, w in ipairs(ns.windows) do ns.ResetWindow(w) end end
+  for _, fn in ipairs(ns.resetHooks) do pcall(fn) end
   Print(ns.T("RESET_DONE"))
 end)
 
 ns.RegisterCommand("theme", true, function() ns.CycleTheme() end)
-ns.RegisterCommand("font", true, function() ns.CycleFontSize() end)
+ns.RegisterCommand("font", true, function(rest) ns.CycleFontSize(rest) end)
 
 function ns.CycleLang()
   @ADDON@Global = @ADDON@Global or {}

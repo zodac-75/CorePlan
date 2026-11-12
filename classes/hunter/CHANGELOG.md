@@ -1,3 +1,9 @@
+# HunterPlan 1.0.0-beta56
+
+- **Text size per window:** right-click a window's resize corner (bottom right) and pick 80% to 160% for that window only, or "Same as the setting". The Text size setting (now 80%-160%, also `/hp font 120`) is the default for every window. Rows and icons grow with the text. Your old Small/Normal/Large carries over.
+- **Resize every window:** the dungeon guide's corner now drags both width and height, and the bag check's corner its width. Ctrl + mouse wheel scales every window, now also the settings window and the quick menu.
+- **Reset window positions** also resets the sizes. Sizes and text sizes are saved in your layout profiles.
+
 # HunterPlan 1.0.0-beta55
 
 - **Easter eggs:** when you emote at another Plan user, the line on your screen now says they saw it ("Faithlezz has a Plan addon too and saw your /gasp!") instead of making it look like they did the emote.

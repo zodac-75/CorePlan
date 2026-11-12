@@ -683,6 +683,87 @@ do
   UnitPower, UnitPowerMax, issecretvalue = oldP, oldM, nil
 end
 
+-- Text size and window sizes
+do
+  local oldCreate = rawget(_G, "CreateFont")
+  CreateFont = function(name)
+    local f = newWidget("Font", name)
+    function f:SetFont(file, size) self.__file, self.__size = file, size end
+    function f:GetFont() return self.__file, self.__size, "" end
+    _G[name] = f
+    return f
+  end
+  local before = ns.db.textScale
+  ns.SetTextScale(1)
+  local small = ns.Font("small")
+  if small == GameFontHighlightSmall or not small.__size then table.insert(errors, "ns.Font skapade ingen egen font") end
+  local s1 = small.__size
+  ns.SetTextScale(1.5)
+  if not (s1 and small.__size and math.abs(small.__size - s1 * 1.5) < 0.01) then
+    table.insert(errors, "textstorlek 150% ändrade inte fonten: " .. tostring(s1) .. " -> " .. tostring(small.__size))
+  end
+  if ns.TS(16) ~= 24 then table.insert(errors, "TS(16) vid 150%: " .. ns.TS(16)) end
+  ns.RunCommand("font", "80")
+  if math.abs(ns.TextScale() - 0.8) > 0.001 then table.insert(errors, "/mp font 80: " .. ns.TextScale()) end
+  ns.RunCommand("font", "")
+  if math.abs(ns.TextScale() - 0.9) > 0.001 then table.insert(errors, "/mp font stegar inte: " .. ns.TextScale()) end
+  ns.SetTextScale(3)
+  if ns.TextScale() ~= 1.6 then table.insert(errors, "textstorlek över 160%: " .. ns.TextScale()) end
+  -- The old Small/Normal/Large setting carries over.
+  ns.db.textScale, ns.db.fontSize = nil, "large"
+  if ns.TextScale() ~= 1.4 then table.insert(errors, "gamla 'Stor' blev " .. ns.TextScale()) end
+  ns.db.fontSize = nil
+  ns.SetTextScale(1)
+  print("  textstorlek: " .. tostring(s1) .. " px vid 100%, egen font " .. tostring(small:GetName()))
+  -- Dungeon guide: drag the corner, the size is saved; reset puts it back.
+  local dw = rawget(_G, "MagePlanDungeons")
+  if dw and dw.grip then
+    -- Right-click on the corner: the text size menu; picking 130% sets it.
+    dw.grip.__scripts.OnMouseDown(dw.grip, "RightButton")
+    local menu = rawget(_G, "MagePlanTextSizeMenu")
+    if not (menu and menu.buttons and #menu.buttons == 10) then
+      table.insert(errors, "högerklick på hörnet öppnade ingen textstorleksmeny")
+    else
+      -- 130% for the dungeon guide only; the others keep the setting.
+      local dfont = ns.Font("small", "dungeon")
+      menu.buttons[6].__scripts.OnClick(menu.buttons[6])
+      if math.abs(ns.TextScale("dungeon") - 1.3) > 0.001 then table.insert(errors, "menyn satte inte 130% på dungeon-guiden: " .. ns.TextScale("dungeon")) end
+      if math.abs(ns.TextScale() - 1) > 0.001 or math.abs(ns.TextScale("bags") - 1) > 0.001 then
+        table.insert(errors, "130% på dungeon-guiden ändrade andra fönster") end
+      if not (dfont.__size and math.abs(dfont.__size - 13) < 0.01) then table.insert(errors, "dungeon-fonten blev inte 13 px: " .. tostring(dfont.__size)) end
+      if math.abs((ns.Font("small").__size or 0) - 10) > 0.01 then table.insert(errors, "den vanliga fonten ändrades också") end
+      -- The last choice: back to the setting.
+      dw.grip.__scripts.OnMouseDown(dw.grip, "RightButton")
+      menu.buttons[10].__scripts.OnClick(menu.buttons[10])
+      if ns.db.textScales and ns.db.textScales.dungeon then table.insert(errors, "'Som inställningen' tog inte bort dungeon-guidens storlek") end
+      ns.SetTextScale(1)
+    end
+    dw:SetSize(900, 600)
+    dw.grip.__scripts.OnMouseUp(dw.grip)
+    if ns.db.dungeonW ~= 900 or ns.db.dungeonH ~= 600 then table.insert(errors, "dungeonfönstrets storlek sparas inte") end
+    ns.RunCommand("reset", "")
+    if ns.db.dungeonW or ns.db.dungeonH then table.insert(errors, "reset nollställde inte dungeonfönstrets storlek") end
+  else
+    table.insert(errors, "dungeonfönstret saknar hörn att dra i")
+  end
+  -- Bag check: wider by its corner.
+  ns.ToggleBags(true)
+  local bw = rawget(_G, "MagePlanBags")
+  if bw and bw.grip then
+    bw:SetWidth(500)
+    bw.grip.__scripts.OnMouseUp(bw.grip)
+    if ns.db.bagW ~= 500 then table.insert(errors, "bag check-bredden sparas inte") end
+    ns.RunCommand("reset", "")
+    if ns.db.bagW then table.insert(errors, "reset nollställde inte bag check-bredden") end
+  else
+    table.insert(errors, "bag check saknar hörn att dra i")
+  end
+  ns.ToggleBags(false)
+  ns.db.bagShown = nil
+  ns.db.textScale = before
+  CreateFont = oldCreate
+end
+
 -- Emote easter eggs
 do
   DoEmote("KISS", "target")

@@ -246,10 +246,15 @@ end
 -- The window. Rows are secure buttons, so a click can sell (with a vendor open)
 -- or disenchant without tainting anything. Nothing is changed in combat.
 ---------------------------------------------------------------------------
-local win, sellAll, hint, foot
+local win, sellAll, hint, foot, title
+local TK = "bags" -- its own text size (ns.TextScale)
 local lines = {}
 local merchantOpen, autoOpened, reopenAfterCombat = false, false, false
-local WIDTH, LINE_H, MAX_LINES, SELL_BATCH = 360, 18, 40, 12
+-- WIDTH and LINE_H are at 100% text size: the window can be made wider by its corner, and the
+-- lines grow with the text size.
+local BASE_WIDTH, BASE_LINE_H, MAX_LINES, SELL_BATCH = 360, 18, 40, 12
+local function W() return (win and win:GetWidth() and win:GetWidth() > 100) and win:GetWidth() or (ns.db.bagW or ns.TS(BASE_WIDTH, TK)) end
+local function LH() return ns.TS(BASE_LINE_H, TK) end
 
 local function DisenchantName()
   return ns.SpellInfo(13262) or "Disenchant"
@@ -323,7 +328,6 @@ end
 local function GetLine(i)
   if lines[i] then return lines[i] end
   local b = CreateFrame("Button", "@ADDON@BagLine" .. i, win, "SecureActionButtonTemplate")
-  b:SetHeight(LINE_H)
   b:SetPoint("LEFT", win, "LEFT", 8, 0)
   b:SetPoint("RIGHT", win, "RIGHT", -8, 0)
   b:RegisterForClicks("AnyUp", "AnyDown")
@@ -331,21 +335,18 @@ local function GetLine(i)
   hl:SetAllPoints()
   hl:SetColorTexture(1, 1, 1, 0.08)
   b.icon = b:CreateTexture(nil, "ARTWORK")
-  b.icon:SetSize(LINE_H - 2, LINE_H - 2)
   b.icon:SetPoint("LEFT", 0, 0)
-  b.name = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  b.name = ns.FontString(b, "small", nil, TK)
   b.name:SetPoint("LEFT", b.icon, "RIGHT", 4, 0)
-  b.name:SetWidth(190)
   b.name:SetJustifyH("LEFT")
   b.name:SetWordWrap(false)
-  b.act = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  b.act = ns.FontString(b, "headSmall", nil, TK)
   b.act:SetPoint("RIGHT", 0, 0)
-  b.act:SetWidth(58)
   b.act:SetJustifyH("RIGHT")
-  b.value = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  b.value = ns.FontString(b, "small", nil, TK)
   b.value:SetPoint("RIGHT", b.act, "LEFT", -6, 0)
   b.value:SetJustifyH("RIGHT")
-  b.head = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  b.head = ns.FontString(b, "head", nil, TK)
   b.head:SetPoint("LEFT", 0, 0)
   b.head:SetJustifyH("LEFT")
   b:SetScript("OnEnter", LineTooltip)
@@ -390,7 +391,13 @@ Refresh = function()
   if not win or not win:IsShown() or InCombatLockdown() then return end
   local list, totals = ns.BagScan()
   hint:SetText(merchantOpen and ns.T("BAG_HINT_VENDOR") or ns.T("BAG_HINT_NOVENDOR"))
-  local y = -46
+  local width, lineH = W(), LH()
+  title:ClearAllPoints()
+  title:SetPoint("TOPLEFT", 10, -10)
+  hint:ClearAllPoints()
+  hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4)
+  hint:SetWidth(width - 20)
+  local y = -(10 + title:GetStringHeight() + 4 + hint:GetStringHeight() + 6)
   local n = 0
   local hidden = 0
   local function Add(fn, arg)
@@ -400,9 +407,13 @@ Refresh = function()
     b:ClearAllPoints()
     b:SetPoint("TOPLEFT", win, "TOPLEFT", 8, y)
     b:SetPoint("TOPRIGHT", win, "TOPRIGHT", -8, y)
+    b:SetHeight(lineH)
+    b.icon:SetSize(lineH - 2, lineH - 2)
+    b.act:SetWidth(ns.TS(58, TK))
+    b.name:SetWidth(math.max(80, width - 16 - lineH - 4 - ns.TS(58, TK) - ns.TS(90, TK)))
     fn(b, arg)
     b:Show()
-    y = y - LINE_H
+    y = y - lineH
   end
   local sellList = {}
   for _, k in ipairs(GROUPS) do
@@ -439,7 +450,7 @@ Refresh = function()
   end
   foot:ClearAllPoints()
   foot:SetPoint("TOPLEFT", win, "TOPLEFT", 10, y - 4)
-  foot:SetWidth(WIDTH - 20)
+  foot:SetWidth(width - 20)
   y = y - 4 - (foot:GetText() ~= "" and (foot:GetStringHeight() + 4) or 0)
 
   -- Sell everything in the junk and vendor groups, 12 at a time (the vendor's buyback holds 12).
@@ -451,7 +462,8 @@ Refresh = function()
     sellAll:SetAttribute("macrotext1", table.concat(macro, "\n"))
     sellAll:SetText(ns.T("BAG_SELLALL", count))
     sellAll:ClearAllPoints()
-    sellAll:SetPoint("TOP", win, "TOPLEFT", WIDTH / 2, y - 4)
+    sellAll:SetSize(width - 40, ns.TS(24, TK))
+    sellAll:SetPoint("TOP", win, "TOPLEFT", width / 2, y - 4)
     sellAll:Show()
     y = y - 30
   else
@@ -466,7 +478,7 @@ ns.RefreshBags = Refresh
 local function Create()
   if win then return end
   win = CreateFrame("Frame", "@ADDON@Bags", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  win:SetWidth(WIDTH)
+  win:SetWidth(ns.db.bagW or ns.TS(BASE_WIDTH, TK))
   win:SetHeight(80)
   -- Same layer as the settings window, so opening it from there puts it on top.
   win:SetFrameStrata("DIALOG")
@@ -497,15 +509,14 @@ local function Create()
     self:SetScale(s)
     ns.db.bagScale = s
   end)
-  local title = win:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  title = ns.FontString(win, "head", nil, TK)
   title:SetPoint("TOPLEFT", 10, -10)
   title:SetText("|cff@COLOR@@ADDON@|r - " .. ns.T("BAG_TITLE"))
   win.title = title
-  hint = win:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  hint = ns.FontString(win, "small", nil, TK)
   hint:SetPoint("TOPLEFT", 10, -26)
-  hint:SetWidth(WIDTH - 20)
   hint:SetJustifyH("LEFT")
-  foot = win:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  foot = ns.FontString(win, "small", nil, TK)
   foot:SetJustifyH("LEFT")
   local close = CreateFrame("Button", nil, win, "UIPanelCloseButton")
   close:SetPoint("TOPRIGHT", 2, 2)
@@ -514,7 +525,7 @@ local function Create()
     if not InCombatLockdown() then win:Hide(); ns.db.bagShown = nil end
   end)
   sellAll = CreateFrame("Button", "@ADDON@BagSellAll", win, "SecureActionButtonTemplate,UIPanelButtonTemplate")
-  sellAll:SetSize(WIDTH - 40, 24)
+  sellAll:SetSize(ns.TS(BASE_WIDTH, TK) - 40, ns.TS(24, TK))
   sellAll:RegisterForClicks("AnyUp", "AnyDown")
   sellAll:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -524,6 +535,41 @@ local function Create()
   sellAll:SetScript("OnLeave", function() GameTooltip:Hide() end)
   sellAll:Hide()
   win:SetScript("OnShow", function() Refresh() end)
+
+  -- Drag the corner for the width; the height follows the list.
+  win:SetResizable(true)
+  if win.SetResizeBounds then win:SetResizeBounds(280, 60, 900, 2000)
+  elseif win.SetMinResize then win:SetMinResize(280, 60); win:SetMaxResize(900, 2000) end
+  local grip = CreateFrame("Button", nil, win)
+  grip:SetSize(14, 14)
+  grip:SetPoint("BOTTOMRIGHT", -2, 2)
+  grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+  grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+  grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+  grip:SetScript("OnMouseDown", function(self, button)
+    if button == "RightButton" then ns.ShowTextSizeMenu(self, TK) return end
+    if not ns.db.locked and not InCombatLockdown() then win:StartSizing("RIGHT") end
+  end)
+  ns.GripTooltip(grip)
+  grip:SetScript("OnMouseUp", function(_, button)
+    if button == "RightButton" then return end
+    win:StopMovingOrSizing()
+    ns.db.bagW = win:GetWidth()
+    local point, _, relPoint, x, y = win:GetPoint()
+    ns.db.bagPos = { point, relPoint, x, y }
+    Refresh()
+  end)
+  win.grip = grip
+  ns.OnTextScale(function() if not InCombatLockdown() then Refresh() end end)
+  ns.OnResetWindows(function()
+    if InCombatLockdown() then return end
+    ns.db.bagPos, ns.db.bagW, ns.db.bagScale = nil, nil, nil
+    win:SetScale(1)
+    win:SetWidth(ns.TS(BASE_WIDTH, TK))
+    win:ClearAllPoints()
+    win:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 400, -110)
+    Refresh()
+  end)
   win:Hide()
 end
 

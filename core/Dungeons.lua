@@ -4,12 +4,18 @@
 local _, ns = ...
 
 local win, scroll, content
+local TK = "dungeon" -- its own text size (ns.TextScale)
 local listButtons = {}
 local rows, rowPool = {}, {}
 local selected
 local inLog = {}
 
-local LIST_W, DETAIL_W, ROW_H = 200, 400, 32
+-- Sizes at 100% text size. ns.TS scales them with the text size; the window itself can be
+-- resized by its corner (the detail pane takes the extra room) and scaled with Ctrl + wheel.
+local BASE_LIST_W, DETAIL_W, BASE_ROW_H, WIN_H = 200, 400, 32, 470
+local function LIST_W() return ns.TS(BASE_LIST_W, TK) end
+local function ROW_H() return ns.TS(BASE_ROW_H, TK) end
+local function DetailW() return (scroll and scroll:GetWidth() and scroll:GetWidth() > 50) and scroll:GetWidth() or DETAIL_W end
 
 ---------------------------------------------------------------------------
 -- Quest state
@@ -224,28 +230,30 @@ local function GetRow()
     r:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     r:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     r.icon = r:CreateTexture(nil, "ARTWORK")
-    r.icon:SetSize(16, 16)
     r.icon:SetPoint("TOPLEFT", 4, -3)
-    r.right = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    r.right = ns.FontString(r, "small", nil, TK)
     r.right:SetPoint("TOPRIGHT", -8, -4)
-    r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    r.text:SetPoint("TOPLEFT", 24, -4)
+    r.text = ns.FontString(r, "small", nil, TK)
     r.text:SetPoint("RIGHT", r.right, "LEFT", -6, 0)
     r.text:SetJustifyH("LEFT")
     r.text:SetWordWrap(false)
-    r.sub = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    r.sub = ns.FontString(r, "dim", nil, TK)
     r.sub:SetPoint("TOPLEFT", r.text, "BOTTOMLEFT", 0, -2)
     r.sub:SetPoint("RIGHT", -8, 0)
     r.sub:SetJustifyH("LEFT")
     r.sub:SetWordWrap(false)
   end
   r:SetParent(content)
-  r:SetWidth(DETAIL_W - 24)
+  r:SetWidth(DetailW() - 24)
+  r.icon:SetSize(ns.TS(16, TK), ns.TS(16, TK))
+  r.text:ClearAllPoints()
+  r.text:SetPoint("TOPLEFT", ns.TS(16, TK) + 8, -4)
+  r.text:SetPoint("RIGHT", r.right, "LEFT", -6, 0)
   r.icon:SetTexture(nil)
   r.icon:SetDesaturated(false)
   r.icon:SetVertexColor(1, 1, 1)
   r.icon:SetTexCoord(0, 1, 0, 1)
-  r.text:SetFontObject(GameFontHighlightSmall)
+  r.text:SetFontObject(ns.Font("small", TK))
   r.text:SetText("")
   r.sub:SetText("")
   r.right:SetText("")
@@ -268,21 +276,21 @@ end
 
 local function Header(y, text)
   local r = GetRow()
-  r:SetHeight(22)
+  r:SetHeight(ns.TS(22, TK))
   r:SetPoint("TOPLEFT", 4, y)
   r:EnableMouse(false)
   r.text:SetText("|cff@COLOR@" .. text .. "|r")
-  r.text:SetFontObject(GameFontNormal)
-  return y - 24
+  r.text:SetFontObject(ns.Font("head", TK))
+  return y - ns.TS(24, TK)
 end
 
 local function SmallText(y, text)
   local r = GetRow()
-  r:SetHeight(18)
+  r:SetHeight(ns.TS(18, TK))
   r:SetPoint("TOPLEFT", 4, y)
   r:EnableMouse(false)
   r.text:SetText("|cff999999" .. text .. "|r")
-  return y - 18
+  return y - ns.TS(18, TK)
 end
 
 ---------------------------------------------------------------------------
@@ -297,32 +305,32 @@ local function ShowDetail()
 
   -- Title
   local t = GetRow()
-  t:SetHeight(26)
+  t:SetHeight(ns.TS(26, TK))
   t:SetPoint("TOPLEFT", 4, y)
   t:EnableMouse(false)
-  t.text:SetFontObject(GameFontNormalLarge)
+  t.text:SetFontObject(ns.Font("large", TK))
   t.text:SetText(d.name)
   t.right:SetText(ns.T("DG_LEVELS", d.lo, d.hi))
-  y = y - 28
+  y = y - ns.TS(28, TK)
 
   -- Entrances (the newest dungeons: from the game's dungeon journal, or the zone and a hint)
   FindEntrance(d)
   if #d.ent == 0 and d.zone then
     local r = GetRow()
-    r:SetHeight(ROW_H)
+    r:SetHeight(ROW_H())
     r:SetPoint("TOPLEFT", 4, y)
-    r.text:SetFontObject(GameFontHighlightSmall)
+    r.text:SetFontObject(ns.Font("small", TK))
     r.icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
     r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     r.text:SetText(ns.T("DG_ENTRANCE"))
     r.sub:SetText(ns.MapName(d.zone) .. (d.where and (" – " .. ns.Tx(d.where)) or ""))
-    y = y - ROW_H
+    y = y - ROW_H()
   end
   for i, e in ipairs(d.ent) do
     local r = GetRow()
-    r:SetHeight(ROW_H)
+    r:SetHeight(ROW_H())
     r:SetPoint("TOPLEFT", 4, y)
-    r.text:SetFontObject(GameFontHighlightSmall)
+    r.text:SetFontObject(ns.Font("small", TK))
     r.icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
     r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     r.text:SetText(ns.T("DG_ENTRANCE") .. (#d.ent > 1 and (" " .. i) or ""))
@@ -331,7 +339,7 @@ local function ShowDetail()
       ns.SetWaypoint(e[1], e[2], e[3], d.name)
       if button == "RightButton" then OpenMap(e[1]) end
     end)
-    y = y - ROW_H
+    y = y - ROW_H()
   end
 
   -- Quests, one row per quest name (Questie lists some quests once per variant).
@@ -360,9 +368,9 @@ local function ShowDetail()
     local id, st = e.id, e.st
     local q = ns.DQUESTS[id]
     local r = GetRow()
-    r:SetHeight(ROW_H)
+    r:SetHeight(ROW_H())
     r:SetPoint("TOPLEFT", 4, y)
-    r.text:SetFontObject(GameFontHighlightSmall)
+    r.text:SetFontObject(ns.Font("small", TK))
     r.icon:SetTexture(ICONS[st])
     local color = "|cffffffff"
     if st == "done" then
@@ -411,7 +419,7 @@ local function ShowDetail()
       GameTooltip:Show()
     end)
     r:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    y = y - ROW_H
+    y = y - ROW_H()
     shown = shown + 1
   end
   if shown == 0 then y = SmallText(y, ns.T(d.id == 0 and "DG_NEW" or "DG_NOQUESTS")) end
@@ -427,9 +435,9 @@ local function ShowDetail()
       if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
     elseif (quality or 0) >= 2 and ns.ItemScore(link) > 0 and ns.CompareToEquipped(link) ~= nil then
       local r = GetRow()
-      r:SetHeight(ROW_H)
+      r:SetHeight(ROW_H())
       r:SetPoint("TOPLEFT", 4, y)
-      r.text:SetFontObject(GameFontHighlightSmall)
+      r.text:SetFontObject(ns.Font("small", TK))
       r.icon:SetTexture(icon)
       r.text:SetText(link)
       r.sub:SetText(ns.T("DG_DROPS", boss) .. (req > 0 and (" – " .. ns.T("DG_REQ", req)) or ""))
@@ -448,7 +456,7 @@ local function ShowDetail()
         GameTooltip:Show()
       end)
       r:SetScript("OnLeave", function() GameTooltip:Hide() end)
-      y = y - ROW_H
+      y = y - ROW_H()
       lootShown = lootShown + 1
     end
   end
@@ -458,6 +466,7 @@ local function ShowDetail()
     y = SmallText(y, ns.T(d.id == 0 and "DG_NEW_LOOT" or "DG_NOLOOT"))
   end
 
+  content:SetWidth(DetailW())
   content:SetHeight(-y + 8)
 end
 
@@ -512,7 +521,7 @@ end
 
 local function CreateWindow()
   win = CreateFrame("Frame", "@ADDON@Dungeons", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-  win:SetSize(LIST_W + DETAIL_W + 24, 470)
+  win:SetSize(ns.db.dungeonW or (LIST_W() + DETAIL_W + 24), ns.db.dungeonH or WIN_H)
   win:SetFrameStrata("HIGH")
   win:SetToplevel(true)
   win:SetClampedToScreen(true)
@@ -558,7 +567,7 @@ local function CreateWindow()
   logo:SetTexture(ns.MEDIA .. "Icon")
   logo:SetSize(26, 26)
   logo:SetPoint("TOPLEFT", 10, -8)
-  win.title = win:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  win.title = ns.FontString(win, "large", nil, TK)
   win.title:SetPoint("LEFT", logo, "RIGHT", 6, 0)
   win.title:SetTextColor(0.41, 0.8, 0.94)
 
@@ -569,53 +578,110 @@ local function CreateWindow()
   local listScroll = CreateFrame("ScrollFrame", "@ADDON@DungeonList", win, "UIPanelScrollFrameTemplate")
   listScroll:SetPoint("TOPLEFT", 10, -42)
   listScroll:SetPoint("BOTTOMLEFT", 10, 40)
-  listScroll:SetWidth(LIST_W - 30)
   local list = CreateFrame("Frame", nil, listScroll)
   listScroll:SetScrollChild(list)
   local i = 0
   for _, d in ipairs(ns.DUNGEONS) do if Visible(d) then
     i = i + 1
     local b = CreateFrame("Button", nil, list)
-    b:SetSize(LIST_W - 30, 20)
-    b:SetPoint("TOPLEFT", 0, -(i - 1) * 21)
     b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     b.sel = b:CreateTexture(nil, "BACKGROUND")
     b.sel:SetAllPoints()
     b.sel:SetColorTexture(0.41, 0.8, 0.94, 0.2)
-    b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    b.text = ns.FontString(b, "small", nil, TK)
     b.text:SetPoint("LEFT", 4, 0)
-    b.text:SetWidth(100)
     b.text:SetJustifyH("LEFT")
     b.text:SetWordWrap(false)
-    b.count = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    b.count = ns.FontString(b, "small", nil, TK)
     b.count:SetPoint("LEFT", b.text, "RIGHT", 2, 0)
-    b.lvl = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    b.lvl = ns.FontString(b, "small", nil, TK)
     b.lvl:SetPoint("RIGHT", -4, 0)
     b.dungeon = d
     b:SetScript("OnClick", function() Select(d) end)
     listButtons[i] = b
   end end
-  list:SetSize(LIST_W - 30, i * 21)
 
   local divider = win:CreateTexture(nil, "ARTWORK")
   divider:SetColorTexture(0.41, 0.8, 0.94, 0.3)
-  divider:SetPoint("TOPLEFT", LIST_W + 6, -40)
-  divider:SetSize(1, 470 - 52)
+  divider:SetWidth(1)
 
   win.clear = CreateFrame("Button", nil, win, "UIPanelButtonTemplate")
-  win.clear:SetSize(LIST_W - 8, 22)
   win.clear:SetPoint("BOTTOMLEFT", 10, 10)
   win.clear:SetScript("OnClick", function() ns.ClearWaypoint() end)
 
   -- Right: details, scrollable
   scroll = CreateFrame("ScrollFrame", "@ADDON@DungeonScroll", win, "UIPanelScrollFrameTemplate")
-  scroll:SetPoint("TOPLEFT", LIST_W + 10, -40)
-  scroll:SetPoint("BOTTOMRIGHT", -30, 10)
+  scroll:SetPoint("BOTTOMRIGHT", -30, 22)
   content = CreateFrame("Frame", nil, scroll)
   content:SetSize(DETAIL_W, 400)
   scroll:SetScrollChild(content)
   CtrlResize(scroll)
   CtrlResize(listScroll)
+
+  -- Everything that depends on the text size: list width and rows, divider, buttons.
+  local function Layout()
+    local lw, bh = LIST_W(), ns.TS(20, TK)
+    listScroll:SetWidth(lw - 30)
+    for k, b in ipairs(listButtons) do
+      b:SetSize(lw - 30, bh)
+      b:ClearAllPoints()
+      b:SetPoint("TOPLEFT", 0, -(k - 1) * (bh + 1))
+      b.text:SetWidth(lw - 30 - ns.TS(70, TK))
+    end
+    list:SetSize(lw - 30, #listButtons * (bh + 1))
+    divider:ClearAllPoints()
+    divider:SetPoint("TOPLEFT", lw + 6, -40)
+    divider:SetPoint("BOTTOMLEFT", lw + 6, 12)
+    win.clear:SetSize(lw - 8, ns.TS(22, TK))
+    listScroll:SetPoint("BOTTOMLEFT", 10, ns.TS(22, TK) + 18)
+    scroll:SetPoint("TOPLEFT", lw + 10, -40)
+    local minW = lw + 300
+    if win.SetResizeBounds then win:SetResizeBounds(minW, 300, 1600, 1200)
+    elseif win.SetMinResize then win:SetMinResize(minW, 300); win:SetMaxResize(1600, 1200) end
+    if win:GetWidth() < minW then win:SetWidth(minW) end
+  end
+  win.Layout = Layout
+  Layout()
+
+  -- Drag the corner for width and height; the detail pane takes the room.
+  win:SetResizable(true)
+  local grip = CreateFrame("Button", nil, win)
+  grip:SetSize(14, 14)
+  grip:SetPoint("BOTTOMRIGHT", -3, 3)
+  grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+  grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+  grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+  grip:SetScript("OnMouseDown", function(self, button)
+    if button == "RightButton" then ns.ShowTextSizeMenu(self, TK) return end
+    if not ns.db.locked then win:StartSizing("BOTTOMRIGHT") end
+  end)
+  ns.GripTooltip(grip)
+  grip:SetScript("OnMouseUp", function(_, button)
+    if button == "RightButton" then return end
+    win:StopMovingOrSizing()
+    ns.db.dungeonW, ns.db.dungeonH = win:GetWidth(), win:GetHeight()
+    local a, _, b, x, y = win:GetPoint()
+    ns.db.dungeonPos = { a, b, x, y }
+    if win:IsShown() then ns.RefreshDungeons() end
+  end)
+  win.grip = grip
+  win:SetScript("OnSizeChanged", function()
+    ns.Debounce("dungeonsize", 0.05, function() if win:IsShown() then ns.RefreshDungeons() end end)
+  end)
+
+  ns.OnTextScale(function()
+    Layout()
+    if win:IsShown() then ns.RefreshDungeons() end
+  end)
+  ns.OnResetWindows(function()
+    ns.db.dungeonPos, ns.db.dungeonW, ns.db.dungeonH, ns.db.dungeonScale = nil, nil, nil, nil
+    win:SetScale(1)
+    win:SetSize(LIST_W() + DETAIL_W + 24, WIN_H)
+    win:ClearAllPoints()
+    win:SetPoint("CENTER", 0, 40)
+    Layout()
+    if win:IsShown() then ns.RefreshDungeons() end
+  end)
 
   win:SetScript("OnShow", Refresh)
   win:Hide()

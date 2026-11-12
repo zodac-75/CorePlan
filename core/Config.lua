@@ -162,11 +162,8 @@ local LOOK_SELECTORS = {
       ns.ApplyThemeAll()
     end },
   { key = "MM_FONT",
-    value = function() return ns.T("FONT_" .. ns.CurrentFont().key) end,
-    step = function(dir)
-      ns.db.fontSize = Step(ns.FONTS, ns.CurrentFont().key, dir)
-      ns.ApplyFontAll()
-    end },
+    value = function() return ns.TextScaleLabel() end,
+    step = function(dir) ns.SetTextScale(ns.TextScale() + dir * 0.1) end },
   { key = "MM_LANG",
     value = function() return ns.Lang() == "svSE" and "Svenska" or "English" end,
     step = function() ns.CycleLang() end },
@@ -460,6 +457,22 @@ local function CreateConfig()
   table.insert(ns.themedFrames, win)
   ns.ApplyTheme(win)
   table.insert(UISpecialFrames, "@ADDON@Config") -- Esc closes it
+  -- Ctrl + mouse wheel: the size of the whole settings window (its layout is fixed, so it
+  -- grows as a whole instead of following the text size).
+  win:SetScale(ns.db.configScale or 1)
+  win:EnableMouseWheel(true)
+  win:SetScript("OnMouseWheel", function(self, delta)
+    if not IsControlKeyDown() then return end
+    local sc = math.max(0.6, math.min(1.6, self:GetScale() + delta * 0.05))
+    self:SetScale(sc)
+    ns.db.configScale = sc
+  end)
+  ns.OnResetWindows(function()
+    ns.db.configPos, ns.db.configScale = nil, nil
+    win:SetScale(1)
+    win:ClearAllPoints()
+    win:SetPoint("CENTER", 0, -30)
+  end)
 
   -- The logo sits on the top edge and sticks out above the window.
   local logo = win:CreateTexture(nil, "OVERLAY")
@@ -662,6 +675,14 @@ local function BuildQuick()
   ns.ApplyTheme(quick)
   table.insert(ns.themedFrames, quick)
   table.insert(UISpecialFrames, "@ADDON@QuickMenu") -- Esc closes it
+  -- Its size follows the text size, and Ctrl + mouse wheel on top of that.
+  quick:EnableMouseWheel(true)
+  quick:SetScript("OnMouseWheel", function(self, delta)
+    if not IsControlKeyDown() then return end
+    ns.db.quickScale = math.max(0.6, math.min(1.6, (ns.db.quickScale or 1) + delta * 0.05))
+    self:SetScale(ns.db.quickScale * ns.TextScale())
+  end)
+  ns.OnResetWindows(function() ns.db.quickScale = nil end)
 
   local title = quick:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   title:SetPoint("TOPLEFT", 10, -9)
@@ -772,6 +793,7 @@ function ns.ToggleQuickMenu(anchor)
   else
     quick:SetPoint("CENTER")
   end
+  quick:SetScale((ns.db.quickScale or 1) * ns.TextScale())
   RefreshQuick()
   quick:Show()
 end

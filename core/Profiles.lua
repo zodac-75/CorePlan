@@ -13,11 +13,11 @@ local KEYS = {
   -- windows
   "pos", "posW", "posS", "hidden",
   "craftPos", "craftPosW", "craftPosS",
-  "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "bagPos", "bagScale", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
-  "arrowPos", "dungeonPos", "dungeonScale", "configPos", "marksOff", "markPos", "markScale", "stormstrikeOff",
+  "shatterPos", "shatterScale", "buffPos", "buffScale", "glidePos", "glideScale", "drinkPos", "drinkScale", "bagPos", "bagScale", "bagW", "glideOff", "secShow", "partyBuffsOff", "eggsOff", "blessFor", "buffHide", "rebuffMin", "buffsOff", "alertSound", "alertSoundKit", "alertStyle",
+  "arrowPos", "dungeonPos", "dungeonScale", "dungeonW", "dungeonH", "configPos", "configScale", "quickScale", "marksOff", "markPos", "markScale", "stormstrikeOff",
   "minimapAngle", "minimapHidden",
   -- look
-  "theme", "fontSize",
+  "theme", "fontSize", "textScale", "textScales",
   -- features
   "shatterOff", "tooltipOff", "bagAutoOff", "rankChatOff", "rankController", "rankStdOff", "bagBtnOff", "upgradeOff", "questOff", "polyOff", "groupBarOff", "groupBarManual",
   "drinkOff", "drinkPct", "xpOff", "zoneTipsOff", "locked", "dungeonAutoOpen", "marks",
@@ -91,8 +91,19 @@ local function ApplyAll()
   end
   Place(_G.@ADDON@Arrow, db.arrowPos, { "TOP", "TOP", 0, -120 })
   Place(_G.@ADDON@Dungeons, db.dungeonPos, { "CENTER", "CENTER", 0, 40 })
-  if _G.@ADDON@Dungeons then _G.@ADDON@Dungeons:SetScale(db.dungeonScale or 1) end
+  local dg = _G.@ADDON@Dungeons
+  if dg then
+    dg:SetScale(db.dungeonScale or 1)
+    if db.dungeonW and db.dungeonH then dg:SetSize(db.dungeonW, db.dungeonH) end
+  end
   Place(_G.@ADDON@Config, db.configPos, { "CENTER", "CENTER", 0, -30 })
+  if _G.@ADDON@Config then _G.@ADDON@Config:SetScale(db.configScale or 1) end
+  local bags = _G.@ADDON@Bags
+  if bags and not (InCombatLockdown and InCombatLockdown()) then
+    bags:SetScale(db.bagScale or 1)
+    if db.bagW then bags:SetWidth(db.bagW) end
+    Place(bags, db.bagPos, { "TOPLEFT", "TOPLEFT", 400, -110 })
+  end
   if _G.@ADDON@MarkButton and not (InCombatLockdown and InCombatLockdown()) then
     Place(_G.@ADDON@MarkButton, db.markPos, { "CENTER", "CENTER", 260, -150 })
     _G.@ADDON@MarkButton:SetScale(db.markScale or 1)
