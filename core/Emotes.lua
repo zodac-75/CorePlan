@@ -137,6 +137,7 @@ local function TextPiece(text, size, r, g, b)
 end
 
 local function Say(text)
+  ns.lastEggLine = text
   label:SetText("|cffffccee" .. text .. "|r")
   label:SetAlpha(1)
   label:Show()
@@ -841,7 +842,9 @@ local function PlanDone()
   Sound("UI_EPICLOOT_TOAST")
 end
 
-local function Show(emote, from)
+-- answer = true: the other player's addon answered an emote *you* did, so the line under the
+-- effect says that they saw it ("Faithlezz has a Plan addon too ...") instead of "Faithlezz gasps!".
+local function Show(emote, from, answer)
   if ns.db.eggsOff then return end
   local fn = EFFECTS[emote]
   if not fn then return end
@@ -849,6 +852,7 @@ local function Show(emote, from)
   lastShown[emote] = GetTime()
   local ok, err = pcall(fn, from)
   if not ok and ns.debug then ns.Print(tostring(err)) end
+  if answer and label then Say(ns.T("EM_SEEN", Short(from), "/" .. emote:lower())) end
 end
 ns.ShowEmoteEgg = Show
 
@@ -962,7 +966,8 @@ local function OnMessage(msg, sender)
     return
   end
   if combo and back == "E" then gotAt[emote .. Short(sender)] = GetTime() end
-  Show(emote, sender)
+  -- An answer to your own emote (not the shared combos, whose lines fit both of you).
+  Show(emote, sender, back == "EB" and not LOCAL_ONLY[emote])
   if back == "E" then Send(emote == "KISS" and "KISSBACK" or ("EB:" .. emote), sender) end
 end
 

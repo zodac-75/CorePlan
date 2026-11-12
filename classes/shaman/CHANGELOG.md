@@ -1,3 +1,7 @@
+# ShamanPlan 1.16.13
+
+- **Easter eggs:** when you emote at another Plan user, the line on your screen now says they saw it ("Faithlezz has a Plan addon too and saw your /gasp!") instead of making it look like they did the emote.
+
 # ShamanPlan 1.16.12
 
 - **Dungeon guide:** when a pre-quest is already in your log, the row now shows who you hand it in to and the arrow and map point there (for example Wiley the Black in Redridge for The Defias Brotherhood), instead of the dungeon quest's own giver.

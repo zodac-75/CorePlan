@@ -694,6 +694,12 @@ do
   fire("CHAT_MSG_ADDON", "ZodacPlan", "KISS", "WHISPER", "Lover-Realm")
   fire("CHAT_MSG_ADDON", "ZodacPlan", "E:CHEER", "WHISPER", "Pal-Realm")
   fire("CHAT_MSG_ADDON", "ZodacPlan", "EB:HUG", "WHISPER", "Pal-Realm")
+  -- The answer to your own /hug says that Pal saw it, not "Pal gives you a big hug!".
+  if not (ns.lastEggLine or ""):find("Pal", 1, true) or (ns.lastEggLine or ""):find("big hug", 1, true)
+    or (ns.lastEggLine or ""):find("kram", 1, true) then
+    table.insert(errors, "svaret på din egen emote: " .. tostring(ns.lastEggLine))
+  end
+  print("  svar på egen /hug: " .. tostring(ns.lastEggLine))
   fire("CHAT_MSG_ADDON", "ZodacPlan", "E:NOPE", "WHISPER", "Pal-Realm")
   table.insert(chat, "[sim] addon msgs after receive: " .. table.concat(SIM_ADDONMSG, ", "))
   for _, e in ipairs({ "KISS", "DANCE", "CHEER", "HUG", "WAVE", "TOAST", "CHICKEN" }) do
