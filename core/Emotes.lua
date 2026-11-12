@@ -19,6 +19,9 @@
 -- Seasonal: snow with /wave in December, a pumpkin from /chicken around Halloween.
 -- Ding party: when a Plan user in your group or guild levels up, everyone with a Plan
 -- addon gets fireworks. Your own ding and finishing the talent plan get one too.
+-- The whole party: an emote with no player targeted, in a party or raid, goes to everyone
+-- there with a Plan addon ("P:<EMOTE>"). They see the effect and answer ("PB:<EMOTE>"), and
+-- you see it once, with who saw it.
 -- All of it can be turned off with /@SLASH@ eggs (or the box in the settings).
 -- The addons talk over a hidden addon-message channel: "E:<EMOTE>" to the target, who
 -- answers "EB:<EMOTE>". ("KISS"/"KISSBACK" from older versions still work.)
@@ -852,7 +855,8 @@ local function Show(emote, from, answer)
   lastShown[emote] = GetTime()
   local ok, err = pcall(fn, from)
   if not ok and ns.debug then ns.Print(tostring(err)) end
-  if answer and label then Say(ns.T("EM_SEEN", Short(from), "/" .. emote:lower())) end
+  if type(answer) == "string" and label then Say(answer)
+  elseif answer and label then Say(ns.T("EM_SEEN", Short(from), "/" .. emote:lower())) end
 end
 ns.ShowEmoteEgg = Show
 
@@ -898,6 +902,7 @@ end
 -- When you last did an emote at someone, and when someone last danced at you (short
 -- names), for the dance party.
 local didAt, gotAt = {}, {}
+local partySeen = {} -- emote -> names who answered your party emote
 local PARTY_WINDOW = 30
 
 local function OnEmote(token, unit)
@@ -912,7 +917,17 @@ local function OnEmote(token, unit)
     Drank(UnitName("player"))
   end
   unit = (type(unit) == "string" and unit ~= "" and unit) or "target"
-  if not (UnitExists(unit) and UnitIsPlayer(unit)) or UnitIsUnit(unit, "player") then return end
+  if not (UnitExists(unit) and UnitIsPlayer(unit)) or UnitIsUnit(unit, "player") then
+    -- Nobody targeted: the whole party (or raid) sees it.
+    if IsInGroup and IsInGroup() then
+      local key = "P:" .. token
+      if lastSent[key] and GetTime() - lastSent[key] < 5 then return end
+      lastSent[key] = GetTime()
+      local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+      if send then pcall(send, PREFIX, "P:" .. token, (IsInRaid and IsInRaid()) and "RAID" or "PARTY") end
+    end
+    return
+  end
   local name, realm = UnitName(unit)
   if not name then return end
   local full = (realm and realm ~= "") and (name .. "-" .. realm) or name
@@ -944,6 +959,31 @@ local function OnMessage(msg, sender)
   end
   if msg == "R:TOAST" then
     if Short(sender) ~= UnitName("player") then Drank(Short(sender)) end
+    return
+  end
+  -- An emote to the whole party: show it, and tell them you saw it.
+  local pe = msg:match("^P:(%u+)$")
+  if pe then
+    if Short(sender) == UnitName("player") or not EFFECTS[pe] or LOCAL_ONLY[pe] then return end
+    Show(pe, sender)
+    Send("PB:" .. pe, sender)
+    return
+  end
+  -- Answers to your party emote: collect them for a moment, then show it once.
+  pe = msg:match("^PB:(%u+)$")
+  if pe then
+    if not EFFECTS[pe] or LOCAL_ONLY[pe] then return end
+    partySeen[pe] = partySeen[pe] or {}
+    table.insert(partySeen[pe], Short(sender))
+    ns.Debounce("partyseen" .. pe, 1, function()
+      local who = partySeen[pe] or {}
+      partySeen[pe] = nil
+      if #who == 0 then return end
+      local line = #who == 1 and ns.T("EM_SEEN", who[1], "/" .. pe:lower())
+        or ns.T("EM_SEEN_MANY", ns.T("EM_AND_MORE", who[1], #who - 1), "/" .. pe:lower())
+      lastShown[pe] = nil
+      Show(pe, who[1], line)
+    end)
     return
   end
   -- "KISS"/"KISSBACK" are the old spelling of "E:KISS"/"EB:KISS" (still sent for kisses).

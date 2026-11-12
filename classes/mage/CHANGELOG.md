@@ -1,3 +1,7 @@
+# MagePlan 1.41.1
+
+- **Easter eggs for the whole party:** do an easter-egg emote (/cheer, /dance, /wave, ...) with nobody targeted while in a party or raid, and everyone there with a Plan addon gets the show. You see it once too, with who saw it ("Buddy and 2 more have Plan addons too and saw your /cheer!").
+
 # MagePlan 1.41.0
 
 - **Text size per window:** right-click a window's resize corner (bottom right) and pick 80% to 160% for that window only, or "Same as the setting". The Text size setting (now 80%-160%, also `/mp font 120`) is the default for every window. Rows and icons grow with the text. Your old Small/Normal/Large carries over.

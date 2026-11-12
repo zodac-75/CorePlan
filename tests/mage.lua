@@ -781,6 +781,30 @@ do
     table.insert(errors, "svaret på din egen emote: " .. tostring(ns.lastEggLine))
   end
   print("  svar på egen /hug: " .. tostring(ns.lastEggLine))
+  -- The whole party: no player targeted, in a party.
+  do
+    local oldGroup, oldExists = rawget(_G, "IsInGroup"), UnitExists
+    IsInGroup = function() return true end
+    UnitExists = function(u) return u == "player" end
+    local n0 = #SIM_ADDONMSG
+    DoEmote("CHEER")
+    if SIM_ADDONMSG[n0 + 1] ~= "ZodacPlan:P:CHEER>nil" then table.insert(errors, "party-emote skickades inte: " .. tostring(SIM_ADDONMSG[n0 + 1])) end
+    DoEmote("CHEER") -- throttled
+    if #SIM_ADDONMSG ~= n0 + 1 then table.insert(errors, "party-emote spammades") end
+    -- A party member's emote: shown, and answered.
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "P:WAVE", "PARTY", "Buddy-Realm")
+    if SIM_ADDONMSG[n0 + 2] ~= "ZodacPlan:PB:WAVE>Buddy-Realm" then table.insert(errors, "party-emote besvarades inte: " .. tostring(SIM_ADDONMSG[n0 + 2])) end
+    -- Answers to yours: one show, with who saw it.
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Buddy-Realm")
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Pal-Realm")
+    fire("CHAT_MSG_ADDON", "ZodacPlan", "PB:CHEER", "WHISPER", "Tank-Realm")
+    now = now + 2; runTimers(now)
+    local line = ns.lastEggLine or ""
+    print("  party-emote: " .. line)
+    if not (line:find("Buddy", 1, true) and line:find("2", 1, true)) then table.insert(errors, "party-svaren visas inte: " .. line) end
+    IsInGroup, UnitExists = oldGroup, oldExists
+    for i = #SIM_ADDONMSG, n0 + 1, -1 do SIM_ADDONMSG[i] = nil end
+  end
   fire("CHAT_MSG_ADDON", "ZodacPlan", "E:NOPE", "WHISPER", "Pal-Realm")
   table.insert(chat, "[sim] addon msgs after receive: " .. table.concat(SIM_ADDONMSG, ", "))
   for _, e in ipairs({ "KISS", "DANCE", "CHEER", "HUG", "WAVE", "TOAST", "CHICKEN" }) do
