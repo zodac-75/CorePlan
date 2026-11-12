@@ -1,4 +1,6 @@
-# MagePlan 1.41.4
+# MagePlan 1.41.5
+
+- **Buff bar:** a buff that someone else's stronger buff blocks (Mark of the Wild on a player with Might of Stormwind, "a more powerful spell is already active") no longer shows an icon. If the game refuses a click for that reason, the icon is hidden for that player for 10 minutes.
 
 - **Easter eggs:** the full-bags egg now has three versions (the bag bursts, the bag burps, or the bag runs away), picked at random. Preview with `/mp egg full`.
 

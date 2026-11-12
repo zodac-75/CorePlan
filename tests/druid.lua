@@ -915,6 +915,26 @@ do
     end
   end
   if motwShown() then table.insert(errors, "Gift of the Wild från någon annan: Mark of the Wild visas ändå") end
+  -- Might of Stormwind på mig: Mark of the Wild går inte att kasta, ingen ikon.
+  local function mosAura(u, i) if u == "player" and i == 1 then return "Might of Stormwind", 0 end end
+  if C_UnitAuras then
+    C_UnitAuras = { GetAuraDataByIndex = function(u, i)
+      local n, id = mosAura(u, i)
+      if n then return { name = n, spellId = 1, expirationTime = now + 1800, duration = 3600 } end
+    end }
+  else
+    UnitAura = function(u, i)
+      local n, id = mosAura(u, i)
+      if n then return n, 0, 0, nil, 3600, now + 1800, "party1", false, false, 1 end
+    end
+  end
+  if motwShown() then table.insert(errors, "Might of Stormwind: Mark of the Wild visas ändå") end
+  -- Utan den auran: ikonen kommer tillbaka, ett klick som nekas ("more powerful spell") gömmer den.
+  if C_UnitAuras then C_UnitAuras = { GetAuraDataByIndex = function() end } else UnitAura = function() end end
+  if not motwShown() then table.insert(errors, "Mark of the Wild saknas men visas inte") end
+  local mb
+  for i = 1, 6 do local b = rawget(_G, "DruidPlanBuff" .. i); if b and b.__shown and rawget(b, "spell") == "Mark of the Wild" then mb = b end end
+  if mb and mb.GetScript and mb.RunScript then pcall(function() mb:RunScript("PostClick", "LeftButton") end) end
   GetSpellLevelLearned = oldLevel
   if C_Spell then C_Spell.GetSpellLevelLearned = oldCL end
   C_UnitAuras, UnitAura = oldC, oldU

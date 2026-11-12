@@ -165,6 +165,40 @@ local function Outranked(names, ids, spell)
   return false
 end
 
+-- Buffs from someone else that make your own cast fail with "a more powerful spell is
+-- already active" (Might of Stormwind over Mark of the Wild). Anything not listed here is
+-- learned the first time the game says so (see Bounced below).
+local BLOCKED_BY = {
+  ["Mark of the Wild"] = { "Might of Stormwind" },
+  ["Gift of the Wild"] = { "Might of Stormwind" },
+}
+local function BlockedByAura(spell, auras)
+  for _, n in ipairs(BLOCKED_BY[spell] or {}) do
+    if auras and auras[n] then return true end
+  end
+  return false
+end
+
+-- Learned: the click on this icon was refused as "a more powerful spell is already
+-- active". No icon for that spell on that player for a while.
+local bounced, lastClick = {}, nil
+local BOUNCE_SEC = 600
+local function BounceKey(unit, spell)
+  local who = "player"
+  if unit then
+    local ok, n = pcall(UnitName, unit)
+    who = (ok and type(n) == "string" and not (issecretvalue and issecretvalue(n))) and n or unit
+  end
+  return who .. "|" .. tostring(spell)
+end
+local function IsBounced(unit, spell)
+  local k = BounceKey(unit, spell)
+  local t = bounced[k]
+  if not t then return false end
+  if GetTime() > t then bounced[k] = nil return false end
+  return true
+end
+
 -- When the aura list is hidden (secret values), ask for the buff by name instead.
 -- Seconds left (1e9 = no end or unknown), 0 = missing for sure, nil = can't tell.
 local function LookupByName(unit, names)
@@ -232,6 +266,7 @@ local function Needed()
         if best then left = best elseif not unsure then left = 0
         elseif not e.match then left = LookupByName("player", e.buffs) end
         if best and Outranked(e.buffs, ids, spell) then left = nil end
+        if BlockedByAura(spell, buffs) or IsBounced(nil, spell) then left = nil end
       end
       local warn = e.warn or WARN
       -- Out of combat: warn earlier, but at most a third of the buff's length, so a
@@ -275,6 +310,7 @@ local function Needed()
             local left = best or (not unsureP and 0 or nil)
             if left == nil and not e.match then left = LookupByName(unit, e.buffs) end
             if best and Outranked(e.buffs, theirIds, spell) then left = nil end
+            if BlockedByAura(spell, theirs) or IsBounced(unit, spell) then left = nil end
             local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
             -- Out of buff range: no icon until they come closer (checked every second).
             if left and (left == 0 or left < warn) and InRange(unit, spell) then
@@ -371,6 +407,11 @@ local function MakeButton(i)
     pcall(self.entry.cycle, self.unit or "player")
     ns.RefreshBuffWatch()
     if GameTooltip and GameTooltip:IsOwned(self) then self:GetScript("OnEnter")(self) end
+  end)
+  b:HookScript("PostClick", function(self, mouse)
+    if mouse == "LeftButton" and self.spell then
+      lastClick = { unit = self.unit, spell = self.spell, t = GetTime() }
+    end
   end)
   -- While unlocked, dragging an icon moves the whole row.
   b:RegisterForDrag("LeftButton")
@@ -552,7 +593,21 @@ ns.RegisterModule(function()
   pcall(ev.RegisterEvent, ev, "ENCOUNTER_START")
   pcall(ev.RegisterEvent, ev, "ENCOUNTER_END")
   pcall(ev.RegisterEvent, ev, "PLAYER_ENTERING_WORLD")
-  ev:SetScript("OnEvent", function(_, event, unit)
+  pcall(ev.RegisterEvent, ev, "UI_ERROR_MESSAGE")
+  ev:SetScript("OnEvent", function(_, event, unit, a2)
+    if event == "UI_ERROR_MESSAGE" then
+      local bounceMsg = _G.SPELL_FAILED_AURA_BOUNCED or "A more powerful spell is already active"
+      if type(a2) == "string" and not (issecretvalue and issecretvalue(a2)) and a2 == bounceMsg
+        and lastClick and GetTime() - lastClick.t < 3 then
+        bounced[BounceKey(lastClick.unit, lastClick.spell)] = GetTime() + BOUNCE_SEC
+        local who = lastClick.unit and select(2, pcall(UnitName, lastClick.unit))
+        if type(who) ~= "string" or (issecretvalue and issecretvalue(who)) then who = nil end
+        ns.Print(who and ns.T("BW_BOUNCED_ON", lastClick.spell, who) or ns.T("BW_BOUNCED", lastClick.spell))
+        lastClick = nil
+        ns.Debounce("buffs", 0.2, function() pcall(Update) end)
+      end
+      return
+    end
     if event == "ENCOUNTER_START" then bossFight = true
     elseif event == "ENCOUNTER_END" or event == "PLAYER_ENTERING_WORLD" then bossFight = false end
     if event == "UNIT_AURA" and unit ~= "player" and not (type(unit) == "string" and unit:find("^party")) then return end
