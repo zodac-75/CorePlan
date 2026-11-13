@@ -89,6 +89,10 @@ events:SetScript("OnEvent", function(self, event, name)
     if message then Say(message) end
     if state == "loaded" then
       local _, class = UnitClass("player")
+      -- The part may not have had its own ADDON_LOADED / PLAYER_LOGIN (it was loaded from
+      -- inside ours): start it now. Does nothing if it already started.
+      local start = rawget(_G, ADDON .. "_" .. CLASSES[class].suffix .. "Start")
+      if start then start() end
       ForwardSlashes(class)
     else
       -- Without a class part loaded, /acp still answers.

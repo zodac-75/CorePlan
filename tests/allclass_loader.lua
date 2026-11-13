@@ -40,6 +40,14 @@ end
 
 print("--- AllClassPlan-laddaren ---")
 do
+  -- The part missed its own ADDON_LOADED/PLAYER_LOGIN: the loader starts it at login.
+  local started = 0
+  _G.AllClassPlan_MageStart = function() started = started + 1 end
+  run("MAGE", {})
+  check(started == 1, "laddaren startade inte mage-delen vid inloggning (" .. started .. ")")
+  _G.AllClassPlan_MageStart = nil
+end
+do
   local loaded, said = run("MAGE", {})
   check(#loaded == 1 and loaded[1] == "AllClassPlan_Mage", "mage: laddade " .. table.concat(loaded, ","))
   check(#said == 0, "mage: sa något fast allt gick bra: " .. table.concat(said, " | "))

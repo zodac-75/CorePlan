@@ -1032,36 +1032,55 @@ events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_LEVEL_UP")
 events:RegisterEvent("SKILL_LINES_CHANGED")
 events:RegisterEvent("SPELLS_CHANGED")
+-- Setup in two steps: the saved settings (ADDON_LOADED) and the window (PLAYER_LOGIN).
+-- Both run once. AllClassPlan loads this part from inside its own ADDON_LOADED, and the game
+-- doesn't always send this part's ADDON_LOADED then, so login (or the loader) runs what's missing.
+local dbReady, started
+local function SetupDB()
+  if dbReady then return end
+  dbReady = true
+  @ADDON@Global = @ADDON@Global or {}
+  if ns.ALLCLASS then
+    -- AllClassPlan: the first time, bring the stand-alone addon's settings along.
+    local imported
+    @ADDON@DB, imported = ns.ImportSettings(ns.ALLCLASS, @ADDON@DB, @ADDON@Global)
+    ns.importedFrom = imported and ns.ALLCLASS or nil
+  end
+  @ADDON@DB = @ADDON@DB or {}
+  db = @ADDON@DB
+  ns.db = db
+end
+
+local function Start()
+  SetupDB()
+  if started then return end
+  local _, class = UnitClass("player")
+  if class ~= "@CLASS@" then
+    return -- another class: stay quiet (the other Plan addons may be installed too)
+  end
+  started = true
+  if ns.retired then
+    Print(ns.T("ACP_RETIRED"))
+    return -- AllClassPlan runs here instead
+  end
+  CreateUI()
+  for _, init in ipairs(ns.modules) do
+    local ok, err = pcall(init)
+    if not ok then Print(ns.T("MODULE_FAIL", tostring(err))) end
+  end
+  ns.RefreshMain()
+  Print(ns.T("LOADED"))
+  if ns.importedFrom then Print(ns.T("ACP_IMPORTED", ns.importedFrom, ns.importedFrom)) end
+  ns.MaybeAllClassNotice()
+end
+-- AllClassPlan's loader calls this at login, in case this part missed its own events.
+if ns.ALLCLASS then _G[ADDON .. "Start"] = function() pcall(Start) end end
+
 events:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == ADDON then
-    @ADDON@Global = @ADDON@Global or {}
-    if ns.ALLCLASS then
-      -- AllClassPlan: the first time, bring the stand-alone addon's settings along.
-      local imported
-      @ADDON@DB, imported = ns.ImportSettings(ns.ALLCLASS, @ADDON@DB, @ADDON@Global)
-      ns.importedFrom = imported and ns.ALLCLASS or nil
-    end
-    @ADDON@DB = @ADDON@DB or {}
-    db = @ADDON@DB
-    ns.db = db
+    SetupDB()
   elseif event == "PLAYER_LOGIN" then
-    local _, class = UnitClass("player")
-    if class ~= "@CLASS@" then
-      return -- another class: stay quiet (the other Plan addons may be installed too)
-    end
-    if ns.retired then
-      Print(ns.T("ACP_RETIRED"))
-      return -- AllClassPlan runs here instead
-    end
-    CreateUI()
-    for _, init in ipairs(ns.modules) do
-      local ok, err = pcall(init)
-      if not ok then Print(ns.T("MODULE_FAIL", tostring(err))) end
-    end
-    ns.RefreshMain()
-    Print(ns.T("LOADED"))
-    if ns.importedFrom then Print(ns.T("ACP_IMPORTED", ns.importedFrom, ns.importedFrom)) end
-    ns.MaybeAllClassNotice()
+    Start()
   elseif event == "PLAYER_LEVEL_UP" and frame then
     OnLevelUp(arg1)
     -- UnitLevel uppdateras ibland först efter eventet.
