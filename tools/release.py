@@ -124,7 +124,8 @@ def release_allclass():
         return
     print("== Releasing %s %s" % (name, version), flush=True)
     env = dict(os.environ, LUA=LUA)
-    run([sys.executable, os.path.join(ROOT, "tests", "allclass.py")], cwd=ROOT, env=env)
+    run([sys.executable, os.path.join(ROOT, "tests", "allclass.py"),
+         "texlua" if shutil.which("texlua") else LUA], cwd=ROOT, env=env)
 
     # One checkout for the packager: the loader at the top, the class parts as subfolders
     # that the packager moves out next to it (move-folders).
