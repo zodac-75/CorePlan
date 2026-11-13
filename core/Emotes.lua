@@ -979,8 +979,20 @@ local function RollName(v)
   v = v:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|H.-|h%[?(.-)%]?|h", "%1")
   return v
 end
+-- /@SLASH@ eggdebug: print every roll line as the game sends it ("|" doubled so the links show) and what
+-- the egg parser made of it, to see why an egg didn't start.
+local function EggDebug(event, msg)
+  if not ns.eggDebug then return end
+  if type(msg) ~= "string" then ns.Print("eggdebug " .. event .. ": " .. type(msg)) return end
+  if issecretvalue and issecretvalue(msg) then ns.Print("eggdebug " .. event .. ": (secret value)") return end
+  if not msg:lower():find("roll", 1, true) then return end
+  ns.Print("eggdebug " .. event .. ": " .. (msg:gsub("|", "||")))
+end
 local function OnRoll100(msg)
-  if GetTime() - lastR100 < 6 then return false end
+  if GetTime() - lastR100 < 6 then
+    if ns.eggDebug then ns.Print("eggdebug: skipped, last roll egg was less than 6 s ago") end
+    return false
+  end
   local rp = RollPatterns()
   for kind, list in pairs(rp) do
     for _, pat in ipairs(list) do
@@ -992,6 +1004,9 @@ local function OnRoll100(msg)
           if n and v:match("^%d+$") then
             if not roll then roll = n elseif not lo then lo = n else hi = n end
           elseif not who then who = RollName(v) end
+        end
+        if ns.eggDebug then
+          ns.Print(string.format("eggdebug: %s pattern matched, roll=%s who=%s", kind, tostring(roll), tostring(who)))
         end
         if (roll == 100 or roll == 67 or roll == 1) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
           if who == YOU or who == "" then who = UnitName("player") end
@@ -1413,10 +1428,12 @@ ns.RegisterModule(function()
       return
     end
     if event == "CHAT_MSG_LOOT" then
+      pcall(EggDebug, event, a1)
       pcall(OnLootMsg, a1)
       return
     end
     if event == "CHAT_MSG_SYSTEM" then
+      pcall(EggDebug, event, a1)
       if not ns.db.eggsOff and type(a1) == "string" and not (issecretvalue and issecretvalue(a1)) then pcall(OnRoll100, a1) end
       return
     end
@@ -1469,4 +1486,9 @@ end
 ns.RegisterCommand("eggs", true, function()
   ns.db.eggsOff = not ns.db.eggsOff
   ns.Print(ns.db.eggsOff and ns.T("EM_OFF") or ns.T("EM_ON"))
+end)
+
+ns.RegisterCommand("eggdebug", false, function()
+  ns.eggDebug = not ns.eggDebug
+  ns.Print("egg debug " .. (ns.eggDebug and "on: every roll line is printed here as the game sends it." or "off."))
 end)

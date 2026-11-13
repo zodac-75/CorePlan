@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.2
+
+- New hidden command `/acp eggdebug`: prints every loot roll line as the game sends it and what the easter eggs made of it, to track down rolls that don't trigger an egg.
+
 # AllClassPlan 0.1.1
 
 - **Fixed: the roll easter eggs (1, 67, 100) didn't show in the real game.** The roller's name comes as a clickable link in loot roll lines, which AllClassPlan didn't recognise, so nothing happened. Names are now read from links too.
