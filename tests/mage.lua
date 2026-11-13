@@ -1875,6 +1875,41 @@ do
   if not ns.lastEggLine then table.insert(errors, "egen need gav ingen easter egg") end
   print("  need-rad: " .. tostring(ns.lastEggLine))
 end
+-- Easter egg: 100 (need = det stora), 67 (six seven), även vanlig /roll 1-100
+do
+  LOOT_ROLL_ROLLED_NEED = "Need Roll - %d for %s by %s"
+  LOOT_ROLL_ROLLED_GREED = "Greed Roll - %d for %s by %s"
+  RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)"
+  local function egg(ev, msg)
+    now = now + 10; runTimers(now)
+    ns.lastEggLine = nil
+    fire(ev, msg)
+    return ns.lastEggLine
+  end
+  local function isOne(line, key, n)
+    for i = 1, n do if line == ns.T(key .. i, "Bob") then return true end end
+    return false
+  end
+  local l = egg("CHAT_MSG_LOOT", "Need Roll - 100 for |cff1eff00|Hitem:1:0|h[Sword]|h|r by Bob")
+  if not isOne(l, "EM_N100_", 2) then table.insert(errors, "need 100 gav fel egg: " .. tostring(l)) end
+  print("  need 100: " .. tostring(l))
+  l = egg("CHAT_MSG_LOOT", "Greed Roll - 100 for [Sword] by Bob")
+  if not isOne(l, "EM_R100_", 2) then table.insert(errors, "greed 100 gav fel egg: " .. tostring(l)) end
+  l = egg("CHAT_MSG_LOOT", "Greed Roll - 99 for [Sword] by Bob")
+  if l then table.insert(errors, "greed 99 gav egg: " .. tostring(l)) end
+  l = egg("CHAT_MSG_LOOT", "Need Roll - 67 for [Sword] by Bob")
+  if l ~= ns.T("EM_67", "Bob") then table.insert(errors, "67 gav fel egg: " .. tostring(l)) end
+  print("  67: " .. tostring(l))
+  l = egg("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
+  if not isOne(l, "EM_R100_", 2) then table.insert(errors, "/roll 100 gav fel egg: " .. tostring(l)) end
+  l = egg("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-1000)")
+  if l then table.insert(errors, "/roll 100 av 1000 gav egg") end
+  l = egg("CHAT_MSG_SYSTEM", "Bob rolls 67 (1-100)")
+  if l ~= ns.T("EM_67", "Bob") then table.insert(errors, "/roll 67 gav fel egg: " .. tostring(l)) end
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
+  if ns.lastEggLine then table.insert(errors, "100-egg visades igen direkt") end
+end
 
 print("--- Okända globaler som lästes ---")
 local names = {}

@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.0-beta4
+
+- New easter eggs: roll a 100 on loot (need or greed, or /roll) and the screen celebrates. Need 100 gets the big show. Roll a 67 and you'll see.
+
 # AllClassPlan 0.1.0-beta3
 
 - **New languages: Deutsch, Русский, Français, Español and Português (BR).** Every menu text, message and tip is translated. Until you pick a language yourself, the addon uses your game's language when it has it (otherwise English). Change it in the menu (Language) or with `/acp lang` (or `/acp lang de`, `ru`, `fr`, `es`, `pt`, `sv`, `en`).

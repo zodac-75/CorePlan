@@ -806,6 +806,100 @@ EFFECTS.NEED = function(from)
   Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
 end
 
+-- Somebody rolls a 100: a golden die lands, stars ring out and a couple of fireworks go off.
+EFFECTS.ROLL100 = function(from)
+  local die = Piece("Interface\\Icons\\INV_Misc_Dice_02", 110, 110)
+  die:SetPoint("CENTER", 0, 380)
+  Move(die, 0, -380, 1, 0.4)
+  Spin(die, 720, 1, 0.4)
+  Move(die, 0, 70, 2, 0.15); Move(die, 0, -70, 3, 0.15)
+  Grow(die, 1.5, 1.5, 4, 0.2); Grow(die, 1 / 1.5, 1 / 1.5, 5, 0.2)
+  Fade(die, 1, 0, 6, 0.5, 0.9)
+  Play(die)
+  for i = 1, 12 do
+    local a = i / 12 * 2 * math.pi
+    local st = Piece(ns.MEDIA .. "Star", 34, 34)
+    st.tex:SetVertexColor(1, 0.85, 0.2, 1)
+    st:SetPoint("CENTER", 0, 0)
+    st:SetAlpha(0)
+    Fade(st, 0, 1, 1, 0.05, 0.4)
+    Move(st, math.cos(a) * 200, math.sin(a) * 140, 2, 0.8)
+    Spin(st, 270, 2, 0.8)
+    Fade(st, 1, 0, 3, 0.5)
+    Play(st)
+  end
+  Fireworks(2, 260)
+  BigText(ns.T("EM_R100_BIG"), 64, 1, 0.85, 0.2, 130, 1.4)
+  Say(ns.T("EM_R100_" .. math.random(2), Short(from)))
+  Sound("UI_EPICLOOT_TOAST")
+end
+
+-- Somebody rolls a 67: a big 6 and a big 7 bob up and down out of step, like the meme.
+EFFECTS.SIXSEVEN = function(from)
+  local digits = { { "6", -110, 1, 0.85, 0.2 }, { "7", 110, 0.3, 0.8, 1 } }
+  for n, d in ipairs(digits) do
+    local t = TextPiece(d[1], 64, d[3], d[4], d[5])
+    t:SetPoint("CENTER", d[2], 60)
+    t:SetAlpha(0)
+    Fade(t, 0, 1, 1, 0.15)
+    Grow(t, 2.2, 2.2, 1, 0.15)
+    local up = (n == 1) and 1 or -1
+    for k = 1, 8 do
+      Move(t, 0, ((k % 2 == 1) and 70 or -70) * up, k + 1, 0.22)
+      Spin(t, ((k % 2 == 1) and 10 or -10) * up, k + 1, 0.22)
+    end
+    Fade(t, 1, 0, 10, 0.5, 0.2)
+    Play(t)
+  end
+  Say(ns.T("EM_67", Short(from)))
+  Sound("UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE")
+end
+
+-- Somebody rolls NEED 100: the big one. Two dice, a rain of gold, a wall of fireworks.
+EFFECTS.NEED100 = function(from)
+  for side = -1, 1, 2 do
+    local die = Piece("Interface\\Icons\\INV_Misc_Dice_02", 130, 130)
+    die:SetPoint("CENTER", side * 170, 400)
+    Move(die, 0, -400, 1, 0.45)
+    Spin(die, side * 900, 1, 0.45)
+    Move(die, 0, 90, 2, 0.15); Move(die, 0, -90, 3, 0.15)
+    Grow(die, 1.7, 1.7, 4, 0.2); Grow(die, 1 / 1.7, 1 / 1.7, 5, 0.2)
+    Spin(die, side * 360, 6, 0.6)
+    Fade(die, 1, 0, 7, 0.6, 1.2)
+    Play(die)
+  end
+  for ring = 1, 2 do
+    for i = 1, 16 do
+      local a = i / 16 * 2 * math.pi
+      local st = Piece(ns.MEDIA .. "Star", 40, 40)
+      local c = COLORS[(i + ring) % #COLORS + 1]
+      st.tex:SetVertexColor(c[1], c[2], c[3], 1)
+      st:SetPoint("CENTER", 0, 20)
+      st:SetAlpha(0)
+      Fade(st, 0, 1, 1, 0.05, 0.45 + ring * 0.25)
+      Move(st, math.cos(a) * (180 + ring * 120), math.sin(a) * (120 + ring * 80), 2, 0.9)
+      Spin(st, 360, 2, 0.9)
+      Fade(st, 1, 0, 3, 0.5)
+      Play(st)
+    end
+  end
+  for i = 1, 30 do
+    local coin = Piece("Interface\\Icons\\INV_Misc_Coin_01", 30, 30)
+    coin:SetPoint("CENTER", math.random(-420, 420), 340)
+    coin:SetAlpha(0)
+    Fade(coin, 0, 1, 1, 0.05, 0.6 + math.random() * 1.4)
+    Move(coin, math.random(-30, 30), -520, 2, 1.1 + math.random() * 0.4)
+    Spin(coin, math.random(-720, 720), 2, 1.3)
+    Fade(coin, 1, 0, 3, 0.3)
+    Play(coin)
+  end
+  Fireworks(7, 420)
+  BigText(ns.T("EM_N100_BIG"), 64, 1, 0.3, 0.15, 140, 2.2)
+  Say(ns.T("EM_N100_" .. math.random(2), Short(from)))
+  Sound("UI_EPICLOOT_TOAST")
+  Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
+end
+
 local lastNeed = -1000
 local needPatterns
 local function Pat(g)
@@ -815,8 +909,57 @@ local function Pat(g)
   p = p:gsub("%%s", "(.-)")
   return "^" .. p .. "$"
 end
+-- A roll result of 100 or 67 (need or greed, or a plain /roll): works in any language, because the
+-- number is whichever piece of the line is a number and the player is the piece that isn't an item.
+local lastR100 = -1000
+local rollPatterns
+local function RollPatterns()
+  if rollPatterns then return rollPatterns end
+  local function P(g) -- like Pat, but %d is a number piece too
+    if type(g) ~= "string" then return nil end
+    local q = g:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1")
+    q = q:gsub("%%%d%%%$[sd]", "(.-)")
+    q = q:gsub("%%[sd]", "(.-)")
+    return "^" .. q .. "$"
+  end
+  rollPatterns = {
+    need = { P(LOOT_ROLL_ROLLED_NEED or "Need Roll - %d for %s by %s") },
+    greed = { P(LOOT_ROLL_ROLLED_GREED or "Greed Roll - %d for %s by %s"), P(LOOT_ROLL_ROLLED_DE) },
+    plain = { P(RANDOM_ROLL_RESULT or "%s rolls %d (%d-%d)") },
+  }
+  return rollPatterns
+end
+local function OnRoll100(msg)
+  if GetTime() - lastR100 < 6 then return false end
+  local rp = RollPatterns()
+  for kind, list in pairs(rp) do
+    for _, pat in ipairs(list) do
+      local c = { msg:match(pat) }
+      if #c >= 3 then
+        local roll, who, lo, hi
+        for _, v in ipairs(c) do
+          local n = tonumber(v)
+          if n and v:match("^%d+$") then
+            if not roll then roll = n elseif not lo then lo = n else hi = n end
+          elseif not who and not v:find("|H", 1, true) and not v:find("[", 1, true) then who = v end
+        end
+        if (roll == 100 or roll == 67) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
+          if who == YOU or who == "" then who = UnitName("player") end
+          lastR100 = GetTime()
+          local egg = roll == 67 and "SIXSEVEN" or (kind == "need" and "NEED100" or "ROLL100")
+          lastShown[egg] = nil
+          ns.ShowEmoteEgg(egg, who)
+          return true
+        end
+      end
+    end
+  end
+  return false
+end
+
 local function OnLootMsg(msg)
   if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
+  if OnRoll100(msg) then return end
   if GetTime() - lastNeed < 15 then return end
   needPatterns = needPatterns or { selfP = Pat(LOOT_ROLL_NEED_SELF), otherP = Pat(LOOT_ROLL_NEED) }
   local who
@@ -1008,7 +1151,7 @@ end
 
 -- Emotes that trigger another effect. Forever has no /toast like later expansions,
 -- so the mugs come with /drink (and /cheers where the game has it).
-local ALIAS = { ROLL = "NEED", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
+local ALIAS = { ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
   SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
@@ -1019,7 +1162,7 @@ local COMBO = { DANCE = "PARTY", HUG = "GROUPHUG", KISS = "KISSKISS" }
 local COMBO_WINDOW = { KISS = 10 }
 
 -- Effects that aren't an emote to send to someone (they start in other ways).
-local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true }
+local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true, ROLL100 = true, NEED100 = true, SIXSEVEN = true }
 
 -- A round of drinks: who in the party drank lately (short name -> when).
 local drinkers = {}
@@ -1212,6 +1355,7 @@ ns.RegisterModule(function()
   ev:RegisterEvent("PLAYER_LEVEL_UP")
   pcall(ev.RegisterEvent, ev, "UI_ERROR_MESSAGE")
   pcall(ev.RegisterEvent, ev, "CHAT_MSG_LOOT")
+  pcall(ev.RegisterEvent, ev, "CHAT_MSG_SYSTEM")
   pcall(ev.RegisterEvent, ev, "PLAYER_DEAD")
   ev:SetScript("OnEvent", function(_, event, a1, a2, _, a4)
     if event == "UI_ERROR_MESSAGE" then
@@ -1220,6 +1364,10 @@ ns.RegisterModule(function()
     end
     if event == "CHAT_MSG_LOOT" then
       pcall(OnLootMsg, a1)
+      return
+    end
+    if event == "CHAT_MSG_SYSTEM" then
+      if not ns.db.eggsOff and type(a1) == "string" and not (issecretvalue and issecretvalue(a1)) then pcall(OnRoll100, a1) end
       return
     end
     if event == "PLAYER_DEAD" then
@@ -1246,7 +1394,7 @@ end)
 
 -- Hidden preview: /@SLASH@ egg dance (or any other effect, party, ding, plan).
 ns.RegisterCommand("egg", false, function(rest)
-  local e = (rest or ""):upper():match("(%u+)") or "KISS"
+  local e = (rest or ""):upper():match("(%w+)") or "KISS"
   e = ALIAS[e] or e
   if e == "DING" then Ding(UnitName("player"), UnitLevel("player") or 1, true) return end
   if e == "PLAN" then PlanDone() return end
