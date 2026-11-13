@@ -6,7 +6,11 @@ tests and release steps. This file has the rules and the things that bit us befo
 ## How the owner wants it
 
 - He writes Swedish or English: answer in the same language.
-- **Always commit and push.** Every fix and feature is released to all users right away: bump
+- **From now on only AllClassPlan is updated.** The nine stand-alone addons are frozen: do not bump
+  their CHANGELOGs (CI only uploads a class when its version is new, so no bump = no release). Bump
+  `allclass/CHANGELOG.md` for every change and push; the shared `core/` and `classes/` code still
+  builds into AllClassPlan. (Languages went out to the old nine by mistake on 2026-11-13.)
+- **Always commit and push** (AllClassPlan, see above). Every fix and feature is released to all users right away: bump
   every affected class's CHANGELOG (a core change bumps all classes) and push to `main`. CI
   uploads to CurseForge. Check the upload:
   `gh api 'repos/zodac-75/CorePlan/actions/runs?per_page=1'` then
