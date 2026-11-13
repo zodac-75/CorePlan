@@ -1,3 +1,13 @@
+# AllClassPlan 0.1.0
+
+First full release: all nine Plan addons (mage, shaman, druid, warrior, paladin, warlock, priest, hunter, rogue) in one install.
+
+- **Your settings come along:** the first time a character logs in, the settings from MagePlan, PaladinPlan, ... are copied. Keep the old addon installed until every character has logged in once, then remove it.
+- **All the old commands work:** `/mp`, `/sp`, `/dp`, `/war`, `/pal`, `/wl`, `/pp`, `/hp` and `/rp` go to AllClassPlan, next to `/acp`.
+- **Seven languages:** English, Svenska, Deutsch, Русский, Français, Español and Português (BR).
+- Language and layout profiles are shared by all your characters.
+- Since beta6: settings only one class uses (the paladin's blessing picks, hidden buff icons, ...) survive the move, and hiding a buff icon on one class no longer hides another class's icon.
+
 # AllClassPlan 0.1.0-beta7
 
 - **Fixed: settings only one class uses were lost when a second class moved over.** The paladin's blessing picks, the shaman's Stormstrike call-out, the mage's Polymorph helper and your hidden buff icons now survive the first login with AllClassPlan, also when another character got there first.
