@@ -1,4 +1,6 @@
-# MagePlan 1.41.9
+# MagePlan 1.41.10
+
+- **AllClassPlan is out!** All nine Plan addons now come in one install: AllClassPlan. Once per character you'll see a notice with the link. Your settings come along when you install it. This is the last update of this addon.
 
 - **New languages: Deutsch, Русский, Français, Español and Português (BR).** Every menu text, message and tip is translated. Until you pick a language yourself, the addon uses your game's language when it has it (otherwise English). Change it in the menu (Language) or with `/mp lang` (or `/mp lang de`, `ru`, `fr`, `es`, `pt`, `sv`, `en`).
 

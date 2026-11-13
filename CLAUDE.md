@@ -9,7 +9,7 @@ tests and release steps. This file has the rules and the things that bit us befo
 - **From now on only AllClassPlan is updated.** The nine stand-alone addons are frozen: do not bump
   their CHANGELOGs (CI only uploads a class when its version is new, so no bump = no release). Bump
   `allclass/CHANGELOG.md` for every change and push; the shared `core/` and `classes/` code still
-  builds into AllClassPlan. (Languages went out to the old nine by mistake on 2026-11-13.)
+  builds into AllClassPlan. (Languages went out to the old nine by mistake on 2026-11-13.) On 2026-11-13 he said go for the move notice: the nine got one last release with `ns.ACP_LIVE = true` and the AllClassPlan logo (core/Media/ACP.tga) in the popup. Frozen again after that.
 - **Always commit and push** (AllClassPlan, see above). Every fix and feature is released to all users right away: bump
   every affected class's CHANGELOG (a core change bumps all classes) and push to `main`. CI
   uploads to CurseForge. Check the upload:

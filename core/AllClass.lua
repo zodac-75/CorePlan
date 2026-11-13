@@ -12,7 +12,7 @@ local ADDON, ns = ...
 -- The AllClassPlan page. ACP_LIVE = true once it is on CurseForge: then the stand-alone
 -- addons show the moving notice once per character.
 ns.ACP_URL = "https://www.curseforge.com/wow/addons/allclassplan"
-ns.ACP_LIVE = false
+ns.ACP_LIVE = true
 
 local function Copy(v)
   if type(v) ~= "table" then return v end
@@ -85,7 +85,15 @@ function ns.ShowAllClassNotice()
       button1 = OKAY or "OK",
       hasEditBox = true,
       editBoxWidth = 320,
+      showAlert = 1, -- makes room on the left for the AllClassPlan logo
       OnShow = function(self)
+        -- The AllClassPlan logo where the alert icon normally sits.
+        local icon = self.AlertIcon or self.Icon or (self.GetName and self:GetName() and _G[self:GetName() .. "AlertIcon"])
+        if icon and icon.SetTexture then
+          icon:SetTexture(ns.MEDIA .. "ACP")
+          icon:SetTexCoord(0, 1, 0, 1)
+          if icon.Show then icon:Show() end
+        end
         local eb = Box(self)
         if eb then eb:SetText(ns.ACP_URL); eb:HighlightText(); eb:SetFocus() end
       end,
