@@ -1874,6 +1874,19 @@ do
   fire("CHAT_MSG_LOOT", "You have selected Need for: [Axe]")
   if not ns.lastEggLine then table.insert(errors, "egen need gav ingen easter egg") end
   print("  need-rad: " .. tostring(ns.lastEggLine))
+  -- the result line only (what the game really sends), plain and with links
+  now = now + 20; runTimers(now)
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_LOOT", "Need Roll - 55 for [Sword] by Cat")
+  if not (ns.lastEggLine or ""):find("Cat", 1, true) then table.insert(errors, "need-resultatrad gav ingen easter egg: " .. tostring(ns.lastEggLine)) end
+  now = now + 20; runTimers(now)
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_LOOT", "Need Roll - 55 for |cff9d9d9d|Hitem:3000:0|h[Ogre Loincloth]|h|r by |cffc41f3b|Hplayer:Dan-Realm:1:LOOT|h[Dan]|h|r")
+  if not (ns.lastEggLine or ""):find("Dan", 1, true) then table.insert(errors, "need-resultatrad med lankar gav ingen easter egg: " .. tostring(ns.lastEggLine)) end
+  now = now + 20; runTimers(now)
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_LOOT", "Greed Roll - 55 for [Sword] by Cat")
+  if ns.lastEggLine then table.insert(errors, "greed-resultatrad gav easter egg") end
 end
 -- Easter egg: 100 (need = det stora), 67 (six seven), även vanlig /roll 1-100
 do

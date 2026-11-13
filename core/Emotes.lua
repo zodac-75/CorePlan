@@ -1024,6 +1024,20 @@ local function OnLootMsg(msg)
   local who
   if needPatterns.otherP then who = msg:match(needPatterns.otherP) end
   if not who and needPatterns.selfP and msg:match(needPatterns.selfP) then who = UnitName("player") end
+  if who then who = RollName(who) or who end
+  -- The game doesn't always say "X has selected Need": it may only give the result line,
+  -- "Need Roll - 55 for [item] by X".
+  if not who then
+    for _, pat in ipairs(RollPatterns().need) do
+      local c = { msg:match(pat) }
+      if #c >= 3 then
+        for _, v in ipairs(c) do
+          if not who and not v:match("^%d+$") then who = RollName(v) end
+        end
+      end
+    end
+    if who and who == YOU then who = UnitName("player") end
+  end
   if not who or who == "" then return end
   lastNeed = GetTime()
   lastShown.NEED = nil
