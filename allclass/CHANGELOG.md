@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.0-beta2
+
+- **Class logos are back in the settings window:** each class shows its own logo again (the mage logo on a mage, and so on). The AllClassPlan icon stays in the addon list and on the minimap button.
+
 # AllClassPlan 0.1.0-beta1
 
 - **Your settings come along:** the first time a character logs in with AllClassPlan, the settings from MagePlan, PaladinPlan, ... are copied (plan, windows, text sizes, profiles, language). Keep the old addon installed until every character has logged in once.

@@ -79,9 +79,9 @@ def build_part(cls, out, ver):
         if os.path.isdir(media):
             for f in os.listdir(media):
                 shutil.copy(os.path.join(media, f), os.path.join(dest, "Media", f))
-    # The AllClassPlan logo and icon instead of the class's.
-    for f in os.listdir(os.path.join(HERE, "Media")):
-        shutil.copy(os.path.join(HERE, "Media", f), os.path.join(dest, "Media", f))
+    # The AllClassPlan icon (addon list, minimap, arrow) instead of the class's. The settings
+    # window keeps the class's own logo (Logo.tga and its layout, ns.LOGO in the class's Data.lua).
+    shutil.copy(os.path.join(HERE, "Media", "Icon.tga"), os.path.join(dest, "Media", "Icon.tga"))
 
     files = []
     for f in build.ORDER:
@@ -98,8 +98,6 @@ def build_part(cls, out, ver):
             text = build.fill(src.read(), m)
         if re.search(r"@[A-Z]+@", re.sub(r"@project-version@", "", text)):
             sys.exit("%s: unfilled placeholder in %s" % (cls, f))
-        if f == "Data.lua" and acp.get("logo"):
-            text += "\n-- AllClassPlan logo layout (allclass/allclass.json)\nns.LOGO = %s\n" % acp["logo"]
         if f == "Data.lua":
             # The stand-alone addon this part replaces: its settings are copied the first time.
             text += "\n-- AllClassPlan: the stand-alone addon this part replaces\nns.ALLCLASS = \"%s\"\n" % standalone
