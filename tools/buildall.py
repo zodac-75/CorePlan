@@ -162,6 +162,7 @@ def build_loader(out, ver, parts):
         "## SavedVariables: %sGlobal" % acp["name"],
         # The stand-alone class addons load first, so the loader can see them and step aside.
         "## OptionalDeps: Auctionator, " + ", ".join(s for _, s in parts),
+    ] + (["## X-Curse-Project-ID: %d" % acp["curseId"]] if acp.get("curseId") else []) + [
         "## X-License: GPL-3.0",
         "",
         "Loader.lua",
