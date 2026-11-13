@@ -1867,10 +1867,12 @@ do
   if not (ns.lastEggLine or ""):find("Bob", 1, true) then table.insert(errors, "need-roll gav ingen easter egg: " .. tostring(ns.lastEggLine)) end
   ns.lastEggLine = nil
   fire("CHAT_MSG_LOOT", "Ann has selected Need for: [Axe]")
-  if ns.lastEggLine then table.insert(errors, "need-roll visades igen direkt") end
+  if not ns.lastEggLine then table.insert(errors, "need-roll direkt efter en annan gav ingen egg (ingen spärr ska finnas)") end
   now = now + 20; runTimers(now)
+  ns.lastEggLine = nil
   fire("CHAT_MSG_LOOT", "Ann has selected Greed for: [Axe]")
   if ns.lastEggLine then table.insert(errors, "greed gav easter egg") end
+  ns.lastEggLine = nil
   fire("CHAT_MSG_LOOT", "You have selected Need for: [Axe]")
   if not ns.lastEggLine then table.insert(errors, "egen need gav ingen easter egg") end
   print("  need-rad: " .. tostring(ns.lastEggLine))

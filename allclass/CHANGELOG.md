@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.6
+
+- **No waiting time on the "somebody needs" egg either.** Everyone rolls at the same time, so every Need roll gets its egg right away.
+
 # AllClassPlan 0.1.5
 
 - **Fixed: the "somebody needs" easter egg didn't start in the real game.** The game doesn't say "X has selected Need", only "Need Roll - 55 for [item] by X"; AllClassPlan now reacts to that line too (and reads the player's name from links).

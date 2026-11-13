@@ -940,7 +940,6 @@ EFFECTS.NEED100 = function(from)
   Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
 end
 
-local lastNeed = -1000
 local needPatterns
 local function Pat(g)
   if type(g) ~= "string" then return nil end
@@ -1019,7 +1018,6 @@ end
 local function OnLootMsg(msg)
   if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
   if OnRoll100(msg) then return end
-  if GetTime() - lastNeed < 15 then return end
   needPatterns = needPatterns or { selfP = Pat(LOOT_ROLL_NEED_SELF), otherP = Pat(LOOT_ROLL_NEED) }
   local who
   if needPatterns.otherP then who = msg:match(needPatterns.otherP) end
@@ -1039,7 +1037,6 @@ local function OnLootMsg(msg)
     if who and who == YOU then who = UnitName("player") end
   end
   if not who or who == "" then return end
-  lastNeed = GetTime()
   lastShown.NEED = nil
   ns.ShowEmoteEgg("NEED", who)
 end
