@@ -1,3 +1,9 @@
+# AllClassPlan 0.1.0-beta7
+
+- **Fixed: settings only one class uses were lost when a second class moved over.** The paladin's blessing picks, the shaman's Stormstrike call-out, the mage's Polymorph helper and your hidden buff icons now survive the first login with AllClassPlan, also when another character got there first.
+- **Fixed: hiding the paladin's aura icon also hid the shaman's shield icon** (and the other way around), because all classes now share the layout profiles.
+- If AllClassPlan can't start, it now says why in chat instead of staying silent.
+
 # AllClassPlan 0.1.0-beta6
 
 - New easter egg: roll a 1 and the screen feels your pain.

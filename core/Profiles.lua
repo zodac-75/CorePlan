@@ -60,6 +60,22 @@ local function SaveInto(name)
   Store()[name] = p
 end
 
+-- AllClassPlan: a character's settings just came over from its stand-alone addon, and the
+-- shared profile (saved by a character of another class) is about to be applied on top.
+-- Keep what only this class uses: the shared profile has never seen it, and would wipe it.
+local CLASS_KEYS = { "blessFor", "stormstrikeOff", "polyOff" }
+function ns.KeepClassSettings(p, db)
+  for _, k in ipairs(CLASS_KEYS) do
+    if p[k] == nil then p[k] = Copy(db[k]) end
+  end
+  if type(db.buffHide) == "table" then -- hidden buff icons: keyed by spell or class
+    if type(p.buffHide) ~= "table" then p.buffHide = {} end
+    for k, v in pairs(db.buffHide) do
+      if p.buffHide[k] == nil then p.buffHide[k] = v end
+    end
+  end
+end
+
 ---------------------------------------------------------------------------
 -- Putting the windows where the settings say
 ---------------------------------------------------------------------------
@@ -268,6 +284,9 @@ ns.RegisterModule(function()
   elseif not store[ns.ActiveProfile()] then
     G().activeProfile = nil
     if not store[DEFAULT] then SaveInto(DEFAULT) end
+  end
+  if ns.importedFrom and store[ns.ActiveProfile()] then
+    ns.KeepClassSettings(store[ns.ActiveProfile()], ns.db)
   end
   -- Another character may have changed the shared profile: apply it once everything exists.
   C_Timer.After(0, function() LoadFrom(ns.ActiveProfile()) end)

@@ -48,8 +48,11 @@ local function Spells(e)
 end
 
 -- Each entry can be turned off on its own in the settings (ns.db.buffHide[key]).
+-- An entry without a fixed spell (the paladin's aura, the shaman's shield) is keyed by its
+-- place in the list, with the class in front: the profiles are shared by every class, so a
+-- bare "entry1" would hide another class's first icon too.
 local function EntryKey(e, i, party)
-  local first = type(e.spells) == "table" and e.spells[1] or e.id or ("entry" .. i)
+  local first = type(e.spells) == "table" and e.spells[1] or e.id or ("@CLASS@:entry" .. i)
   return (party and "party:" or "") .. first
 end
 

@@ -60,7 +60,8 @@ def main():
                            stdout=null, check=True)
         r = subprocess.run([lua, os.path.join(ROOT, "tests", "allclass_core.lua"),
                             os.path.join(single, "MagePlan", "AllClass.lua"),
-                            os.path.join(out, buildall.part_name("mage"), "AllClass.lua")],
+                            os.path.join(out, buildall.part_name("mage"), "AllClass.lua"),
+                            os.path.join(out, buildall.part_name("mage"), "Profiles.lua")],
                            capture_output=True, text=True)
         print(r.stdout.rstrip() + r.stderr.rstrip())
         if (r.stdout.strip().splitlines() or [""])[-1] != "--- FEL (0) ---":

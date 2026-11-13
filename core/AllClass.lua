@@ -42,6 +42,22 @@ if not ns.ALLCLASS then
   if ns.retired then _G[ADDON .. "Retired"] = true end
 end
 
+-- The stand-alone addons saved a hidden buff-watcher icon without a fixed spell (the paladin's
+-- aura, the shaman's shield) as "entry1", "entry2": the same for every class. AllClassPlan's
+-- profiles are shared by all classes, so the key now carries the class (see Buffs.lua).
+local function ScopeBuffKeys(t)
+  local hide = type(t) == "table" and t.buffHide
+  if type(hide) ~= "table" then return end
+  local out = {}
+  for k, v in pairs(hide) do
+    if type(k) == "string" then
+      k = k:gsub("^entry(%d+)$", "@CLASS@:entry%1"):gsub("^party:entry(%d+)$", "party:@CLASS@:entry%1")
+    end
+    out[k] = v
+  end
+  t.buffHide = out
+end
+
 -- AllClassPlan: copy the stand-alone addon's settings.
 --   db: this character's AllClassPlanDB (nil the first time), global: AllClassPlanGlobal.
 -- The character's settings are copied only when there are none yet. The account-wide ones
@@ -52,11 +68,16 @@ function ns.ImportSettings(from, db, global)
   local old = rawget(_G, from .. "DB")
   if db == nil and type(old) == "table" and next(old) ~= nil then
     db = Copy(old)
+    ScopeBuffKeys(db)
     imported = true
   end
   local oldG = rawget(_G, from .. "Global")
   global.importedFrom = global.importedFrom or {}
   if type(oldG) == "table" and not global.importedFrom[from] then
+    oldG = Copy(oldG) -- the stand-alone addon's own settings stay as they are
+    if type(oldG.profiles) == "table" then
+      for _, p in pairs(oldG.profiles) do ScopeBuffKeys(p) end
+    end
     for k, v in pairs(oldG) do
       if global[k] == nil then
         global[k] = Copy(v)

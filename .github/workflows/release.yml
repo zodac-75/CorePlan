@@ -3,7 +3,8 @@
 # On every push to main, tools/release.py looks at each classes/<class>/CHANGELOG.md.
 # If the version in its first line ("# MagePlan 1.8.0") has no "<Addon>-<version>"
 # tag yet, that addon is built from core/ + its class folder, tested in the simulator,
-# uploaded to its own CurseForge project and released on GitHub.
+# uploaded to its own CurseForge project and released on GitHub. The same goes for
+# AllClassPlan (allclass/CHANGELOG.md), which is the one that gets new versions now.
 # A version with "beta" or "alpha" in it becomes a beta/alpha file on CurseForge.
 #
 # Needs the repository secret CF_API_KEY (a CurseForge API token).

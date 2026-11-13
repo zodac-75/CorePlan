@@ -11,7 +11,7 @@ tests and release steps. This file has the rules and the things that bit us befo
   `allclass/CHANGELOG.md` for every change and push; the shared `core/` and `classes/` code still
   builds into AllClassPlan. (Languages went out to the old nine by mistake on 2026-11-13.) On 2026-11-13 he said go for the move notice: the nine got one last release with `ns.ACP_LIVE = true` and the AllClassPlan logo (core/Media/ACP.tga) in the popup. Frozen again after that.
 - **Always commit and push** (AllClassPlan, see above). Every fix and feature is released to all users right away: bump
-  every affected class's CHANGELOG (a core change bumps all classes) and push to `main`. CI
+  `allclass/CHANGELOG.md` (never the nine class CHANGELOGs) and push to `main`. CI
   uploads to CurseForge. Check the upload:
   `gh api 'repos/zodac-75/CorePlan/actions/runs?per_page=1'` then
   `gh run view <id> -R zodac-75/CorePlan --log | grep Uploading` (`gh run list` doesn't work).

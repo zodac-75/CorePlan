@@ -1074,7 +1074,12 @@ local function Start()
   ns.MaybeAllClassNotice()
 end
 -- AllClassPlan's loader calls this at login, in case this part missed its own events.
-if ns.ALLCLASS then _G[ADDON .. "Start"] = function() pcall(Start) end end
+if ns.ALLCLASS then
+  _G[ADDON .. "Start"] = function()
+    local ok, err = pcall(Start)
+    if not ok then Print(ns.T("ERROR", tostring(err))) end -- say so, don't fail silently
+  end
+end
 
 events:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == ADDON then

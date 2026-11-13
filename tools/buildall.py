@@ -10,7 +10,8 @@ of MagePlan, so the windows, chat lines and settings say AllClassPlan. Only one 
 loaded per character (the loader picks it by class), so the parts can share the
 AllClassPlan* global names.
 
-AllClassPlan lives in allclass/, not classes/, so tools/release.py (CI) never uploads it.
+AllClassPlan lives in allclass/, not classes/; tools/release.py (CI) releases it with
+release_allclass() when its version is new.
 The version comes from the first line of allclass/CHANGELOG.md ("# AllClassPlan 0.1.0").
 """
 import json

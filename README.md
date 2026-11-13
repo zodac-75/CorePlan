@@ -56,7 +56,7 @@ lua5.3 tests/druid.lua dist/DruidPlan modern enUS   # ends with "--- FEL (0) ---
 
 Use a version like `1.0.1-beta1` to upload a beta. Needs the repository secret `CF_API_KEY`.
 
-## AllClassPlan (all classes in one install, not released)
+## AllClassPlan (all classes in one install)
 
 `allclass/` holds AllClassPlan: a small loader (`allclass/Loader.lua`) plus one load-on-demand
 part per class, `AllClassPlan_Mage`, `AllClassPlan_Paladin`, ... Each part is the normal class
@@ -69,7 +69,9 @@ python3 tools/buildall.py              # dist/AllClassPlan + dist/AllClassPlan_<
 python3 tests/allclass.py              # every class test against its part + the loader test
 ```
 
-It is outside `classes/`, so CI never uploads it. Install = copy all ten folders to AddOns.
+This is the addon that gets updated now ([allclassplan](https://www.curseforge.com/wow/addons/allclassplan), project 1802117); the nine
+stand-alone addons are frozen. Put the new version's notes at the top of `allclass/CHANGELOG.md` and push:
+CI tests it and uploads the loader and all nine parts as one file. A manual install = copy all ten folders to AddOns.
 
 ## Adding a class
 
