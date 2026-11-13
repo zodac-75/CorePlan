@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.4
+
+- **No waiting time between roll eggs.** Every roll of 1, 67 or 100 gets its egg right away, also straight after another one.
+
 # AllClassPlan 0.1.3
 
 - **Fixed: a 100 (or 67) rolled soon after another roll egg didn't show.** Only identical roll lines are skipped now, not every roll for six seconds.

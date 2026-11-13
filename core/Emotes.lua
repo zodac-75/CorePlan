@@ -951,7 +951,6 @@ local function Pat(g)
 end
 -- A roll result of 100, 67 or 1 (need or greed, or a plain /roll): works in any language, because the
 -- number is whichever piece of the line is a number and the player is the piece that isn't an item.
-local lastR100 = -1000
 local rollPatterns
 local function RollPatterns()
   if rollPatterns then return rollPatterns end
@@ -988,14 +987,7 @@ local function EggDebug(event, msg)
   if not msg:lower():find("roll", 1, true) then return end
   ns.Print("eggdebug " .. event .. ": " .. (msg:gsub("|", "||")))
 end
-local lastRollMsg
 local function OnRoll100(msg)
-  -- The same line can arrive twice (loot and system channel): skip an identical one for a few
-  -- seconds. A different roll always counts, so a 100 right after a 1 still gets its egg.
-  if msg == lastRollMsg and GetTime() - lastR100 < 6 then
-    if ns.eggDebug then ns.Print("eggdebug: skipped, the same roll line was just handled") end
-    return false
-  end
   local rp = RollPatterns()
   for kind, list in pairs(rp) do
     for _, pat in ipairs(list) do
@@ -1013,7 +1005,6 @@ local function OnRoll100(msg)
         end
         if (roll == 100 or roll == 67 or roll == 1) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
           if who == YOU or who == "" then who = UnitName("player") end
-          lastR100, lastRollMsg = GetTime(), msg
           local egg = roll == 1 and "ROLL1" or roll == 67 and "SIXSEVEN" or (kind == "need" and "NEED100" or "ROLL100")
           lastShown[egg] = nil
           ns.ShowEmoteEgg(egg, who)

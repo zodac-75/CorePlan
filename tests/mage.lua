@@ -1932,7 +1932,7 @@ do
   egg("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
   ns.lastEggLine = nil
   fire("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
-  if ns.lastEggLine then table.insert(errors, "100-egg visades igen direkt") end
+  if not ns.lastEggLine then table.insert(errors, "100-egg uteblev vid ny roll direkt efter en annan (ingen spärr ska finnas)") end
 end
 
 print("--- Okända globaler som lästes ---")
