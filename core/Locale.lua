@@ -41,6 +41,9 @@ end
 -------------------------------------------------------------------------------
 -- English
 -------------------------------------------------------------------------------
+E.ACP_RETIRED = "AllClassPlan runs on this character instead (with your settings). You can remove @ADDON@ from your AddOns folder once every character has logged in with AllClassPlan."
+E.ACP_IMPORTED = "your %s settings came along. Log in once on your other characters too, then you can remove %s from your AddOns folder."
+E.ACP_NOTICE = "Thank you for using @ADDON@!\n\nThis grew much bigger than I ever thought, so I'm putting all the Plan addons together in one: AllClassPlan. @ADDON@ won't get any more updates.\n\nInstall AllClassPlan and log in once on each character: your settings come along, and /@SLASH@ still works. Then you can remove @ADDON@.\n\nThank you so much!\n//Zodac"
 E.LOADED = "loaded. Type /@SLASH@ help for commands, or right-click the minimap icon."
 E.HIDDEN = "hidden. Type /@SLASH@ to show it again."
 E.UNKNOWN_CMD = "unknown command. /@SLASH@ help for a list."
@@ -520,6 +523,9 @@ E.BAG_AUTO_OFF = "the bag check no longer opens at vendors (open it with /@SLASH
 -------------------------------------------------------------------------------
 -- Svenska
 -------------------------------------------------------------------------------
+S.ACP_RETIRED = "AllClassPlan körs på den här karaktären i stället (med dina inställningar). Du kan ta bort @ADDON@ ur AddOns-mappen när alla karaktärer har loggat in med AllClassPlan."
+S.ACP_IMPORTED = "dina %s-inställningar följde med. Logga in en gång på dina andra karaktärer också, sedan kan du ta bort %s ur AddOns-mappen."
+S.ACP_NOTICE = "Tack för att du använder @ADDON@!\n\nDet här blev mycket större än jag trott, så jag slår ihop alla Plan-addons till ett: AllClassPlan. @ADDON@ får inga fler uppdateringar.\n\nInstallera AllClassPlan och logga in en gång på varje karaktär: dina inställningar följer med, och /@SLASH@ fungerar som förut. Sedan kan du ta bort @ADDON@.\n\nTack så mycket!\n//Zodac"
 S.LOADED = "laddat. /@SLASH@ help för kommandon, eller högerklicka på minimap-ikonen."
 S.HIDDEN = "dold. Skriv /@SLASH@ för att visa igen."
 S.UNKNOWN_CMD = "okänt kommando. /@SLASH@ help för lista."

@@ -60,6 +60,8 @@ def build_part(cls, out, ver):
     m = dict(build.meta(cls))
     standalone = m["name"]
     m["name"] = acp["name"]  # @ADDON@ = AllClassPlan in globals, chat and window titles
+    class_slash = m["slash"]
+    m["slash"] = acp["slash"]  # @SLASH@ = acp in help and chat ("/acp egg dance")
     folder = part_name(cls)
     dest = os.path.join(out, folder)
     if os.path.exists(dest):
@@ -98,12 +100,15 @@ def build_part(cls, out, ver):
             sys.exit("%s: unfilled placeholder in %s" % (cls, f))
         if f == "Data.lua" and acp.get("logo"):
             text += "\n-- AllClassPlan logo layout (allclass/allclass.json)\nns.LOGO = %s\n" % acp["logo"]
+        if f == "Data.lua":
+            # The stand-alone addon this part replaces: its settings are copied the first time.
+            text += "\n-- AllClassPlan: the stand-alone addon this part replaces\nns.ALLCLASS = \"%s\"\n" % standalone
         if f == "Core.lua":
-            # /acp next to the class's own command (/mp, /pal, ...).
+            # The class's own command (/mp, /pal, ...) next to /acp.
             line = 'SLASH_%s2 = "/%s"\n' % (slash_up, m["slash"])
             if line not in text:
                 sys.exit("Core.lua: slash line not found")
-            text = text.replace(line, line + 'SLASH_%s3 = "/%s"\n' % (slash_up, acp["slash"]))
+            text = text.replace(line, line + 'SLASH_%s3 = "/%s"\n' % (slash_up, class_slash))
         write(os.path.join(dest, f), text)
 
     with open(os.path.join(ROOT, "LICENSE"), encoding="utf-8") as src:
@@ -138,8 +143,8 @@ def build_loader(out, ver, parts):
     rows = []
     for cls, standalone in parts:
         m = build.meta(cls)
-        rows.append('  %s = { suffix = "%s", standalone = "%s", color = "%s" },' % (
-            m["class"], suffix(cls), standalone, m["color"]))
+        rows.append('  %s = { suffix = "%s", standalone = "%s", color = "%s", slash = "%s" },' % (
+            m["class"], suffix(cls), standalone, m["color"], m["slash"]))
     with open(os.path.join(HERE, "Loader.lua"), encoding="utf-8") as f:
         text = f.read()
     if "--@CLASSES@" not in text:

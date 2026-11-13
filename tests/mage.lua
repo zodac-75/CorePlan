@@ -1837,6 +1837,15 @@ do
   bag[4] = nil
   ns.GetProfSkill = oldSkill
 end
+-- Flyttbeskedet till AllClassPlan (/mp allclass)
+do
+  slash("allclass")
+  local d = StaticPopupDialogs and StaticPopupDialogs.MAGEPLAN_ALLCLASS
+  if StaticPopupDialogs and not (d and d.text and d.text:find("AllClassPlan", 1, true) and d.text:find("Zodac", 1, true)) then
+    table.insert(errors, "flyttbeskedet visades inte") end
+  if ns.retired then table.insert(errors, "MagePlan klev åt sidan utan AllClassPlan") end
+  print("  flyttbesked: " .. tostring(d and d.text and d.text:sub(1, 60)))
+end
 -- Easter egg: need på en roll
 -- Someone needs on a roll: a die tumbles in (once, then a pause).
 do

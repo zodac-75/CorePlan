@@ -226,7 +226,7 @@ for _, e in ipairs({ "TRADE_SKILL_SHOW", "TRADE_SKILL_UPDATE", "CRAFT_SHOW", "CR
   pcall(profEvents.RegisterEvent, profEvents, e)
 end
 profEvents:SetScript("OnEvent", function(_, event, msg)
-  if not ns.db then return end
+  if not ns.db or ns.retired then return end
   if event == "CHAT_MSG_SKILL" then
     local name, rank = (msg or ""):match("Your skill in (.+) has increased to (%d+)")
     if name then ns.RememberProf(name, tonumber(rank)) end
@@ -1006,6 +1006,13 @@ SlashCmdList.@ADDONUP@ = function(msg)
     Print(ns.T("UNKNOWN_CMD"))
   end
 end
+-- AllClassPlan runs on this character instead: leave /@SLASH@ to it.
+if ns.retired then SlashCmdList.@ADDONUP@ = nil end
+
+-- The moving-to-AllClassPlan notice, on demand (stand-alone only).
+if not ns.ALLCLASS then
+  ns.RegisterCommand("allclass", false, function() ns.ShowAllClassNotice() end)
+end
 
 ---------------------------------------------------------------------------
 -- Events
@@ -1019,6 +1026,12 @@ events:RegisterEvent("SPELLS_CHANGED")
 events:SetScript("OnEvent", function(_, event, arg1)
   if event == "ADDON_LOADED" and arg1 == ADDON then
     @ADDON@Global = @ADDON@Global or {}
+    if ns.ALLCLASS then
+      -- AllClassPlan: the first time, bring the stand-alone addon's settings along.
+      local imported
+      @ADDON@DB, imported = ns.ImportSettings(ns.ALLCLASS, @ADDON@DB, @ADDON@Global)
+      ns.importedFrom = imported and ns.ALLCLASS or nil
+    end
     @ADDON@DB = @ADDON@DB or {}
     db = @ADDON@DB
     ns.db = db
@@ -1027,6 +1040,10 @@ events:SetScript("OnEvent", function(_, event, arg1)
     if class ~= "@CLASS@" then
       return -- another class: stay quiet (the other Plan addons may be installed too)
     end
+    if ns.retired then
+      Print(ns.T("ACP_RETIRED"))
+      return -- AllClassPlan runs here instead
+    end
     CreateUI()
     for _, init in ipairs(ns.modules) do
       local ok, err = pcall(init)
@@ -1034,6 +1051,8 @@ events:SetScript("OnEvent", function(_, event, arg1)
     end
     ns.RefreshMain()
     Print(ns.T("LOADED"))
+    if ns.importedFrom then Print(ns.T("ACP_IMPORTED", ns.importedFrom, ns.importedFrom)) end
+    ns.MaybeAllClassNotice()
   elseif event == "PLAYER_LEVEL_UP" and frame then
     OnLevelUp(arg1)
     -- UnitLevel uppdateras ibland först efter eventet.

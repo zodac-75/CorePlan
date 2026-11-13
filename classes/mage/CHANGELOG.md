@@ -1,4 +1,6 @@
-# MagePlan 1.41.7
+# MagePlan 1.41.8
+
+- **Getting ready for AllClassPlan** (all Plan addons in one install, coming soon): when AllClassPlan is installed and turned on, MagePlan steps aside on that character and AllClassPlan takes over with your settings. Without AllClassPlan nothing changes.
 
 - **New easter egg:** when somebody in your group rolls Need on an item, a die tumbles in with "NEED!" and a line about the greedy one (at most every 15 seconds, only you see it). Preview with `/mp egg need`.
 

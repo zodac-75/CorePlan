@@ -5,8 +5,9 @@ local DIR = arg[1]
 local errors = {}
 local function check(cond, msg) if not cond then table.insert(errors, msg) end end
 
-local function run(class, installed, loadResult, lang)
+local function run(class, installed, loadResult, lang, retired)
   local frames, said, loaded = {}, {}, {}
+  for _, n in ipairs({ "MagePlan", "PaladinPlan" }) do _G[n .. "Retired"] = retired and retired[n] or nil end
   _G.AllClassPlanGlobal = lang and { lang = lang } or nil
   _G.AllClassPlanLoader = nil
   _G.SlashCmdList = {}
@@ -55,6 +56,28 @@ do
   check(said[1] and said[1]:find("MagePlan", 1, true), "inget besked om MagePlan: " .. tostring(said[1]))
   check(SlashCmdList.ALLCLASSPLANLOADER ~= nil and SLASH_ALLCLASSPLANLOADER1 == "/acp", "/acp svarar inte när delen inte laddades")
   print("  " .. tostring(said[1]))
+end
+do
+  -- A stand-alone version that steps aside on its own: AllClassPlan takes over.
+  local loaded, said = run("MAGE", { MagePlan = true }, nil, nil, { MagePlan = true })
+  check(loaded[1] == "AllClassPlan_Mage", "MagePlan som kliver åt sidan: delen laddades inte")
+  check(#said == 0, "MagePlan som kliver åt sidan: sa något: " .. table.concat(said, " | "))
+end
+do
+  -- Every class's command goes to the loaded part; an older stand-alone keeps its own.
+  local got
+  run("MAGE", { PaladinPlan = true })
+  SlashCmdList.ALLCLASSPLAN = function(msg) got = msg end
+  local pal, rp, mp
+  for k, fn in pairs(SlashCmdList) do
+    local s1 = _G["SLASH_" .. k .. "1"]
+    if s1 == "/pal" then pal = fn elseif s1 == "/rp" then rp = fn elseif s1 == "/mp" then mp = fn end
+  end
+  check(pal == nil, "/pal togs över fast PaladinPlan (äldre) körs")
+  check(mp == nil, "/mp registrerades av laddaren (delen äger den)")
+  check(rp ~= nil, "/rp går inte till AllClassPlan")
+  if rp then rp("egg dance") end
+  check(got == "egg dance", "/rp egg dance kom inte fram: " .. tostring(got))
 end
 do
   -- Another class's stand-alone addon doesn't stop it.

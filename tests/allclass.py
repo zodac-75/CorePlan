@@ -54,6 +54,17 @@ def main():
                     print("%-22s %-8s %s  %s" % (part, mode, lang, "ok" if ok else "FAIL " + last))
                     if not ok:
                         fails.append("%s %s %s" % (part, mode, lang))
+        single = os.path.join(tmp, "single")
+        with open(os.devnull, "w") as null:
+            subprocess.run([sys.executable, os.path.join(ROOT, "tools", "build.py"), "--out", single],
+                           stdout=null, check=True)
+        r = subprocess.run([lua, os.path.join(ROOT, "tests", "allclass_core.lua"),
+                            os.path.join(single, "MagePlan", "AllClass.lua"),
+                            os.path.join(out, buildall.part_name("mage"), "AllClass.lua")],
+                           capture_output=True, text=True)
+        print(r.stdout.rstrip() + r.stderr.rstrip())
+        if (r.stdout.strip().splitlines() or [""])[-1] != "--- FEL (0) ---":
+            fails.append("allclass core")
         r = subprocess.run([lua, os.path.join(ROOT, "tests", "allclass_loader.lua"),
                             os.path.join(out, name)], capture_output=True, text=True)
         print(r.stdout.rstrip())
