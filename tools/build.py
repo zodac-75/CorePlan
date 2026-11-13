@@ -22,11 +22,14 @@ import re
 import shutil
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import langs
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Load order. Class modules (class.json "modules") go where CLASS_MODULES is.
 ORDER = [
-    "Locale.lua", "LocaleClass.lua", "Data.lua", "TalentIds.lua", "TrainData.lua", "ProfData.lua",
+    "Locale.lua", "LocaleClass.lua", "Languages.lua", "Data.lua", "TalentIds.lua", "TrainData.lua", "ProfData.lua",
     "AllClass.lua", "Core.lua", "Rows.lua", "Plans.lua", "Import.lua", "Ranks.lua", "Talents.lua", "Trainer.lua", "Helper.lua",
     "CLASS_MODULES",
     "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "QuestReward.lua", "Bags.lua",
@@ -80,6 +83,16 @@ def toc(m, version, files):
     return "\n".join(lines + files) + "\n"
 
 
+def code_of(sources):
+    """All the addon's Lua text (to see which data texts it uses)."""
+    out = []
+    for path in sources.values():
+        if path:
+            with open(path, encoding="utf-8") as f:
+                out.append(f.read())
+    return "\n".join(out)
+
+
 def build(cls, out, version=None):
     m = meta(cls)
     version = version or version_of(cls)
@@ -100,6 +113,7 @@ def build(cls, out, version=None):
             for f in os.listdir(media):
                 shutil.copy(os.path.join(media, f), os.path.join(dest, "Media", f))
 
+    sources["Languages.lua"] = None  # generated from lang/ (see tools/langs.py)
     files = []
     for f in ORDER:
         if f == "CLASS_MODULES":
@@ -112,8 +126,11 @@ def build(cls, out, version=None):
         sys.exit("%s: missing %s, not in the load order %s" % (cls, missing, unlisted))
 
     for f in files:
-        with open(sources[f], encoding="utf-8") as src:
-            text = fill(src.read(), m)
+        if f == "Languages.lua":
+            text = fill(langs.render(cls, code_of(sources)), m)
+        else:
+            with open(sources[f], encoding="utf-8") as src:
+                text = fill(src.read(), m)
         if "@" in re.sub(r"@project-version@", "", text) and re.search(r"@[A-Z]+@", text):
             sys.exit("%s: unfilled placeholder in %s" % (cls, f))
         with open(os.path.join(dest, f), "w", encoding="utf-8") as dst:

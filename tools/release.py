@@ -45,9 +45,10 @@ def tag_exists(tag):
 
 def test(cls, addon_dir):
     run(["texlua" if shutil.which("texlua") else LUA, os.path.join(ROOT, "tools", "checktalents.lua"), cls], cwd=ROOT)
+    run([sys.executable, os.path.join(ROOT, "tools", "langs.py"), "check"], cwd=ROOT)  # placeholders in lang/
     run([sys.executable, os.path.join(ROOT, "tests", "luablocks.py")] + glob.glob(os.path.join(addon_dir, "*.lua")))
     for mode in ("classic", "modern"):
-        for lang in ("enUS", "svSE"):
+        for lang in ("enUS", "svSE", "deDE", "ruRU", "frFR", "esES", "ptBR"):
             out = run([LUA, os.path.join(ROOT, "tests", cls + ".lua"), addon_dir, mode, lang], capture=True)
             if "--- FEL (0) ---" not in out:
                 print(out[-4000:])

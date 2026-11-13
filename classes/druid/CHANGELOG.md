@@ -1,4 +1,6 @@
-# DruidPlan 1.15.7
+# DruidPlan 1.15.8
+
+- **New languages: Deutsch, Русский, Français, Español and Português (BR).** Every menu text, message and tip is translated. Until you pick a language yourself, the addon uses your game's language when it has it (otherwise English). Change it in the menu (Language) or with `/dp lang` (or `/dp lang de`, `ru`, `fr`, `es`, `pt`, `sv`, `en`).
 
 - **Getting ready for AllClassPlan** (all Plan addons in one install, coming soon): when AllClassPlan is installed and turned on, DruidPlan steps aside on that character and AllClassPlan takes over with your settings. Without AllClassPlan nothing changes.
 

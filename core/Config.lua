@@ -166,8 +166,8 @@ local LOOK_SELECTORS = {
     value = function() return ns.TextScaleLabel() end,
     step = function(dir) ns.SetTextScale(ns.TextScale() + dir * 0.1) end },
   { key = "MM_LANG",
-    value = function() return ns.Lang() == "svSE" and "Svenska" or "English" end,
-    step = function() ns.CycleLang() end },
+    value = function() return ns.LangName(ns.Lang()) end,
+    step = function(dir) ns.CycleLang(ns.NextLang(dir)) end },
 }
 
 local ALERT_SELECTORS = {

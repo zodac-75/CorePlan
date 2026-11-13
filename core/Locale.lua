@@ -2,11 +2,38 @@
 local _, ns = ...
 
 local E, S = {}, {}
-ns.LOCALES = { enUS = E, svSE = S }
-ns.LANGS = { { key = "enUS", name = "English" }, { key = "svSE", name = "Svenska" } }
+ns.LOCALES = { enUS = E, svSE = S, deDE = {}, ruRU = {}, frFR = {}, esES = {}, ptBR = {} }
+ns.LANGS = {
+  { key = "enUS", name = "English" }, { key = "svSE", name = "Svenska" }, { key = "deDE", name = "Deutsch" },
+  { key = "ruRU", name = "Русский" }, { key = "frFR", name = "Français" }, { key = "esES", name = "Español" },
+  { key = "ptBR", name = "Português" },
+}
+ns.TX = ns.TX or {} -- data texts per language: [English text] = translation (Languages.lua)
 
+-- The chosen language; until one is chosen, the game's own language if the addon speaks it.
 function ns.Lang()
-  return (@ADDON@Global and @ADDON@Global.lang) or "enUS"
+  local l = @ADDON@Global and @ADDON@Global.lang
+  if l and ns.LOCALES[l] then return l end
+  local ok, loc = pcall(GetLocale)
+  if ok then
+    if loc == "esMX" then loc = "esES" end
+    if loc ~= "svSE" and ns.LOCALES[loc] then return loc end
+  end
+  return "enUS"
+end
+
+-- The next language in the menu (dir = 1) or the one before (dir = -1).
+function ns.NextLang(dir)
+  local cur, n = ns.Lang(), #ns.LANGS
+  for i, l in ipairs(ns.LANGS) do
+    if l.key == cur then return ns.LANGS[((i - 1 + (dir or 1)) % n) + 1].key end
+  end
+  return "enUS"
+end
+
+function ns.LangName(key)
+  for _, l in ipairs(ns.LANGS) do if l.key == key then return l.name end end
+  return "English"
 end
 
 -- Translated string, formatted with any extra arguments.
@@ -33,7 +60,13 @@ function ns.Tx(entry)
     if entry.A or entry.H then
       return ns.Tx((ns.IsHorde() and entry.H) or entry.A or entry.H)
     end
-    return (ns.Lang() == "svSE" and entry[2]) or entry[1]
+    local lang = ns.Lang()
+    if lang == "svSE" then return entry[2] or entry[1] end
+    if lang ~= "enUS" then
+      local d = ns.TX[lang]
+      return (d and d[entry[1]]) or entry[1]
+    end
+    return entry[1]
   end
   return entry
 end
@@ -65,7 +98,7 @@ E.CMD_lock = "lock/unlock all windows"
 E.CMD_reset = "reset window positions"
 E.CMD_all = "print the full talent plan"
 E.CMD_font = "change text size (Small, Normal, Large)"
-E.CMD_lang = "switch language (English/Svenska)"
+E.CMD_lang = "switch language: /@SLASH@ lang, or pick one: en, sv, de, ru, fr, es, pt"
 E.CMD_ranks = "check spell ranks and missing spells on your bars"
 E.CMD_craft = "show/hide the crafting assistant"
 E.CMD_minimap = "show/hide the minimap icon"
@@ -547,7 +580,7 @@ S.CMD_lock = "lås/lås upp alla fönster"
 S.CMD_reset = "återställ fönstrens positioner"
 S.CMD_all = "skriv ut hela talentplanen"
 S.CMD_font = "byt textstorlek (Liten, Normal, Stor)"
-S.CMD_lang = "byt språk (English/Svenska)"
+S.CMD_lang = "byt språk: /@SLASH@ lang, eller välj: en, sv, de, ru, fr, es, pt"
 S.CMD_ranks = "kolla spell-ranks och saknade spells på dina bars"
 S.CMD_craft = "visa/dölj crafting-assistenten"
 S.CMD_minimap = "visa/dölj minimap-ikonen"

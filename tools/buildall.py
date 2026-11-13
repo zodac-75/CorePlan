@@ -83,6 +83,7 @@ def build_part(cls, out, ver):
     # window keeps the class's own logo (Logo.tga and its layout, ns.LOGO in the class's Data.lua).
     shutil.copy(os.path.join(HERE, "Media", "Icon.tga"), os.path.join(dest, "Media", "Icon.tga"))
 
+    sources["Languages.lua"] = None
     files = []
     for f in build.ORDER:
         if f == "CLASS_MODULES":
@@ -94,8 +95,11 @@ def build_part(cls, out, ver):
 
     slash_up = acp["name"].upper()
     for f in files:
-        with open(sources[f], encoding="utf-8") as src:
-            text = build.fill(src.read(), m)
+        if f == "Languages.lua":
+            text = build.fill(build.langs.render(cls, build.code_of(sources)), m)
+        else:
+            with open(sources[f], encoding="utf-8") as src:
+                text = build.fill(src.read(), m)
         if re.search(r"@[A-Z]+@", re.sub(r"@project-version@", "", text)):
             sys.exit("%s: unfilled placeholder in %s" % (cls, f))
         if f == "Data.lua":

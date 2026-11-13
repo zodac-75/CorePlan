@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.0-beta3
+
+- **New languages: Deutsch, Русский, Français, Español and Português (BR).** Every menu text, message and tip is translated. Until you pick a language yourself, the addon uses your game's language when it has it (otherwise English). Change it in the menu (Language) or with `/acp lang` (or `/acp lang de`, `ru`, `fr`, `es`, `pt`, `sv`, `en`).
+
 # AllClassPlan 0.1.0-beta2
 
 - **Class logos are back in the settings window:** each class shows its own logo again (the mage logo on a mage, and so on). The AllClassPlan icon stays in the addon list and on the minimap button.

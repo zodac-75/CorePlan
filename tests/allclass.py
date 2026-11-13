@@ -46,7 +46,7 @@ def main():
             with open(test, "w", encoding="utf-8") as f:
                 f.write(text)
             for mode in ("classic", "modern"):
-                for lang in ("enUS", "svSE"):
+                for lang in ("enUS", "svSE", "deDE", "ruRU", "frFR", "esES", "ptBR"):
                     r = subprocess.run([lua, test, os.path.join(out, part), mode, lang],
                                        capture_output=True, text=True, cwd=tmp)
                     last = (r.stdout.strip().splitlines() or [""])[-1]

@@ -965,15 +965,24 @@ end)
 ns.RegisterCommand("theme", true, function() ns.CycleTheme() end)
 ns.RegisterCommand("font", true, function(rest) ns.CycleFontSize(rest) end)
 
-function ns.CycleLang()
+function ns.CycleLang(to)
   @ADDON@Global = @ADDON@Global or {}
-  @ADDON@Global.lang = (ns.Lang() == "enUS") and "svSE" or "enUS"
+  @ADDON@Global.lang = (to and ns.LOCALES[to]) and to or ns.NextLang(1)
   ns.Print(ns.T("LANG_SET"))
   ns.RefreshMain()
   if ns.RefreshCraft then ns.RefreshCraft() end
   if ns.RefreshMenu then ns.RefreshMenu() end
 end
-ns.RegisterCommand("lang", true, function() ns.CycleLang() end)
+ns.RegisterCommand("lang", true, function(rest)
+  -- /lang de, /lang ru ... picks one; /lang alone goes to the next language
+  local want = rest and rest:lower():match("^%s*(%S+)")
+  if want then
+    for _, l in ipairs(ns.LANGS) do
+      if l.key:lower():sub(1, 2) == want:sub(1, 2) or l.name:lower() == want then return ns.CycleLang(l.key) end
+    end
+  end
+  ns.CycleLang()
+end)
 
 ns.RegisterCommand("all", true, function()
   Print(ns.T("FULL_PLAN"))

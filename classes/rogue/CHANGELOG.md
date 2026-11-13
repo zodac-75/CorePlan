@@ -1,4 +1,6 @@
-# RoguePlan 1.0.0-beta62
+# RoguePlan 1.0.0-beta63
+
+- **New languages: Deutsch, Русский, Français, Español and Português (BR).** Every menu text, message and tip is translated. Until you pick a language yourself, the addon uses your game's language when it has it (otherwise English). Change it in the menu (Language) or with `/rp lang` (or `/rp lang de`, `ru`, `fr`, `es`, `pt`, `sv`, `en`).
 
 - **Getting ready for AllClassPlan** (all Plan addons in one install, coming soon): when AllClassPlan is installed and turned on, RoguePlan steps aside on that character and AllClassPlan takes over with your settings. Without AllClassPlan nothing changes.
 

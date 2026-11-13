@@ -1,4 +1,6 @@
-# PaladinPlan 1.16.7
+# PaladinPlan 1.16.8
+
+- **New languages: Deutsch, Русский, Français, Español and Português (BR).** Every menu text, message and tip is translated. Until you pick a language yourself, the addon uses your game's language when it has it (otherwise English). Change it in the menu (Language) or with `/pal lang` (or `/pal lang de`, `ru`, `fr`, `es`, `pt`, `sv`, `en`).
 
 - **Getting ready for AllClassPlan** (all Plan addons in one install, coming soon): when AllClassPlan is installed and turned on, PaladinPlan steps aside on that character and AllClassPlan takes over with your settings. Without AllClassPlan nothing changes.
 

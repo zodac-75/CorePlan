@@ -412,6 +412,10 @@ now = now + 5; runTimers(now)
 for _, cmd in ipairs({ "help", "craft", "ranks", "de", "all", "lock", "lock", "shatter", "shatter", "move", "move", "tooltip", "tooltip", "minimap", "minimap", "theme", "theme", "theme", "theme", "lang", "lang", "font", "font", "font", "reset", "" , "", "nonsense" }) do
   slash(cmd)
 end
+-- /lang cycles through all the languages. Back to the one under test; the many text checks below
+-- look for English/Swedish words, so the new languages run the rest of this file in English (the
+-- other classes' tests keep their language all the way).
+MagePlanGlobal.lang = (arg[3] == "svSE") and "svSE" or "enUS"
 now = now + 5; runTimers(now)
 
 -- Fönster: dra hörnet, Ctrl+mushjul
@@ -1506,6 +1510,8 @@ do
 end
 print("--- Rank-koll utan rank-text (Forever) ---")
 do
+  local keepLang = MagePlanGlobal.lang
+  MagePlanGlobal.lang = "enUS" -- the check looks for English/Swedish words
   local oldSub = GetSpellSubtext
   GetSpellSubtext = function() return "" end
   local levels = { [116] = 4, [7322] = 26 }
@@ -1521,6 +1527,7 @@ do
     table.insert(errors, "old rank not found without rank text: " .. all)
   end
   GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
+  MagePlanGlobal.lang = keepLang
 end
 print("--- Väskfönstret öppnas igen efter reload/laddningsskärm ---")
 do
@@ -1626,6 +1633,8 @@ do
 end
 print("--- Rank-koll: knappar över 180 räknas bara med controller ikryssad ---")
 do
+  local keepLang = MagePlanGlobal.lang
+  MagePlanGlobal.lang = "enUS" -- the checks below look for English/Swedish words
   local oldSub, oldActions = GetSpellSubtext, {}
   GetSpellSubtext = function() return "" end
   GetSpellLevelLearned = function(id) return ({ [116] = 4, [7322] = 26 })[id] or 0 end
@@ -1667,6 +1676,7 @@ do
   for k in pairs(actions) do actions[k] = nil end
   for k, v in pairs(oldActions) do actions[k] = v end
   GetSpellSubtext, GetSpellLevelLearned = oldSub, nil
+  MagePlanGlobal.lang = keepLang
 end
 print("--- Rank-koll med handkontroll (spells bundna direkt) ---")
 do

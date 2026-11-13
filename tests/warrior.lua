@@ -406,6 +406,7 @@ now = now + 5; runTimers(now)
 for _, cmd in ipairs({ "help", "craft", "ranks", "all", "lock", "lock", "combat", "combat", "move", "move", "minimap", "minimap", "theme", "theme", "theme", "theme", "lang", "lang", "font", "font", "font", "reset", "" , "", "nonsense" }) do
   slash(cmd)
 end
+WarriorPlanGlobal.lang = arg[3] -- /lang cycles through all the languages: back to the one under test
 now = now + 5; runTimers(now)
 
 -- Fönster: dra hörnet, Ctrl+mushjul
