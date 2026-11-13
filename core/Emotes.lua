@@ -834,6 +834,46 @@ EFFECTS.ROLL100 = function(from)
   Sound("UI_EPICLOOT_TOAST")
 end
 
+-- Somebody rolls a 1: the die thuds down and tips over, a rain cloud drifts in, and a sad face.
+EFFECTS.ROLL1 = function(from)
+  local die = Piece("Interface\\Icons\\INV_Misc_Dice_02", 100, 100)
+  die.tex:SetVertexColor(0.6, 0.6, 0.7, 1)
+  die:SetPoint("CENTER", 0, 380)
+  Move(die, 0, -400, 1, 0.5)
+  Move(die, 0, 14, 2, 0.1); Move(die, 0, -14, 3, 0.1)
+  Spin(die, -100, 4, 0.9, 0.3)
+  Move(die, 0, -60, 5, 1.2); Fade(die, 1, 0, 5, 1.2)
+  Play(die)
+  local cloud = Piece(ns.MEDIA .. "Cloud", 300, 188)
+  cloud:SetPoint("CENTER", -260, 200)
+  cloud:SetAlpha(0)
+  Fade(cloud, 0, 1, 1, 0.5); Move(cloud, 260, 0, 1, 0.9)
+  Move(cloud, 0, -8, 2, 0.6); Move(cloud, 0, 8, 3, 0.6); Move(cloud, 0, -8, 4, 0.6)
+  Fade(cloud, 1, 0, 5, 0.6)
+  Play(cloud)
+  for i = 1, 24 do
+    local d = Piece(WHITE, 4, 16)
+    d.tex:SetVertexColor(0.45, 0.65, 1, 0.9)
+    d:SetPoint("CENTER", math.random(-110, 110), 140)
+    d:SetAlpha(0)
+    Fade(d, 0, 1, 1, 0.05, 0.9 + math.random() * 1.6)
+    Move(d, 0, -math.random(180, 260), 2, 0.7)
+    Fade(d, 1, 0, 2, 0.7)
+    Play(d)
+  end
+  -- ":(" slowly sinking
+  local t = TextPiece(":(", 64, 0.55, 0.7, 1)
+  t:SetPoint("CENTER", 0, 60)
+  t:SetAlpha(0)
+  Fade(t, 0, 1, 1, 0.3, 0.6)
+  Grow(t, 1.8, 1.8, 1, 0.3, 0.6)
+  Move(t, 0, -50, 2, 1.8)
+  Fade(t, 1, 0, 3, 0.8)
+  Play(t)
+  Say(ns.T("EM_R1_" .. math.random(2), Short(from)))
+  Sound("UI_BATTLEGROUND_COUNTDOWN_FINISHED")
+end
+
 -- Somebody rolls a 67: a big 6 and a big 7 bob up and down out of step, like the meme.
 EFFECTS.SIXSEVEN = function(from)
   local digits = { { "6", -110, 1, 0.85, 0.2 }, { "7", 110, 0.3, 0.8, 1 } }
@@ -909,7 +949,7 @@ local function Pat(g)
   p = p:gsub("%%s", "(.-)")
   return "^" .. p .. "$"
 end
--- A roll result of 100 or 67 (need or greed, or a plain /roll): works in any language, because the
+-- A roll result of 100, 67 or 1 (need or greed, or a plain /roll): works in any language, because the
 -- number is whichever piece of the line is a number and the player is the piece that isn't an item.
 local lastR100 = -1000
 local rollPatterns
@@ -943,10 +983,10 @@ local function OnRoll100(msg)
             if not roll then roll = n elseif not lo then lo = n else hi = n end
           elseif not who and not v:find("|H", 1, true) and not v:find("[", 1, true) then who = v end
         end
-        if (roll == 100 or roll == 67) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
+        if (roll == 100 or roll == 67 or roll == 1) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
           if who == YOU or who == "" then who = UnitName("player") end
           lastR100 = GetTime()
-          local egg = roll == 67 and "SIXSEVEN" or (kind == "need" and "NEED100" or "ROLL100")
+          local egg = roll == 1 and "ROLL1" or roll == 67 and "SIXSEVEN" or (kind == "need" and "NEED100" or "ROLL100")
           lastShown[egg] = nil
           ns.ShowEmoteEgg(egg, who)
           return true
@@ -1151,7 +1191,7 @@ end
 
 -- Emotes that trigger another effect. Forever has no /toast like later expansions,
 -- so the mugs come with /drink (and /cheers where the game has it).
-local ALIAS = { ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
+local ALIAS = { ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", ["1"] = "ROLL1", ONE = "ROLL1", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
   SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
@@ -1162,7 +1202,7 @@ local COMBO = { DANCE = "PARTY", HUG = "GROUPHUG", KISS = "KISSKISS" }
 local COMBO_WINDOW = { KISS = 10 }
 
 -- Effects that aren't an emote to send to someone (they start in other ways).
-local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true, ROLL100 = true, NEED100 = true, SIXSEVEN = true }
+local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true, ROLL100 = true, NEED100 = true, SIXSEVEN = true, ROLL1 = true }
 
 -- A round of drinks: who in the party drank lately (short name -> when).
 local drinkers = {}

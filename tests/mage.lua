@@ -1906,6 +1906,14 @@ do
   if l then table.insert(errors, "/roll 100 av 1000 gav egg") end
   l = egg("CHAT_MSG_SYSTEM", "Bob rolls 67 (1-100)")
   if l ~= ns.T("EM_67", "Bob") then table.insert(errors, "/roll 67 gav fel egg: " .. tostring(l)) end
+  l = egg("CHAT_MSG_LOOT", "Greed Roll - 1 for [Sword] by Bob")
+  if not isOne(l, "EM_R1_", 2) then table.insert(errors, "roll 1 gav fel egg: " .. tostring(l)) end
+  print("  1: " .. tostring(l))
+  l = egg("CHAT_MSG_SYSTEM", "Bob rolls 1 (1-100)")
+  if not isOne(l, "EM_R1_", 2) then table.insert(errors, "/roll 1 gav fel egg: " .. tostring(l)) end
+  l = egg("CHAT_MSG_SYSTEM", "Bob rolls 1 (1-2)")
+  if l then table.insert(errors, "/roll 1 av 2 gav egg") end
+  egg("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
   ns.lastEggLine = nil
   fire("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
   if ns.lastEggLine then table.insert(errors, "100-egg visades igen direkt") end

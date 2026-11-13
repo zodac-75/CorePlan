@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.0-beta6
+
+- New easter egg: roll a 1 and the screen feels your pain.
+
 # AllClassPlan 0.1.0-beta5
 
 - **Fixed: AllClassPlan didn't start** (no window, no minimap icon, "only active on ... characters"). It now starts properly at login.
