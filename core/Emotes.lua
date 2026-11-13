@@ -969,6 +969,16 @@ local function RollPatterns()
   }
   return rollPatterns
 end
+-- The player piece of a roll line: plain text, or a player link (with colour codes) in the real
+-- client, "|cffc41f3b|Hplayer:Name-Realm:123:LOOT|h[Name]|h|r". Item links and plain "[Item]" pieces
+-- are not players.
+local function RollName(v)
+  local link = v:find("|Hplayer:", 1, true)
+  if v:find("|H", 1, true) and not link then return nil end -- item or other link
+  if not link and v:find("[", 1, true) then return nil end -- plain "[Item]"
+  v = v:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|H.-|h%[?(.-)%]?|h", "%1")
+  return v
+end
 local function OnRoll100(msg)
   if GetTime() - lastR100 < 6 then return false end
   local rp = RollPatterns()
@@ -981,7 +991,7 @@ local function OnRoll100(msg)
           local n = tonumber(v)
           if n and v:match("^%d+$") then
             if not roll then roll = n elseif not lo then lo = n else hi = n end
-          elseif not who and not v:find("|H", 1, true) and not v:find("[", 1, true) then who = v end
+          elseif not who then who = RollName(v) end
         end
         if (roll == 100 or roll == 67 or roll == 1) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
           if who == YOU or who == "" then who = UnitName("player") end

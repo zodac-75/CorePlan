@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.1
+
+- **Fixed: the roll easter eggs (1, 67, 100) didn't show in the real game.** The roller's name comes as a clickable link in loot roll lines, which AllClassPlan didn't recognise, so nothing happened. Names are now read from links too.
+
 # AllClassPlan 0.1.0
 
 First full release: all nine Plan addons (mage, shaman, druid, warrior, paladin, warlock, priest, hunter, rogue) in one install.

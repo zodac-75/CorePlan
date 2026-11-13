@@ -1911,6 +1911,16 @@ do
   print("  1: " .. tostring(l))
   l = egg("CHAT_MSG_SYSTEM", "Bob rolls 1 (1-100)")
   if not isOne(l, "EM_R1_", 2) then table.insert(errors, "/roll 1 gav fel egg: " .. tostring(l)) end
+  -- the real client: item and player are links, with colour codes
+  local item = "|cff9d9d9d|Hitem:3000:0|h[Ogre Loincloth]|h|r"
+  local function plink(n) return "|cffc41f3b|Hplayer:" .. n .. "-Realm:123:LOOT|h[" .. n .. "]|h|r" end
+  l = egg("CHAT_MSG_LOOT", "Need Roll - 1 for " .. item .. " by " .. plink("Adiliniel"))
+  if l ~= ns.T("EM_R1_1", "Adiliniel") and l ~= ns.T("EM_R1_2", "Adiliniel") then table.insert(errors, "roll 1 med spelarlänk gav fel egg: " .. tostring(l)) end
+  print("  1 (länkar): " .. tostring(l))
+  l = egg("CHAT_MSG_LOOT", "Greed Roll - 67 for " .. item .. " by " .. plink("Adiliniel"))
+  if l ~= ns.T("EM_67", "Adiliniel") then table.insert(errors, "67 med spelarlänk gav fel egg: " .. tostring(l)) end
+  l = egg("CHAT_MSG_LOOT", "Need Roll - 1 for " .. item .. " by |Hplayer:Bob-Realm:5|h[Bob]|h")
+  if not isOne(l, "EM_R1_", 2) then table.insert(errors, "roll 1 med enkel spelarlänk gav fel egg: " .. tostring(l)) end
   l = egg("CHAT_MSG_SYSTEM", "Bob rolls 1 (1-2)")
   if l then table.insert(errors, "/roll 1 av 2 gav egg") end
   egg("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
