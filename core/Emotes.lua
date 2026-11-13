@@ -988,9 +988,12 @@ local function EggDebug(event, msg)
   if not msg:lower():find("roll", 1, true) then return end
   ns.Print("eggdebug " .. event .. ": " .. (msg:gsub("|", "||")))
 end
+local lastRollMsg
 local function OnRoll100(msg)
-  if GetTime() - lastR100 < 6 then
-    if ns.eggDebug then ns.Print("eggdebug: skipped, last roll egg was less than 6 s ago") end
+  -- The same line can arrive twice (loot and system channel): skip an identical one for a few
+  -- seconds. A different roll always counts, so a 100 right after a 1 still gets its egg.
+  if msg == lastRollMsg and GetTime() - lastR100 < 6 then
+    if ns.eggDebug then ns.Print("eggdebug: skipped, the same roll line was just handled") end
     return false
   end
   local rp = RollPatterns()
@@ -1010,7 +1013,7 @@ local function OnRoll100(msg)
         end
         if (roll == 100 or roll == 67 or roll == 1) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
           if who == YOU or who == "" then who = UnitName("player") end
-          lastR100 = GetTime()
+          lastR100, lastRollMsg = GetTime(), msg
           local egg = roll == 1 and "ROLL1" or roll == 67 and "SIXSEVEN" or (kind == "need" and "NEED100" or "ROLL100")
           lastShown[egg] = nil
           ns.ShowEmoteEgg(egg, who)
@@ -1200,7 +1203,7 @@ local function Show(emote, from, answer)
   if lastShown[emote] and GetTime() - lastShown[emote] < 2 then return end
   lastShown[emote] = GetTime()
   local ok, err = pcall(fn, from)
-  if not ok and ns.debug then ns.Print(tostring(err)) end
+  if not ok and (ns.debug or ns.eggDebug) then ns.Print("egg " .. tostring(emote) .. " error: " .. tostring(err)) end
   if type(answer) == "string" and label then Say(answer)
   elseif answer and label then Say(ns.T("EM_SEEN", Short(from), "/" .. emote:lower())) end
 end

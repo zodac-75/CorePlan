@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.3
+
+- **Fixed: a 100 (or 67) rolled soon after another roll egg didn't show.** Only identical roll lines are skipped now, not every roll for six seconds.
+- `/acp eggdebug` now also prints an error if an egg effect fails.
+
 # AllClassPlan 0.1.2
 
 - New hidden command `/acp eggdebug`: prints every loot roll line as the game sends it and what the easter eggs made of it, to track down rolls that don't trigger an egg.

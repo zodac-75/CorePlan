@@ -1911,6 +1911,12 @@ do
   print("  1: " .. tostring(l))
   l = egg("CHAT_MSG_SYSTEM", "Bob rolls 1 (1-100)")
   if not isOne(l, "EM_R1_", 2) then table.insert(errors, "/roll 1 gav fel egg: " .. tostring(l)) end
+  -- a 100 straight after a 1 (no time passes in between) is a different roll: it still gets its egg
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_SYSTEM", "Bob rolls 1 (1-100)")
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
+  if not isOne(ns.lastEggLine, "EM_R100_", 2) then table.insert(errors, "100 direkt efter en 1 gav fel egg: " .. tostring(ns.lastEggLine)) end
   -- the real client: item and player are links, with colour codes
   local item = "|cff9d9d9d|Hitem:3000:0|h[Ogre Loincloth]|h|r"
   local function plink(n) return "|cffc41f3b|Hplayer:" .. n .. "-Realm:123:LOOT|h[" .. n .. "]|h|r" end
