@@ -9,12 +9,26 @@ local f, big, small, flash
 local acc = 0
 local lastState
 
-local function PlayerHas(buff)
-  return ns.ForEachAura("player", "HELPFUL", function(n) return n == buff end)
+-- Does the unit have one of these auras? In combat the game can hide aura names from addons
+-- (the list scan then sees nothing), but looking an aura up by name still works.
+local function HasAny(unit, filter, names)
+  if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
+    for name in pairs(names) do
+      local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, name, filter)
+      if ok and a then return true end
+    end
+  end
+  return (ns.ForEachAura(unit, filter, function(n) return names[n] end))
+end
+
+local FOF_SET = { [FOF] = true }
+
+local function PlayerHas()
+  return HasAny("player", "HELPFUL", FOF_SET)
 end
 
 local function TargetFrozen()
-  return ns.ForEachAura("target", "HARMFUL", function(n) return FROZEN[n] end)
+  return HasAny("target", "HARMFUL", FROZEN)
 end
 
 local function Update()
@@ -24,7 +38,7 @@ local function Update()
   local main, state, sub
 
   if hasTarget and ns.SpellInfo("Ice Lance") then
-    local fof = PlayerHas(FOF)
+    local fof = PlayerHas()
     local frozen = TargetFrozen()
     if fof or frozen then
       local cd = ns.CooldownLeft("Ice Lance")
@@ -133,4 +147,32 @@ ns.RegisterCommand("move", true, function()
   f:EnableMouseWheel(ns.db.shatterUnlocked and true or false)
   if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
   ns.Print(ns.db.shatterUnlocked and ns.T("SH_UNLOCKED") or ns.T("SH_LOCKED"))
+end)
+
+-- /@SLASH@ shatterdebug: prints what the shatter indicator sees right now (target a frozen enemy first).
+ns.RegisterCommand("shatterdebug", false, function()
+  ns.Print("shatterdebug: target " .. tostring(UnitExists("target")) .. ", can attack " .. tostring(UnitCanAttack("player", "target"))
+    .. ", Ice Lance known " .. tostring(ns.SpellInfo("Ice Lance") ~= nil) .. ", cooldown " .. string.format("%.1f", ns.CooldownLeft("Ice Lance")))
+  ns.Print("shatterdebug: frozen " .. tostring(TargetFrozen()) .. ", Fingers of Frost " .. tostring(PlayerHas()))
+  for _, unit in ipairs({ "target", "player" }) do
+    local filter = unit == "target" and "HARMFUL" or "HELPFUL"
+    local names, hidden = {}, 0
+    for i = 1, 40 do
+      local name
+      if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+        local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, filter)
+        if not ok or not a then break end
+        name = a.name
+      elseif UnitAura then
+        local ok, n = pcall(UnitAura, unit, i, filter)
+        if not ok or not n then break end
+        name = n
+      else
+        break
+      end
+      if issecretvalue and issecretvalue(name) then hidden = hidden + 1 else names[#names + 1] = tostring(name) end
+    end
+    ns.Print("shatterdebug: " .. unit .. " " .. filter:lower() .. " auras: " .. (#names > 0 and table.concat(names, ", ") or "-")
+      .. (hidden > 0 and (" (+" .. hidden .. " hidden)") or ""))
+  end
 end)

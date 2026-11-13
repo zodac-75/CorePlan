@@ -1169,6 +1169,26 @@ for _, w in ipairs(allFrames) do
     print((w.__text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
   end
 end
+-- The aura list can be hidden from addons in combat: a frozen target is found by name instead.
+if MODE == "modern" then
+  local oldC = C_UnitAuras
+  C_UnitAuras = {
+    GetAuraDataByIndex = function() return nil end,
+    GetAuraDataBySpellName = function(u, n, f) if u == "target" and n == "Frost Nova" and f == "HARMFUL" then return { name = n } end end,
+  }
+  local seen
+  now = now + 10; runTimers(now)
+  for _, w in ipairs(allFrames) do
+    if w.__scripts.OnUpdate then pcall(w.__scripts.OnUpdate, w, 0.2) end
+  end
+  for _, w in ipairs(allFrames) do
+    if w.__kind == "FontString" and w.__text and w.__text:find("Ice Lance", 1, true) then seen = w.__text end
+  end
+  if not seen then table.insert(errors, "frusen fiende hittades inte via namnuppslag") end
+  print("  frusen via namn: " .. tostring(seen))
+  ns.RunCommand("shatterdebug")
+  C_UnitAuras = oldC
+end
 print("--- Yrkestest (PROFTEST) ---")
 GetNumSkillLines, GetSkillLineInfo = nil, nil
 ns.db.profCache = nil

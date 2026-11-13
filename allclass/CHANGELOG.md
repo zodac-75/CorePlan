@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.7
+
+- **Mage: the frozen-target / Fingers of Frost call-out looks the auras up by name**, which still works when the game hides the aura list from addons (in combat). Before it could miss a frozen target.
+- New hidden command `/acp shatterdebug`: prints what the shatter indicator sees (target, Ice Lance, the auras on you and your target).
+
 # AllClassPlan 0.1.6
 
 - **No waiting time on the "somebody needs" egg either.** Everyone rolls at the same time, so every Need roll gets its egg right away.
