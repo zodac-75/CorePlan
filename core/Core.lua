@@ -492,6 +492,37 @@ function ns.CycleFontSize(arg)
   ns.Print(ns.T("FONT_SET", ns.TextScaleLabel()))
 end
 
+-- Windows go away when combat starts and come back when it ends, unless "show windows in combat"
+-- is on (ns.db.combatShow). Only our own plain frames are hidden (never secure buttons or Blizzard's).
+-- A window you open yourself during the fight stays; one you closed yourself is not brought back.
+ns.combatWindows = {}
+local combatHidden, combatHiding = {}, false
+function ns.HideInCombat(f)
+  if not f or f.combatRegistered then return end
+  f.combatRegistered = true
+  table.insert(ns.combatWindows, f)
+  -- (a hook on Show, not on the OnShow script: the windows set their own OnShow later)
+  hooksecurefunc(f, "Show", function(self) if not combatHiding then combatHidden[self] = nil end end)
+end
+local combatEv = CreateFrame("Frame")
+combatEv:RegisterEvent("PLAYER_REGEN_DISABLED")
+combatEv:RegisterEvent("PLAYER_REGEN_ENABLED")
+combatEv:SetScript("OnEvent", function(_, event)
+  if event == "PLAYER_REGEN_DISABLED" then
+    if ns.db and ns.db.combatShow then return end
+    combatHiding = true
+    for _, f in ipairs(ns.combatWindows) do
+      if f:IsShown() then combatHidden[f] = true; f:Hide() end
+    end
+    combatHiding = false
+  else
+    local list = {}
+    for f in pairs(combatHidden) do table.insert(list, f) end
+    combatHidden = {}
+    for _, f in ipairs(list) do f:Show() end
+  end
+end)
+
 -- Gemensam stil för fönster: tema, flyttbart, ändringsbar bredd och skala.
 function ns.MakeWindow(name, width, posKey, defaultPoint)
   local f = CreateFrame("Frame", name, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
@@ -502,6 +533,7 @@ function ns.MakeWindow(name, width, posKey, defaultPoint)
   f:SetClampedToScreen(true)
   table.insert(ns.themedFrames, f)
   table.insert(ns.textWindows, f)
+  ns.HideInCombat(f)
   ns.ApplyTheme(f)
   local p = ns.db[posKey]
   if p then
@@ -937,6 +969,11 @@ end
 ---------------------------------------------------------------------------
 -- Kommandon
 ---------------------------------------------------------------------------
+ns.RegisterCommand("combatwin", true, function()
+  db.combatShow = not db.combatShow
+  Print(db.combatShow and ns.T("COMBATWIN_ON") or ns.T("COMBATWIN_OFF"))
+end)
+
 ns.RegisterCommand("lock", true, function()
   db.locked = not db.locked
   Print(db.locked and ns.T("LOCKED") or ns.T("UNLOCKED"))

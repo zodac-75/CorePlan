@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.16
+
+- **Windows hide in combat.** The plan window, crafting window, dungeon guide and settings go away when a fight starts and come back when it ends. New tick box "Show windows in combat" (`/acp combatwin`) keeps them open. A window you open yourself during the fight stays. The bag check is included: with the tick box on it stays open in combat, but its sell and destroy buttons don't work until the fight is over.
+
 # AllClassPlan 0.1.15
 
 - **The flower egg also starts from the loot line.** When the party sees that the herbalist receives an herb, the flower egg starts, so it works even if her addon is old or her cast isn't visible.

@@ -249,7 +249,7 @@ end
 local win, sellAll, hint, foot, title
 local TK = "bags" -- its own text size (ns.TextScale)
 local lines = {}
-local merchantOpen, autoOpened, reopenAfterCombat = false, false, false
+local merchantOpen, autoOpened, reopenAfterCombat, shownInCombat = false, false, false, false
 -- WIDTH and LINE_H are at 100% text size: the window can be made wider by its corner, and the
 -- lines grow with the text size.
 local BASE_WIDTH, BASE_LINE_H, MAX_LINES, SELL_BATCH = 360, 18, 40, 12
@@ -647,16 +647,24 @@ ns.RegisterModule(function()
         QueueRefresh()
       elseif event == "PLAYER_REGEN_DISABLED" then
         -- Just before combat locks secure frames: clear every click action and hide.
+        -- With "show windows in combat" on, it stays open but is only to look at (no click actions).
         if win and win:IsShown() then
           for _, b in ipairs(lines) do SetSecure(b, nil, nil) end
           sellAll:SetAttribute("type1", nil)
-          win:Hide()
-          reopenAfterCombat = true
+          if ns.db.combatShow then
+            shownInCombat = true
+          else
+            win:Hide()
+            reopenAfterCombat = true
+          end
         end
       elseif event == "PLAYER_REGEN_ENABLED" then
         if reopenAfterCombat then
           reopenAfterCombat = false
           ns.ToggleBags(true, true)
+        elseif shownInCombat then
+          shownInCombat = false
+          QueueRefresh() -- the click actions come back
         end
       end
     end)

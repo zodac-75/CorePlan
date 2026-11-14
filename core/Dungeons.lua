@@ -521,6 +521,7 @@ end
 
 local function CreateWindow()
   win = CreateFrame("Frame", "@ADDON@Dungeons", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  ns.HideInCombat(win)
   win:SetSize(ns.db.dungeonW or (LIST_W() + DETAIL_W + 24), ns.db.dungeonH or WIN_H)
   win:SetFrameStrata("HIGH")
   win:SetToplevel(true)

@@ -40,6 +40,7 @@ end
 -- Tick boxes, each in a group (the headings in the settings window and the quick menu).
 local FEATURES = {
   { group = "CAT_COMBAT", key = "MM_SHATTER", on = function() return not ns.db.shatterOff end, cmd = ns.COMBAT_CMD or "combat" },
+  { group = "CAT_COMBAT", key = "MM_COMBATWIN", on = function() return ns.db.combatShow end, cmd = "combatwin" },
   { group = "CAT_COMBAT", key = "MM_MOVE", on = function() return ns.db.shatterUnlocked end, cmd = "move" },
   { group = "CAT_BUFFS", key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
   { group = "CAT_BUFFS", key = "MM_PARTYBUFF", on = function() return not ns.db.partyBuffsOff end, cmd = "partybuffs", party = true },
@@ -435,6 +436,7 @@ end
 ---------------------------------------------------------------------------
 local function CreateConfig()
   win = CreateFrame("Frame", "@ADDON@Config", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  ns.HideInCombat(win)
   win:SetSize(800, 500)
   win:SetFrameStrata("DIALOG")
   win:SetToplevel(true)
@@ -669,6 +671,7 @@ end
 
 local function BuildQuick()
   quick = CreateFrame("Frame", "@ADDON@QuickMenu", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+  ns.HideInCombat(quick)
   quick:SetFrameStrata("DIALOG")
   quick:SetClampedToScreen(true)
   quick:EnableMouse(true)

@@ -1845,6 +1845,18 @@ do
     fire("PLAYER_REGEN_DISABLED")
     if w.__shown then table.insert(errors, "väskgenomgången stängdes inte inför strid") end
     fire("PLAYER_REGEN_ENABLED")
+    -- with "show windows in combat" on, it stays open but its buttons do nothing
+    if not w.__shown then slash("de") end
+    ns.db.combatShow = true
+    fire("PLAYER_REGEN_DISABLED")
+    if not w.__shown then table.insert(errors, "väskgenomgången göms trots 'visa i combat'") end
+    for i = 1, 40 do
+      local b = rawget(_G, "MagePlanBagLine" .. i)
+      if b and b:GetAttribute("macrotext1") then table.insert(errors, "väskrad har klickaktion i strid") end
+    end
+    fire("PLAYER_REGEN_ENABLED"); now = now + 1; runTimers(now)
+    ns.db.combatShow = nil
+    if not w.__shown then table.insert(errors, "väskgenomgången försvann efter strid med 'visa i combat'") end
     slash("de")
     print("  rader: " .. (function() local n = 0; for i = 1, 40 do local b = rawget(_G, "MagePlanBagLine" .. i); if b and b.__shown then n = n + 1 end end; return n end)())
   end)
@@ -2030,6 +2042,37 @@ do
   ns.lastEggLine = nil
   fire("CHAT_MSG_SYSTEM", "Bob rolls 100 (1-100)")
   if not ns.lastEggLine then table.insert(errors, "100-egg uteblev vid ny roll direkt efter en annan (ingen spärr ska finnas)") end
+end
+
+-- Fönster göms i strid (standard) och kommer tillbaka; med "visa i combat" står de kvar
+do
+  local n = #ns.combatWindows
+  if n < 3 then table.insert(errors, "för få fönster registrerade för strid: " .. n) end
+  local a, b, c = ns.combatWindows[1], ns.combatWindows[2], ns.combatWindows[3]
+  a:Show(); b:Show(); c:Hide()
+  fire("PLAYER_REGEN_DISABLED")
+  if a:IsShown() or b:IsShown() then table.insert(errors, "fönster göms inte i strid") end
+  fire("PLAYER_REGEN_ENABLED")
+  if not a:IsShown() or not b:IsShown() then table.insert(errors, "fönster kom inte tillbaka efter strid") end
+  if c:IsShown() then table.insert(errors, "stängt fönster dök upp efter strid") end
+  -- opened during the fight: stays; closed by you during the fight: not brought back
+  fire("PLAYER_REGEN_DISABLED")
+  c:Show()
+  b:Show(); b:Hide() -- reopened and closed again by you
+  fire("PLAYER_REGEN_ENABLED")
+  if not c:IsShown() then table.insert(errors, "fönster öppnat i strid försvann") end
+  if b:IsShown() then table.insert(errors, "fönster som du stängde i strid kom tillbaka") end
+  if not a:IsShown() then table.insert(errors, "fönster a kom inte tillbaka (andra striden)") end
+  -- the toggle
+  ns.db.combatShow = nil
+  pcall(SlashCmdList[next(SlashCmdList)], "combatwin")
+  if not ns.db.combatShow then table.insert(errors, "/mp combatwin slog inte på") end
+  fire("PLAYER_REGEN_DISABLED")
+  if not a:IsShown() or not c:IsShown() then table.insert(errors, "fönster göms i strid fast 'visa i combat' är på") end
+  fire("PLAYER_REGEN_ENABLED")
+  pcall(SlashCmdList[next(SlashCmdList)], "combatwin")
+  if ns.db.combatShow then table.insert(errors, "/mp combatwin slog inte av") end
+  a:Hide(); b:Hide(); c:Hide()
 end
 
 -- Easter egg: Faithlezz plockar blomma (casten syns på partyramen, eller hennes egen addon säger till)
