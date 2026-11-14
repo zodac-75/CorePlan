@@ -27,8 +27,26 @@ local function PlayerHas()
   return HasAny("player", "HELPFUL", FOF_SET)
 end
 
+-- In combat the game can refuse to show addons the auras on an enemy at all ("Auras cannot be
+-- accessed ..."). Then the only sign of a frozen target is your own Frost Nova: for its 8 seconds
+-- the target in range counts as frozen, until you hit it with Ice Lance (which breaks the root).
+local NOVA_SECONDS = 8
+local function FrozenByNova()
+  local last = ns.lastCast
+  local t = last and last["Frost Nova"]
+  if not t or GetTime() - t > NOVA_SECONDS then return false end
+  if (last["Ice Lance"] or 0) > t then return false end
+  local near = rawget(_G, "CheckInteractDistance")
+  if near then
+    local ok, inRange = pcall(near, "target", 3) -- 10 yards, Frost Nova's reach
+    if ok and inRange == false then return false end
+  end
+  return true
+end
+ns.FrozenByNova = FrozenByNova
+
 local function TargetFrozen()
-  return HasAny("target", "HARMFUL", FROZEN)
+  return HasAny("target", "HARMFUL", FROZEN) or FrozenByNova()
 end
 
 local function Update()
@@ -164,7 +182,7 @@ ns.RegisterCommand("shatterdebug", false, function()
     local ok, a = pcall(fn)
     local r
     if not ok then
-      r = "error " .. tostring(a):sub(1, 50)
+      r = "error " .. tostring(a):sub(1, 220)
     elseif a == nil or a == false then
       r = "nothing"
     elseif issecretvalue and issecretvalue(a) then
@@ -202,6 +220,16 @@ ns.RegisterCommand("shatterdebug", false, function()
   local au = rawget(_G, "AuraUtil")
   if au and au.FindAuraByName then
     try("AuraUtil.FindAuraByName Frost Nova", function() return (au.FindAuraByName("Frost Nova", "target", "HARMFUL")) end)
+  end
+  local cs = rawget(_G, "C_Secrets")
+  if cs then
+    for _, fname in ipairs({ "ShouldAurasBeSecret", "HasSecretRestrictions" }) do
+      if cs[fname] then try("C_Secrets." .. fname, function() return cs[fname]() end) end
+    end
+  end
+  do
+    local t = ns.lastCast and ns.lastCast["Frost Nova"]
+    ns.Print("shatterdebug: Frost Nova cast " .. (t and string.format("%.1fs ago", GetTime() - t) or "never") .. ", counts as frozen: " .. tostring(FrozenByNova()))
   end
   ns.Print("shatterdebug: in combat " .. tostring(UnitAffectingCombat("player") and true or false)
     .. ", target " .. tostring(UnitName("target")) .. ", level " .. tostring(UnitLevel("target")))

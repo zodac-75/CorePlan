@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.10
+
+- **Mage: the shatter call-out sees a frozen target in combat.** The game refuses to show addons the auras on enemies in combat, so the frozen debuff couldn't be read. Now your own Frost Nova counts: for its 8 seconds the target in range is treated as frozen (until you cast Ice Lance). Fingers of Frost can't be seen in combat either; that one is still open.
+- `/acp shatterdebug` also prints the full error text, what the game says about secret auras and when you last cast Frost Nova.
+
 # AllClassPlan 0.1.9
 
 - `/acp shatterdebug` now tries every way of reading auras (by name, by index with different filters, the old functions) and says which ones work, to find out why a frozen target isn't seen in the game.

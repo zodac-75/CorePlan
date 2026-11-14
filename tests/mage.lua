@@ -1186,6 +1186,28 @@ if MODE == "modern" then
   end
   if not seen then table.insert(errors, "frusen fiende hittades inte via namnuppslag") end
   print("  frusen via namn: " .. tostring(seen))
+  -- Auras unreadable (error in combat): your own Frost Nova still counts as a frozen target.
+  C_UnitAuras = {
+    GetAuraDataByIndex = function() error("Auras cannot be accessed when in combat") end,
+    GetAuraDataBySpellName = function() return nil end,
+  }
+  ns.lastCast = ns.lastCast or {}
+  ns.lastCast["Frost Nova"] = GetTime()
+  ns.lastCast["Ice Lance"] = nil
+  local seenNova
+  for _, w in ipairs(allFrames) do
+    if w.__scripts.OnUpdate then pcall(w.__scripts.OnUpdate, w, 0.2) end
+  end
+  for _, w in ipairs(allFrames) do
+    if w.__kind == "FontString" and w.__text and w.__text:find("Ice Lance", 1, true) then seenNova = w.__text end
+  end
+  if not seenNova then table.insert(errors, "Frost Nova räknades inte som fryst när auror inte går att läsa") end
+  if not ns.FrozenByNova() then table.insert(errors, "FrozenByNova gav false direkt efter Frost Nova") end
+  ns.lastCast["Ice Lance"] = GetTime() + 1
+  if ns.FrozenByNova() then table.insert(errors, "FrozenByNova gäller trots Ice Lance efter Frost Nova") end
+  ns.lastCast["Frost Nova"] = nil
+  ns.lastCast["Ice Lance"] = nil
+  print("  frusen via Frost Nova-kast: " .. tostring(seenNova))
   ns.RunCommand("shatterdebug")
   C_UnitAuras = oldC
 end
