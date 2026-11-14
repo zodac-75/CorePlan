@@ -895,6 +895,52 @@ EFFECTS.SIXSEVEN = function(from)
   Sound("UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE")
 end
 
+-- Faithlezz (Jennie's character) picks a flower: an inside joke for the party. The whole screen
+-- goes pink, flowers and petals rain down across it, a big flower pops up in the middle.
+local FLOWER_NAME = "Faithlezz"
+local FLOWER_ICONS = {
+  "Interface\\Icons\\INV_Misc_Flower_01", "Interface\\Icons\\INV_Misc_Flower_02", "Interface\\Icons\\INV_Misc_Flower_03",
+}
+EFFECTS.FLOWER = function(from)
+  -- a pink wash over the whole screen
+  local wash = Piece(WHITE, 4200, 2400)
+  wash:SetPoint("CENTER", 0, 0)
+  wash.tex:SetVertexColor(1, 0.45, 0.75, 1)
+  wash:SetAlpha(0)
+  Fade(wash, 0, 0.28, 1, 0.25)
+  Fade(wash, 0.28, 0.12, 2, 0.6)
+  Fade(wash, 0.12, 0, 3, 1.4, 1.6)
+  Play(wash)
+  -- the big flower: pops in, wobbles, fades
+  local big = Piece(ns.MEDIA .. "Flower", 300, 300)
+  big:SetPoint("CENTER", 0, 90)
+  big:SetAlpha(0)
+  Fade(big, 0, 1, 1, 0.25)
+  Grow(big, 1.25, 1.25, 1, 0.25)
+  for k = 1, 4 do
+    Spin(big, (k % 2 == 1) and 14 or -14, k + 1, 0.3)
+    Grow(big, (k % 2 == 1) and 1.1 or 1 / 1.1, (k % 2 == 1) and 1.1 or 1 / 1.1, k + 1, 0.3)
+  end
+  Spin(big, 7, 6, 0.15)
+  Fade(big, 1, 0, 7, 0.8, 1.2)
+  Play(big)
+  -- rain: our own flower, the game's flower icons and pink petals (hearts), right across the screen
+  Rain(26, function(i)
+    local p
+    if i % 3 == 1 then p = Piece(ns.MEDIA .. "Flower", 90, 90)
+    elseif i % 3 == 2 then
+      p = Piece(FLOWER_ICONS[(i % #FLOWER_ICONS) + 1], 56, 56)
+    else
+      p = Piece(ns.MEDIA .. "Heart", 34, 34)
+      p.tex:SetVertexColor(1, 0.6, 0.85, 1)
+    end
+    return p
+  end, 900, 3.4)
+  BigText(ns.T("EM_FLOWER_BIG"), 72, 1, 0.55, 0.85, -130, 2.2)
+  Say(ns.T("EM_FLOWER_" .. math.random(3), Short(from)))
+  Sound("UI_EPICLOOT_TOAST")
+end
+
 -- Somebody rolls NEED 100: the big one. Two dice, a rain of gold, a wall of fireworks.
 EFFECTS.NEED100 = function(from)
   for side = -1, 1, 2 do
@@ -986,6 +1032,27 @@ local function EggDebug(event, msg)
   if not msg:lower():find("roll", 1, true) then return end
   ns.Print("eggdebug " .. event .. ": " .. (msg:gsub("|", "||")))
 end
+-- Roll eggs go to the whole group: the roller's own addon sees the line for sure (it is yours), so it
+-- tells the others ("L:<EGG>"), who may not see the line themselves (secret chat text, other
+-- window, out of range). The same egg for the same person from another source within 4 s (your
+-- click and then the chat line, the message and then the line) is not shown twice.
+local ROLL_EGGS = { NEED = true, ROLL1 = true, SIXSEVEN = true, ROLL100 = true, NEED100 = true }
+local lastRollEgg = {}
+local function RollEgg(egg, who, source)
+  if type(who) ~= "string" or who == "" then return end
+  local key, t = egg .. ":" .. Short(who), GetTime()
+  local last = lastRollEgg[key]
+  if last and last.source ~= source and t - last.t < 4 then return end
+  lastRollEgg[key] = { t = t, source = source }
+  lastShown[egg] = nil
+  ns.ShowEmoteEgg(egg, who)
+  if source ~= "net" and IsMe(who) then
+    local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+    if send and IsInGroup and IsInGroup() then
+      pcall(send, PREFIX, "L:" .. egg, (IsInRaid and IsInRaid()) and "RAID" or "PARTY")
+    end
+  end
+end
 local function OnRoll100(msg)
   local rp = RollPatterns()
   for kind, list in pairs(rp) do
@@ -1005,8 +1072,7 @@ local function OnRoll100(msg)
         if (roll == 100 or roll == 67 or roll == 1) and who and (kind ~= "plain" or (lo == 1 and hi == 100)) then
           if who == YOU or who == "" then who = UnitName("player") end
           local egg = roll == 1 and "ROLL1" or roll == 67 and "SIXSEVEN" or (kind == "need" and "NEED100" or "ROLL100")
-          lastShown[egg] = nil
-          ns.ShowEmoteEgg(egg, who)
+          RollEgg(egg, who, "chat")
           return true
         end
       end
@@ -1037,8 +1103,64 @@ local function OnLootMsg(msg)
     if who and who == YOU then who = UnitName("player") end
   end
   if not who or who == "" then return end
-  lastShown.NEED = nil
-  ns.ShowEmoteEgg("NEED", who)
+  RollEgg("NEED", who, "chat")
+end
+-- You press Need yourself: don't wait for the chat line.
+local function OnOwnNeed()
+  if ns.db.eggsOff then return end
+  RollEgg("NEED", UnitName("player"), "click")
+end
+
+-- Faithlezz picks a flower: her own addon sees her cast Herb Gathering and tells the party; the
+-- others' addons also see the cast on her party frame (and they are in range). Whichever comes
+-- first starts the egg; for FLOWER_COOLDOWN seconds the rest are ignored (one flower after another).
+local FLOWER_COOLDOWN = 10
+local lastFlower = -1000
+local HERB_IDS = { [2366] = true, [2368] = true, [3570] = true, [11993] = true, [28695] = true, [50300] = true, [74519] = true }
+local herbName
+local function SpellNameOf(id)
+  if C_Spell and C_Spell.GetSpellName then
+    local ok, n = pcall(C_Spell.GetSpellName, id)
+    if ok and type(n) == "string" then return n end
+  end
+  if C_Spell and C_Spell.GetSpellInfo then
+    local ok, i = pcall(C_Spell.GetSpellInfo, id)
+    if ok and type(i) == "table" and type(i.name) == "string" then return i.name end
+  end
+  if GetSpellInfo then
+    local ok, n = pcall(GetSpellInfo, id)
+    if ok and type(n) == "string" then return n end
+  end
+end
+local function IsHerbCast(spellID)
+  if type(spellID) ~= "number" or (issecretvalue and issecretvalue(spellID)) then return false end
+  if HERB_IDS[spellID] then return true end
+  herbName = herbName or SpellNameOf(2366) or false -- "Herb Gathering" in the game's language
+  return herbName and SpellNameOf(spellID) == herbName or false
+end
+local function IsFlowerName(name)
+  return type(name) == "string" and not (issecretvalue and issecretvalue(name)) and Short(name):lower() == FLOWER_NAME:lower()
+end
+-- Start the flower egg unless one just ran. Returns true if it started.
+local function Flower(from)
+  if GetTime() - lastFlower < FLOWER_COOLDOWN then return false end
+  lastFlower = GetTime()
+  lastShown.FLOWER = nil
+  ns.ShowEmoteEgg("FLOWER", from) -- (Show is defined further down)
+  return true
+end
+local function OnCast(unit, spellID)
+  if ns.db.eggsOff or type(unit) ~= "string" then return end
+  if unit ~= "player" and not unit:find("^party%d") and not unit:find("^raid%d") then return end
+  local ok, name = pcall(UnitName, unit)
+  if not ok or not IsFlowerName(name) or not IsHerbCast(spellID) then return end
+  if not Flower(name) then return end
+  if unit == "player" then -- it is you: tell the group, so they see it even from far away
+    local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+    if send and IsInGroup and IsInGroup() then
+      pcall(send, PREFIX, "L:FLOWER", (IsInRaid and IsInRaid()) and "RAID" or "PARTY")
+    end
+  end
 end
 
 local lastBagsFull = -1000
@@ -1221,7 +1343,7 @@ end
 
 -- Emotes that trigger another effect. Forever has no /toast like later expansions,
 -- so the mugs come with /drink (and /cheers where the game has it).
-local ALIAS = { ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", ["1"] = "ROLL1", ONE = "ROLL1", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
+local ALIAS = { HERB = "FLOWER", BLOMMA = "FLOWER", ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", ["1"] = "ROLL1", ONE = "ROLL1", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
   SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
@@ -1232,7 +1354,7 @@ local COMBO = { DANCE = "PARTY", HUG = "GROUPHUG", KISS = "KISSKISS" }
 local COMBO_WINDOW = { KISS = 10 }
 
 -- Effects that aren't an emote to send to someone (they start in other ways).
-local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true, ROLL100 = true, NEED100 = true, SIXSEVEN = true, ROLL1 = true }
+local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true, ROLL100 = true, NEED100 = true, SIXSEVEN = true, ROLL1 = true, FLOWER = true }
 
 -- A round of drinks: who in the party drank lately (short name -> when).
 local drinkers = {}
@@ -1307,6 +1429,17 @@ local function OnMessage(msg, sender)
   if lvl then
     -- Someone else dinged (our own ding shows from PLAYER_LEVEL_UP).
     if Short(sender) ~= UnitName("player") then Ding(sender, tonumber(lvl)) end
+    return
+  end
+  -- Faithlezz picked a flower (only she may send this one).
+  if msg == "L:FLOWER" then
+    if not IsMe(sender) and IsFlowerName(sender) then Flower(sender) end
+    return
+  end
+  -- A roll egg from the roller's addon.
+  local re = msg:match("^L:(%u[%u%d]+)$")
+  if re and ROLL_EGGS[re] then
+    if not IsMe(sender) then RollEgg(re, Short(sender), "net") end
     return
   end
   if msg == "R:TOAST" then
@@ -1427,7 +1560,12 @@ ns.RegisterModule(function()
   pcall(ev.RegisterEvent, ev, "CHAT_MSG_LOOT")
   pcall(ev.RegisterEvent, ev, "CHAT_MSG_SYSTEM")
   pcall(ev.RegisterEvent, ev, "PLAYER_DEAD")
-  ev:SetScript("OnEvent", function(_, event, a1, a2, _, a4)
+  if hooksecurefunc and RollOnLoot then -- 1 = Need (0 pass, 2 greed, 3 disenchant)
+    pcall(hooksecurefunc, "RollOnLoot", function(_, rollType) if rollType == 1 then pcall(OnOwnNeed) end end)
+  end
+  pcall(ev.RegisterEvent, ev, "UNIT_SPELLCAST_START")
+  pcall(ev.RegisterEvent, ev, "UNIT_SPELLCAST_CHANNEL_START")
+  ev:SetScript("OnEvent", function(_, event, a1, a2, a3, a4)
     if event == "UI_ERROR_MESSAGE" then
       pcall(OnUIError, a1, a2)
       return
@@ -1444,6 +1582,11 @@ ns.RegisterModule(function()
     end
     if event == "PLAYER_DEAD" then
       pcall(WatchForWipe, 20)
+      return
+    end
+    if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START" then
+      -- (unit, castGUID, spellID) for a cast, (unit, castGUID, spellID) for a channel too
+      pcall(OnCast, a1, a3)
       return
     end
     if event == "PLAYER_LEVEL_UP" then
@@ -1473,7 +1616,7 @@ ns.RegisterCommand("egg", false, function(rest)
   lastShown[e] = nil
   local off = ns.db.eggsOff
   ns.db.eggsOff = nil
-  Show(e, UnitName("player"))
+  Show(e, e == "FLOWER" and FLOWER_NAME or UnitName("player"))
   ns.db.eggsOff = off
 end)
 ns.RegisterCommand("heart", false, function() lastShown.KISS = nil; Show("KISS", UnitName("player")) end)

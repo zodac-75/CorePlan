@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.14
+
+- **New easter egg: a flower.** When a certain herbalist in your party goes astray to pick a flower, the whole screen lets you know. Preview it with `/acp egg flower`.
+- **Roll eggs reach the whole group.** Pressing Need now starts the Need egg right away, and your addon tells the party about your Need, 1, 67 and 100 rolls, so everyone with the addon sees them even if the chat line never reaches their screen.
+
 # AllClassPlan 0.1.13
 
 - **Mage: bigger icons in the supplies line** (water, food and runes).

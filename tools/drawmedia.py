@@ -1,5 +1,5 @@
 """Draws the easter-egg pictures that were made in code (flat style, like Mug.tga):
-Violin, Crown, Fish, Cake, Pumpkin and Note. Writes 256x256 32-bit TGAs to core/Media.
+Violin, Crown, Fish, Cake, Pumpkin, Note and Flower. Writes 256x256 32-bit TGAs to core/Media.
 
     python3 tools/drawmedia.py
 """
@@ -148,9 +148,34 @@ def note():
     return save(im, "Note")
 
 
+def flower():
+    im, d = canvas()
+    dark, green, leaf = (70, 40, 60, 255), (58, 150, 70, 255), (84, 186, 92, 255)
+    pink, pink2 = (255, 120, 190, 255), (255, 170, 215, 255)
+    W = 6 * S
+    # stem and two leaves
+    d.line(P((128, 140), (128, 246)), fill=green, width=14 * S)
+    d.polygon(P((128, 214), (70, 176), (60, 214), (84, 238)), fill=leaf, outline=dark)
+    d.polygon(P((128, 192), (186, 152), (198, 192), (172, 216)), fill=leaf, outline=dark)
+    # six round petals around the middle, a lighter one inside each
+    cx, cy, r = 128, 86, 46
+    for k in range(6):
+        a = math.radians(k * 60 - 90)
+        x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+        d.ellipse(B(x - 32, y - 32, x + 32, y + 32), fill=pink, outline=dark, width=W // 2)
+    for k in range(6):
+        a = math.radians(k * 60 - 90)
+        x, y = cx + math.cos(a) * r, cy + math.sin(a) * r
+        d.ellipse(B(x - 17, y - 17, x + 17, y + 17), fill=pink2)
+    # the yellow middle, with a ring
+    d.ellipse(B(cx - 30, cy - 30, cx + 30, cy + 30), fill=(255, 205, 50, 255), outline=dark, width=W // 2)
+    d.ellipse(B(cx - 15, cy - 15, cx + 15, cy + 15), fill=(255, 150, 40, 255))
+    return save(im, "Flower")
+
+
 if __name__ == "__main__":
-    sheet = Image.new("RGB", (256 * 6, 256), (40, 40, 40))
-    for i, fn in enumerate((violin, crown, fish, cake, pumpkin, note)):
+    sheet = Image.new("RGB", (256 * 7, 256), (40, 40, 40))
+    for i, fn in enumerate((violin, crown, fish, cake, pumpkin, note, flower)):
         im = fn()
         sheet.paste(im, (256 * i, 0), im)
     preview = os.environ.get("PREVIEW")
