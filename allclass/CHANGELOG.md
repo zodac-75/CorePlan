@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.12
+
+- **Mage: the supplies line shows icons.** Water and food show the icon of the best water and food you carry, with how many you have.
+- **Mage: runes in the supplies line.** Once you know a teleport, the supplies line also shows your Rune of Teleportation, and once you know a portal, your Rune of Portals: the rune's icon with how many you carry (red when you have none, yellow when you're down to the last two).
+
 # AllClassPlan 0.1.11
 
 - **Mage: the Frost Nova guess is safer and optional.** The target stops counting as frozen as soon as it moves (a missed or broken Nova), and you can turn the guess off in the settings ("Shatter: count your Frost Nova as frozen") or with `/acp novaguess`.

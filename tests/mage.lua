@@ -1534,6 +1534,34 @@ do
   if ns.ImportTalents("https://www.icy-veins.com/wow-forever/mage-talent-calculator#tc-ZZZZZ~1") then table.insert(errors, "tog emot en felaktig Icy-länk") end
   ns.ClearImport()
 end
+print("--- Förråd: runor ---")
+do
+  local oldInfo, oldCount = ns.SpellInfo, C_Item and C_Item.GetItemCount
+  local known = { ["Conjure Water"] = true, ["Teleport: Stormwind"] = true, ["Portal: Stormwind"] = true }
+  ns.SpellInfo = function(s) return known[s] and { name = s } or nil end
+  local counts = { [17031] = 0, [17032] = 2, [2288] = 4, [8079] = 20 }
+  if C_Item then C_Item.GetItemCount = function(id) return counts[id] or 0 end end
+  local oldGIC = rawget(_G, "GetItemCount")
+  GetItemCount = function(id) return counts[id] or 0 end
+  local line
+  for _, p in ipairs(ns.statusProviders) do
+    local ok, t = pcall(p.fn)
+    if ok and type(t) == "string" and t:find(ns.T("SUP_LINE"), 1, true) then line = t end
+  end
+  print("  " .. tostring(line and line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
+  if not line or not line:find(":14:14|t |cffff60600", 1, true) or not line:find(":14:14|t |cffffd1002", 1, true) then
+    table.insert(errors, "förrådsraden visar inte runorna")
+  end
+  if not line:find(":14:14|t |cff60ff6024", 1, true) then table.insert(errors, "förrådsraden visar inte vattnet som ikon och antal (24)") end
+  known["Teleport: Stormwind"], known["Portal: Stormwind"] = nil, nil
+  for _, p in ipairs(ns.statusProviders) do
+    local ok, t = pcall(p.fn)
+    if ok and type(t) == "string" and select(2, t:gsub("|T", "")) > 1 then table.insert(errors, "runor visas utan teleport") end
+  end
+  ns.SpellInfo = oldInfo
+  if C_Item then C_Item.GetItemCount = oldCount end
+  GetItemCount = oldGIC
+end
 print("--- Walk on Air ---")
 do
   local oldC, oldU = C_UnitAuras, UnitAura
