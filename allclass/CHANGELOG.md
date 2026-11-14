@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.9
+
+- `/acp shatterdebug` now tries every way of reading auras (by name, by index with different filters, the old functions) and says which ones work, to find out why a frozen target isn't seen in the game.
+
 # AllClassPlan 0.1.8
 
 - **Mage: the shatter call-out shows Frostbolt on a frozen target even if you haven't learned Ice Lance yet** (it's a talent). Before, nothing showed until you had Ice Lance.

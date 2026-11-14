@@ -159,6 +159,52 @@ ns.RegisterCommand("shatterdebug", false, function()
   ns.Print("shatterdebug: target " .. tostring(UnitExists("target")) .. ", can attack " .. tostring(UnitCanAttack("player", "target"))
     .. ", Ice Lance known " .. tostring(ns.SpellInfo("Ice Lance") ~= nil) .. ", cooldown " .. string.format("%.1f", ns.CooldownLeft("Ice Lance")))
   ns.Print("shatterdebug: frozen " .. tostring(TargetFrozen()) .. ", Fingers of Frost " .. tostring(PlayerHas()))
+  -- Every way of reading auras we know of, one line each: which of them works in this game?
+  local function try(label, fn)
+    local ok, a = pcall(fn)
+    local r
+    if not ok then
+      r = "error " .. tostring(a):sub(1, 50)
+    elseif a == nil or a == false then
+      r = "nothing"
+    elseif issecretvalue and issecretvalue(a) then
+      r = "secret"
+    elseif type(a) == "table" then
+      local n = a.name
+      r = "found " .. ((issecretvalue and issecretvalue(n)) and "(secret name)" or tostring(n))
+    else
+      r = tostring(a)
+    end
+    ns.Print("shatterdebug: " .. label .. ": " .. r)
+  end
+  local CU = C_UnitAuras
+  for _, name in ipairs({ "Frost Nova", "Frostbite", "Freeze", "Frozen" }) do
+    if CU and CU.GetAuraDataBySpellName then
+      try("by name " .. name .. " HARMFUL", function() return CU.GetAuraDataBySpellName("target", name, "HARMFUL") end)
+      try("by name " .. name .. " (no filter)", function() return CU.GetAuraDataBySpellName("target", name) end)
+    end
+  end
+  if CU and CU.GetAuraDataByIndex then
+    for _, f in ipairs({ "HARMFUL", "HARMFUL|PLAYER", "HELPFUL" }) do
+      try("target #1 index " .. f, function() return CU.GetAuraDataByIndex("target", 1, f) end)
+    end
+    try("target #1 index (no filter)", function() return CU.GetAuraDataByIndex("target", 1) end)
+    try("player #1 index HELPFUL", function() return CU.GetAuraDataByIndex("player", 1, "HELPFUL") end)
+  else
+    ns.Print("shatterdebug: C_UnitAuras.GetAuraDataByIndex is missing")
+  end
+  if CU and CU.GetDebuffDataByIndex then
+    try("target #1 GetDebuffDataByIndex", function() return CU.GetDebuffDataByIndex("target", 1) end)
+  end
+  local legacyAura, legacyDebuff = rawget(_G, "UnitAura"), rawget(_G, "UnitDebuff")
+  if legacyAura then try("UnitAura target #1 HARMFUL", function() return (legacyAura("target", 1, "HARMFUL")) end) end
+  if legacyDebuff then try("UnitDebuff target #1", function() return (legacyDebuff("target", 1)) end) end
+  local au = rawget(_G, "AuraUtil")
+  if au and au.FindAuraByName then
+    try("AuraUtil.FindAuraByName Frost Nova", function() return (au.FindAuraByName("Frost Nova", "target", "HARMFUL")) end)
+  end
+  ns.Print("shatterdebug: in combat " .. tostring(UnitAffectingCombat("player") and true or false)
+    .. ", target " .. tostring(UnitName("target")) .. ", level " .. tostring(UnitLevel("target")))
   for _, unit in ipairs({ "target", "player" }) do
     local filter = unit == "target" and "HARMFUL" or "HELPFUL"
     local names, hidden = {}, 0
