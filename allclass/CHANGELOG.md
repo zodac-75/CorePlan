@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.8
+
+- **Mage: the shatter call-out shows Frostbolt on a frozen target even if you haven't learned Ice Lance yet** (it's a talent). Before, nothing showed until you had Ice Lance.
+
 # AllClassPlan 0.1.7
 
 - **Mage: the frozen-target / Fingers of Frost call-out looks the auras up by name**, which still works when the game hides the aura list from addons (in combat). Before it could miss a frozen target.
