@@ -10,7 +10,8 @@ tests and release steps. This file has the rules and the things that bit us befo
   their CHANGELOGs (CI only uploads a class when its version is new, so no bump = no release). Bump
   `allclass/CHANGELOG.md` for every change and push; the shared `core/` and `classes/` code still
   builds into AllClassPlan. (Languages went out to the old nine by mistake on 2026-11-13.) On 2026-11-13 he said go for the move notice: the nine got one last release with `ns.ACP_LIVE = true` and the AllClassPlan logo (core/Media/ACP.tga) in the popup. Frozen again after that.
-- **Always commit and push** (AllClassPlan, see above). Every fix and feature is released to all users right away: bump
+- **Test on his PC before pushing (since 2026-11-14).** Build, run the tests, install the changed files on his PC (when linked) and tell him what to test. Commit and push only after he says it works / gives the go-ahead. Gather several fixes into one release instead of many small patches. Without a linked PC, ask before pushing. This is for addon changes; repo notes like this file can be pushed right away.
+- **Commit and push when he approves** (AllClassPlan, see above). Every fix and feature is released to all users right away: bump
   `allclass/CHANGELOG.md` (never the nine class CHANGELOGs) and push to `main`. CI
   uploads to CurseForge. Check the upload:
   `gh api 'repos/zodac-75/CorePlan/actions/runs?per_page=1'` then
