@@ -37,10 +37,11 @@ local function Update()
   local hasTarget = UnitExists("target") and UnitCanAttack("player", "target") and not UnitIsDead("target")
   local main, state, sub
 
-  if hasTarget and ns.SpellInfo("Ice Lance") then
-    local fof = PlayerHas()
+  if hasTarget then
+    local lance = ns.SpellInfo("Ice Lance")
+    local fof = lance and PlayerHas()
     local frozen = TargetFrozen()
-    if fof or frozen then
+    if lance and (fof or frozen) then
       local cd = ns.CooldownLeft("Ice Lance")
       if cd <= 0 then
         state = "go"
@@ -49,6 +50,10 @@ local function Update()
         state = "cd"
         main = "|cffaaaaaa" .. ns.T("SH_CD", cd) .. "|r"
       end
+    elseif frozen then
+      -- No Ice Lance yet (it's a talent): a frozen target is still the moment for Frostbolt.
+      state = "go"
+      main = ns.AlertMain("|cff66ccff", "SHATTER!", ns.T("SH_BOLT"), { "Frostbolt" })
     end
   end
 

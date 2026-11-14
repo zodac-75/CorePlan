@@ -1,3 +1,7 @@
+# MagePlan 1.35.2
+
+- **Shatter call-out without Ice Lance:** when your target is frozen the call-out now shows Frostbolt even if you haven't learned Ice Lance yet (it's a talent). Before, nothing showed until you had Ice Lance.
+
 # MagePlan 1.41.10
 
 - **AllClassPlan is out!** All nine Plan addons now come in one install: AllClassPlan. Once per character you'll see a notice with the link. Your settings come along when you install it. This is the last update of this addon.
