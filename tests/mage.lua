@@ -2084,6 +2084,23 @@ do
   fire("UNIT_SPELLCAST_START", "party1", "guid", "SECRET")
   issecretvalue = oldIS
   if ns.lastEggLine then table.insert(errors, "hemligt spell-id gav egg") end
+  -- the loot line of the herb (works without her addon): egg once, only herbs, only her
+  local oldGII = GetItemInfoInstant
+  GetItemInfoInstant = function(id) if id == 2449 then return id, "Trade Goods", "Herb", "", 1, 7, 9 end return id, "Trade Goods", "Cloth", "", 1, 7, 5 end
+  local function loot(text) now = now + 20; runTimers(now); ns.lastEggLine = nil; fire("CHAT_MSG_LOOT", text); return ns.lastEggLine end
+  local herb = "|cffffffff|Hitem:2449:0:0|h[Earthroot]|h|rx2"
+  l = loot("Faithlezz Nightwhisper receives loot: " .. herb .. ".")
+  if not isFlower(l) then table.insert(errors, "herb-loot gav inget blom-egg: " .. tostring(l)) end
+  l = loot("|Hplayer:Faithlezz-Realm:1|h[Faithlezz]|h receives loot: " .. herb .. ".")
+  if not isFlower(l) then table.insert(errors, "herb-loot med spelarlänk gav inget egg: " .. tostring(l)) end
+  ns.lastEggLine = nil
+  fire("CHAT_MSG_LOOT", "Faithlezz Nightwhisper receives loot: " .. herb .. ".")
+  if ns.lastEggLine then table.insert(errors, "andra herb-loot inom 10 s gav nytt egg") end
+  l = loot("Bob receives loot: " .. herb .. ".")
+  if l then table.insert(errors, "Bobs herb gav blom-egg") end
+  l = loot("Faithlezz Nightwhisper receives loot: |Hitem:2589:0|h[Linen Cloth]|h.")
+  if l then table.insert(errors, "Faithlezz tyg gav blom-egg") end
+  GetItemInfoInstant = oldGII
   -- the message from her own addon (also from far away)
   local function msg(text, sender, ch)
     now = now + 20; runTimers(now)

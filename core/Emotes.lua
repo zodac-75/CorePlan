@@ -1163,6 +1163,26 @@ local function OnCast(unit, spellID)
   end
 end
 
+-- The loot line is the surest sign: "Faithlezz Nightwhisper receives loot: [Earthroot]x2." goes to the
+-- whole party, whatever her addon version is. An herb (trade goods, herb) in a line that starts with
+-- her name is a flower picked.
+local function ItemIsHerb(id)
+  if not GetItemInfoInstant then return false end
+  local ok, _, _, _, _, _, classID, subClassID = pcall(GetItemInfoInstant, id)
+  if not ok then return false end
+  local cls = (Enum and Enum.ItemClass and Enum.ItemClass.Tradegoods) or 7
+  return classID == cls and subClassID == 9
+end
+local function OnHerbLoot(msg)
+  if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
+  local pos, _, id = msg:find("|Hitem:(%d+)")
+  if not pos then return end
+  local before = msg:sub(1, pos - 1):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|H.-|h%[?(.-)%]?|h", "%1")
+  if not before:find(FLOWER_NAME, 1, true) then return end
+  if not ItemIsHerb(tonumber(id)) then return end
+  Flower(FLOWER_NAME)
+end
+
 local lastBagsFull = -1000
 local function OnUIError(_, msg)
   if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
@@ -1573,6 +1593,7 @@ ns.RegisterModule(function()
     if event == "CHAT_MSG_LOOT" then
       pcall(EggDebug, event, a1)
       pcall(OnLootMsg, a1)
+      pcall(OnHerbLoot, a1)
       return
     end
     if event == "CHAT_MSG_SYSTEM" then

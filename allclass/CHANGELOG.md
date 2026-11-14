@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.15
+
+- **The flower egg also starts from the loot line.** When the party sees that the herbalist receives an herb, the flower egg starts, so it works even if her addon is old or her cast isn't visible.
+
 # AllClassPlan 0.1.14
 
 - **New easter egg: a flower.** When a certain herbalist in your party goes astray to pick a flower, the whole screen lets you know. Preview it with `/acp egg flower`.
