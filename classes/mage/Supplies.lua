@@ -57,7 +57,7 @@ end
 
 -- "|T icon|t 12" in red, yellow or green.
 local function IconCount(icon, n, color)
-  return "|T" .. tostring(icon) .. ":14:14|t " .. color .. n .. "|r"
+  return "|T" .. tostring(icon) .. ":20:20|t " .. color .. n .. "|r"
 end
 
 local function Status()

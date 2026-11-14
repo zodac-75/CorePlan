@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.13
+
+- **Mage: bigger icons in the supplies line** (water, food and runes).
+
 # AllClassPlan 0.1.12
 
 - **Mage: the supplies line shows icons.** Water and food show the icon of the best water and food you carry, with how many you have.

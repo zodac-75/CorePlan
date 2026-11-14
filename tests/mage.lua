@@ -1549,10 +1549,10 @@ do
     if ok and type(t) == "string" and t:find(ns.T("SUP_LINE"), 1, true) then line = t end
   end
   print("  " .. tostring(line and line:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))
-  if not line or not line:find(":14:14|t |cffff60600", 1, true) or not line:find(":14:14|t |cffffd1002", 1, true) then
+  if not line or not line:find(":20:20|t |cffff60600", 1, true) or not line:find(":20:20|t |cffffd1002", 1, true) then
     table.insert(errors, "förrådsraden visar inte runorna")
   end
-  if not line:find(":14:14|t |cff60ff6024", 1, true) then table.insert(errors, "förrådsraden visar inte vattnet som ikon och antal (24)") end
+  if not line:find(":20:20|t |cff60ff6024", 1, true) then table.insert(errors, "förrådsraden visar inte vattnet som ikon och antal (24)") end
   known["Teleport: Stormwind"], known["Portal: Stormwind"] = nil, nil
   for _, p in ipairs(ns.statusProviders) do
     local ok, t = pcall(p.fn)
