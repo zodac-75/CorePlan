@@ -19,7 +19,7 @@ local KEYS = {
   -- look
   "theme", "fontSize", "textScale", "textScales",
   -- features
-  "shatterOff", "tooltipOff", "bagAutoOff", "rankChatOff", "rankController", "rankStdOff", "bagBtnOff", "upgradeOff", "questOff", "polyOff", "groupBarOff", "groupBarManual",
+  "shatterOff", "tooltipOff", "bagAutoOff", "rankChatOff", "rankController", "rankStdOff", "bagBtnOff", "upgradeOff", "questOff", "polyOff", "novaGuessOff", "groupBarOff", "groupBarManual",
   "drinkOff", "drinkPct", "xpOff", "zoneTipsOff", "locked", "dungeonAutoOpen", "marks",
 }
 
@@ -63,7 +63,7 @@ end
 -- AllClassPlan: a character's settings just came over from its stand-alone addon, and the
 -- shared profile (saved by a character of another class) is about to be applied on top.
 -- Keep what only this class uses: the shared profile has never seen it, and would wipe it.
-local CLASS_KEYS = { "blessFor", "stormstrikeOff", "polyOff" }
+local CLASS_KEYS = { "blessFor", "stormstrikeOff", "polyOff", "novaGuessOff" }
 function ns.KeepClassSettings(p, db)
   for _, k in ipairs(CLASS_KEYS) do
     if p[k] == nil then p[k] = Copy(db[k]) end

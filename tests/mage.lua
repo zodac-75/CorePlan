@@ -1203,6 +1203,17 @@ if MODE == "modern" then
   end
   if not seenNova then table.insert(errors, "Frost Nova räknades inte som fryst när auror inte går att läsa") end
   if not ns.FrozenByNova() then table.insert(errors, "FrozenByNova gav false direkt efter Frost Nova") end
+  local oldSpeed = rawget(_G, "GetUnitSpeed")
+  GetUnitSpeed = function() return 7 end
+  if ns.FrozenByNova() then table.insert(errors, "FrozenByNova gäller trots att målet rör sig") end
+  GetUnitSpeed = function() return 0 end
+  if ns.FrozenByNova() then table.insert(errors, "FrozenByNova kom tillbaka efter att målet rört sig") end
+  ns.lastCast["Frost Nova"] = GetTime() - 0.5 -- a new Nova
+  if not ns.FrozenByNova() then table.insert(errors, "FrozenByNova gav false efter ny Frost Nova") end
+  ns.db.novaGuessOff = true
+  if ns.FrozenByNova() then table.insert(errors, "FrozenByNova gäller trots att gissningen är avslagen") end
+  ns.db.novaGuessOff = nil
+  GetUnitSpeed = oldSpeed
   ns.lastCast["Ice Lance"] = GetTime() + 1
   if ns.FrozenByNova() then table.insert(errors, "FrozenByNova gäller trots Ice Lance efter Frost Nova") end
   ns.lastCast["Frost Nova"] = nil

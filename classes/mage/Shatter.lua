@@ -30,12 +30,25 @@ end
 -- In combat the game can refuse to show addons the auras on an enemy at all ("Auras cannot be
 -- accessed ..."). Then the only sign of a frozen target is your own Frost Nova: for its 8 seconds
 -- the target in range counts as frozen, until you hit it with Ice Lance (which breaks the root).
+-- The guess can be wrong (a missed or broken Nova), so it can be turned off (novaGuessOff),
+-- and it ends as soon as the target moves: a frozen target stands still.
 local NOVA_SECONDS = 8
+local brokenNova -- the Nova (its cast time) whose target was seen moving
+local function TargetMoving()
+  local speedOf = rawget(_G, "GetUnitSpeed")
+  if not speedOf then return nil end
+  local ok, speed = pcall(speedOf, "target")
+  if not ok or type(speed) ~= "number" or not ns.Readable(speed) then return nil end
+  return speed > 0
+end
 local function FrozenByNova()
+  if ns.db.novaGuessOff then return false end
   local last = ns.lastCast
   local t = last and last["Frost Nova"]
   if not t or GetTime() - t > NOVA_SECONDS then return false end
   if (last["Ice Lance"] or 0) > t then return false end
+  if brokenNova == t then return false end
+  if TargetMoving() then brokenNova = t return false end
   local near = rawget(_G, "CheckInteractDistance")
   if near then
     local ok, inRange = pcall(near, "target", 3) -- 10 yards, Frost Nova's reach
@@ -164,6 +177,12 @@ ns.RegisterCommand("shatter", true, function()
   ns.Print(ns.db.shatterOff and ns.T("SH_OFF") or ns.T("SH_ON"))
 end)
 
+ns.RegisterCommand("novaguess", true, function()
+  ns.db.novaGuessOff = not ns.db.novaGuessOff
+  ns.Print(ns.db.novaGuessOff and ns.T("NOVA_OFF") or ns.T("NOVA_ON"))
+  if ns.RefreshMenu then ns.RefreshMenu() end
+end)
+
 ns.RegisterCommand("move", true, function()
   ns.db.shatterUnlocked = not ns.db.shatterUnlocked
   f:EnableMouse(ns.db.shatterUnlocked and true or false)
@@ -222,11 +241,30 @@ ns.RegisterCommand("shatterdebug", false, function()
     try("AuraUtil.FindAuraByName Frost Nova", function() return (au.FindAuraByName("Frost Nova", "target", "HARMFUL")) end)
   end
   local cs = rawget(_G, "C_Secrets")
-  if cs then
-    for _, fname in ipairs({ "ShouldAurasBeSecret", "HasSecretRestrictions" }) do
-      if cs[fname] then try("C_Secrets." .. fname, function() return cs[fname]() end) end
+  if cs and cs.ShouldAurasBeSecret then try("C_Secrets.ShouldAurasBeSecret", function() return cs.ShouldAurasBeSecret() end) end
+  if cs and cs.HasSecretRestrictions then try("C_Secrets.HasSecretRestrictions", function() return cs.HasSecretRestrictions() end) end
+  -- Your own buffs by name (Fingers of Frost is one): can they be read in combat?
+  if CU and CU.GetAuraDataBySpellName then
+    for _, name in ipairs({ "Fingers of Frost", "Frost Armor", "Ice Armor", "Ice Barrier", "Arcane Intellect" }) do
+      try("you, by name " .. name, function() return CU.GetAuraDataBySpellName("player", name, "HELPFUL") end)
     end
   end
+  -- Does Ice Lance light up (the game's proc glow)?
+  local lanceId
+  pcall(function()
+    local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo("Ice Lance")
+    lanceId = info and info.spellID
+    if not lanceId and GetSpellInfo then lanceId = select(7, GetSpellInfo("Ice Lance")) end
+  end)
+  local overlay = rawget(_G, "C_SpellActivationOverlay")
+  if lanceId and overlay and overlay.IsSpellOverlayed then
+    try("Ice Lance glows", function() return overlay.IsSpellOverlayed(lanceId) end)
+  elseif lanceId and rawget(_G, "IsSpellOverlayed") then
+    try("Ice Lance glows", function() return rawget(_G, "IsSpellOverlayed")(lanceId) end)
+  else
+    ns.Print("shatterdebug: Ice Lance glow can't be checked (spell " .. tostring(lanceId) .. ")")
+  end
+  ns.Print("shatterdebug: target moving " .. tostring(TargetMoving()) .. ", Frost Nova guess " .. (ns.db.novaGuessOff and "off" or "on"))
   do
     local t = ns.lastCast and ns.lastCast["Frost Nova"]
     ns.Print("shatterdebug: Frost Nova cast " .. (t and string.format("%.1fs ago", GetTime() - t) or "never") .. ", counts as frozen: " .. tostring(FrozenByNova()))

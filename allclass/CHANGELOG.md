@@ -1,3 +1,9 @@
+# AllClassPlan 0.1.11
+
+- **Mage: the Frost Nova guess is safer and optional.** The target stops counting as frozen as soon as it moves (a missed or broken Nova), and you can turn the guess off in the settings ("Shatter: count your Frost Nova as frozen") or with `/acp novaguess`.
+- `/acp shatterdebug` also checks whether your own buffs (Fingers of Frost and others) can be read by name in combat, whether Ice Lance glows, and whether your target is moving.
+- The Frostbolt-without-Ice-Lance call-out is translated into every language.
+
 # AllClassPlan 0.1.10
 
 - **Mage: the shatter call-out sees a frozen target in combat.** The game refuses to show addons the auras on enemies in combat, so the frozen debuff couldn't be read. Now your own Frost Nova counts: for its 8 seconds the target in range is treated as frozen (until you cast Ice Lance). Fingers of Frost can't be seen in combat either; that one is still open.
