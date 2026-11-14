@@ -322,6 +322,7 @@ function ul(items) { return "<ul>" + items.map(i => `<li>${i}</li>`).join("") + 
 function descHtml(a) {
   return [
     `<h2>${a.name}</h2>`,
+    `<p><b>${a.name} has moved to <a href="https://www.curseforge.com/wow/addons/allclassplan">AllClassPlan</a> and is no longer updated. Install AllClassPlan instead</b>: it has everything ${a.name} has, for every class in one addon.</p>`,
     `<p><b>${a.tagline}</b> ${a.name} tells you what to train, which talent to take, which gear is better and where to go next, so you can spend your time playing instead of looking things up.</p>`,
     `<h3>Pick your spec</h3>`, ul(a.specs), `<p>${a.specNote}</p>`,
     `<h3>Talents</h3>`, ul(COMMON.plan(a.slash)),
