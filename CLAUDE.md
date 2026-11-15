@@ -22,11 +22,15 @@ tests and release steps. This file has the rules and the things that bit us befo
   `D:\Blizzard\World of Warcraft\_forever_\Interface\AddOns\<Addon>\`, copying from the build
   output. New files need a full game restart; changed files only `/reload`. Tell him which.
 - **CurseForge descriptions**: update them when a real feature lands (not for small
-  fixes), in the built-in browser where he is logged in (authors.curseforge.com/#/projects/<id>/description).
-  The editor is TinyMCE: `tinymce.activeEditor.setContent(html)` without the final ".", type
-  the "." with a real keystroke, then click Save and check "Changes saved successfully".
-  Wait until the editor content starts with `<h2><Addon></h2>` before editing (the page is an SPA
-  and keeps the old project's text for a moment). If logged out, tell him; don't log in.
+  fixes), in Chrome where he is logged in (authors.curseforge.com/#/projects/<id>/description;
+  the built-in browser is logged out). Release uploads go by CI, but the API cannot change the
+  description, so this is the one manual step. Since 2026-11-15 the AllClassPlan editor is in
+  **Markdown mode** (a textarea with the Markdown source and a live preview, not TinyMCE). Edit
+  the existing text: read the textarea, `replace` the exact lines, set it with the native value
+  setter plus an `input` event, check the preview, click Save and look for "Changes saved
+  successfully". Keep the easter egg line as it is (only the five examples, no more hints).
+  If logged out, tell him; don't log in. `docs/curseforge/AllClassPlan.html` is the same text as
+  HTML for reference; keep it in step with what is on the page.
 - Every addon gets every core feature ("same on all addons").
 - The CurseForge texts live in `docs/curseforge/`: `kit.html` (name, summary, categories,
   description and first comment for every addon; also published as his "CurseForge kit"
