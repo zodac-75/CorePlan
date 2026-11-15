@@ -16,10 +16,10 @@ tests and release steps. This file has the rules and the things that bit us befo
   uploads to CurseForge. Check the upload:
   `gh api 'repos/zodac-75/CorePlan/actions/runs?per_page=1'` then
   `gh run view <id> -R zodac-75/CorePlan --log | grep Uploading` (`gh run list` doesn't work).
-- **Release zips on his NAS** (when the PC is linked and `Z:\` is connected): after each AllClassPlan release put `AllClassPlan-<version>.zip` (the same folders as the CurseForge package) in `Z:\AllClassPlan\Releases\`, like his FaithHeals addon. Logos, icons and screenshots live in `Z:\AllClassPlan\Bilder\`. `Z:\AllClassPlan\Claude\` has an overview CLAUDE.md of the whole setup (for new chats on other Claude accounts) and a paste-in prompt. After every addon change or release (when Z:\ is connected), update its "Läge just nu" section and add a line at the top of its "Logg"; update the paste-in prompt when the way of working changes.
+- **Notes, release zips and images live outside this repo**, on his own storage (the folder is connected when the PC is linked; the full paths and the overview are in the overview CLAUDE.md there, kept out of this public repo on purpose). After each AllClassPlan release put `AllClassPlan-<version>.zip` (the same folders as the CurseForge package) in its Releases folder; logos, icons and screenshots are in its Bilder folder. After every addon change or release update the "Läge just nu" section and add a line at the top of the "Logg" of that overview; update the paste-in prompt when the way of working changes. Keep private details (paths, drive letters, character and player names) out of this file, the code comments and the changelogs; they belong in that overview.
 - **Never** paste or ask for the CurseForge API token. It lives only in the repo secret `CF_API_KEY`.
 - **Install on his PC** when the session is linked to his computer:
-  `D:\Blizzard\World of Warcraft\_forever_\Interface\AddOns\<Addon>\`, copying from the build
+  the WoW `_forever_\Interface\AddOns\<Addon>\` folder (path in the overview), copying from the build
   output. New files need a full game restart; changed files only `/reload`. Tell him which.
 - **CurseForge descriptions**: update them when a real feature lands (not for small
   fixes), in Chrome where he is logged in (authors.curseforge.com/#/projects/<id>/description;

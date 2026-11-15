@@ -895,7 +895,7 @@ EFFECTS.SIXSEVEN = function(from)
   Sound("UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE")
 end
 
--- Faithlezz (Jennie's character) picks a flower: an inside joke for the party. The whole screen
+-- One specific character picks a flower: an inside joke for the party. The whole screen
 -- goes pink, flowers and petals rain down across it, a big flower pops up in the middle.
 local FLOWER_NAME = "Faithlezz"
 local FLOWER_ICONS = {
@@ -1111,7 +1111,7 @@ local function OnOwnNeed()
   RollEgg("NEED", UnitName("player"), "click")
 end
 
--- Faithlezz picks a flower: her own addon sees her cast Herb Gathering and tells the party; the
+-- That character picks a flower: their own addon sees them cast Herb Gathering and tells the party; the
 -- others' addons also see the cast on her party frame (and they are in range). Whichever comes
 -- first starts the egg; for FLOWER_COOLDOWN seconds the rest are ignored (one flower after another).
 local FLOWER_COOLDOWN = 10
@@ -1365,7 +1365,7 @@ local function PlanDone()
 end
 
 -- answer = true: the other player's addon answered an emote *you* did, so the line under the
--- effect says that they saw it ("Faithlezz has a Plan addon too ...") instead of "Faithlezz gasps!".
+-- effect says that they saw it ("<Name> has a Plan addon too ...") instead of "<Name> gasps!".
 local function Show(emote, from, answer)
   if ns.db.eggsOff then return end
   local fn = EFFECTS[emote]
@@ -1477,7 +1477,7 @@ local function OnMessage(msg, sender)
     if Short(sender) ~= UnitName("player") then Ding(sender, tonumber(lvl)) end
     return
   end
-  -- Faithlezz picked a flower (only she may send this one).
+  -- The flower character picked a flower (only that character may send this one).
   if msg == "L:FLOWER" then
     if not IsMe(sender) and IsFlowerName(sender) then Flower(sender, true) end
     return

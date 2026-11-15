@@ -169,7 +169,7 @@ local function Step(idx, dir)
   UpdateButton()
 end
 
--- Settings window rows: "<icon> Star   < Jennie >".
+-- Settings window rows: "<icon> Star   < Name >".
 ns.MARK_SELECTORS = {}
 for _, idx in ipairs(ns.PARTY_MARKS) do
   table.insert(ns.MARK_SELECTORS, { key = "MK_" .. idx,
