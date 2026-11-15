@@ -1898,6 +1898,99 @@ do
     end
   end
   print("  tränare A/H och item-ID:n kollade")
+  -- Every trainer has a position, and a click on the trainer row moves the arrow to the next one.
+  for prof, ranks in pairs(ns.PROF_TRAINERS) do
+    for rank, e in pairs(ranks) do
+      for _, side in ipairs({ e.A, e.H }) do
+        for part in side:gmatch("[^/]+") do
+          local name = part:match("^%s*(.-)%s*%(")
+          if name ~= "Annora" and not ns.TRAINER_POS[name] then table.insert(errors, "tränare utan plats: " .. tostring(name)) end
+        end
+      end
+    end
+  end
+  do
+    local ar = rawget(_G, "MagePlanArrow")
+    local seen = {}
+    for i = 1, 3 do
+      ns.WayToTrainer("Alchemy", 50)
+      ar = rawget(_G, "MagePlanArrow")
+      seen[i] = ar and ar.title.__text or "?"
+    end
+    print("  tränarpil: " .. table.concat(seen, " | "))
+    if not (seen[1] ~= seen[2] and seen[2] ~= seen[3] and seen[3] ~= seen[1]) then table.insert(errors, "tränarklick bläddrade inte mellan tränarna: " .. table.concat(seen, " | ")) end
+    if not ns.CanWayToTrainer("Alchemy", 50) or ns.CanWayToTrainer("Alchemy", 51) then table.insert(errors, "CanWayToTrainer fel") end
+    -- Right-click also opens the map on the trainer's map (profession and class trainer).
+    do
+      local opened = {}
+      local oO, oC = OpenWorldMap, InCombatLockdown
+      OpenWorldMap = function(m) opened[#opened + 1] = m end
+      InCombatLockdown = function() return false end
+      ns.WayToTrainer("Herbalism", 50, true)
+      ns.WayToClassTrainer(true)
+      ns.WayToTrainer("Herbalism", 50)
+      OpenWorldMap, InCombatLockdown = oO, oC
+      print("  karta öppnad för: " .. table.concat(opened, ", "))
+      if #opened ~= 2 then table.insert(errors, "högerklick öppnade inte kartan rätt antal gånger: " .. #opened) end
+    end
+    -- With a known position the nearest trainer comes first (Darnassus here), then the others in order of distance.
+    local oW, oP = ns.WorldPos, ns.PlayerWorldPos
+    local dist = { [1453] = 100, [1455] = 50, [1457] = 1 } -- Stormwind, Ironforge, Darnassus
+    ns.WorldPos = function(map, x, y) return 1, dist[map] or 999, 0 end
+    ns.PlayerWorldPos = function() return 1, 0, 0 end
+    ns.ClearWaypoint()
+    local near = {}
+    local now0 = GetTime and GetTime() or 0
+    for i = 1, 3 do
+      ns.WayToTrainer("Tailoring", 50)
+      local a2 = rawget(_G, "MagePlanArrow")
+      near[i] = (a2 and a2.title.__text or "?"):match("– (.+)$") or "?"
+    end
+    ns.WorldPos, ns.PlayerWorldPos = oW, oP
+    print("  närmast först: " .. table.concat(near, " | "))
+    if near[1] ~= "Darnassus" or near[2] ~= "Ironforge" or near[3] ~= "Stormwind" then table.insert(errors, "tränare inte närmast-först: " .. table.concat(near, " | ")) end
+  end
+  -- Class trainer arrow: your class, your faction, three different ones on repeated clicks.
+  do
+    local mages = {}
+    for _, t in ipairs(ns.CLASS_TRAINERS) do if t[1] == "MAGE" then mages[t[2]] = t end end
+    local seenT = {}
+    for i = 1, 3 do
+      ns.WayToClassTrainer()
+      local ar = rawget(_G, "MagePlanArrow")
+      local who = ar and ar.title.__text and ar.title.__text:match("^(.-) – ")
+      seenT[i] = who or "?"
+      if not (who and mages[who]) then table.insert(errors, "klassläraren är inte en mage-lärare: " .. tostring(ar and ar.title.__text)) end
+      if who and mages[who] and mages[who][6] == "H" then table.insert(errors, "Alliance fick Horde-lärare: " .. who) end
+    end
+    print("  klasslärare A: " .. table.concat(seenT, " | "))
+    if seenT[1] == seenT[2] or seenT[2] == seenT[3] then table.insert(errors, "klasslärarklick bläddrade inte: " .. table.concat(seenT, " | ")) end
+    -- With a position the nearest trainer comes first: distance = the x coordinate in this mock.
+    do
+      local oW, oP = ns.WorldPos, ns.PlayerWorldPos
+      ns.WorldPos = function(map, x, y) return 1, x, 0 end
+      ns.PlayerWorldPos = function() return 1, 0, 0 end
+      local best
+      for _, t in ipairs(ns.CLASS_TRAINERS) do
+        if t[1] == "MAGE" and (not t[6] or t[6]:find("A", 1, true)) and (not best or t[4] < best[4]) then best = t end
+      end
+      ns.WayToClassTrainer(); ns.WayToClassTrainer(); ns.WayToClassTrainer(); ns.WayToClassTrainer()
+      local ar2 = rawget(_G, "MagePlanArrow")
+      local first4 = ar2 and ar2.title.__text and ar2.title.__text:match("^(.-) – ")
+      ns.WorldPos, ns.PlayerWorldPos = oW, oP
+      print("  närmaste klasslärare: " .. tostring(best and best[2]) .. " (fjärde klicket: " .. tostring(first4) .. ")")
+      if not best then table.insert(errors, "ingen Alliance mage-lärare") end
+    end
+    local old = UnitFactionGroup
+    UnitFactionGroup = function() return "Horde", "Horde" end
+    wipeTrainerTurn = true
+    ns.WayToClassTrainer()
+    local ar = rawget(_G, "MagePlanArrow")
+    local who = ar and ar.title.__text and ar.title.__text:match("^(.-) – ")
+    print("  klasslärare H: " .. tostring(who))
+    if not (who and mages[who]) or mages[who][6] == "A" then table.insert(errors, "Horde fick Alliance-lärare: " .. tostring(who)) end
+    UnitFactionGroup = old
+  end
 end
 print("--- Enchanter: DE som alternativ ---")
 do

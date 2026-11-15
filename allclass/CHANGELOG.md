@@ -1,3 +1,9 @@
+# AllClassPlan 0.1.18
+
+- **Arrow to your trainers.** Click the "Trainer: ..." line in the crafting window, or the "train Expert: ..." goal line in the plan, and an arrow points to the nearest profession trainer; click again for the next one. Right-click also opens the map there.
+- **Arrow to your class trainer.** Click the "Train now: ..." line for an arrow to the nearest trainer of your class and faction (click again for the next). Right-click also opens the map. `/acp train` still lists what you can train in chat.
+- **Fixed: Mark of the Wild reminder vanished with Might of Stormwind.** The buff watcher wrongly believed Might of Stormwind always blocks Mark of the Wild. It now reminds you; if the game really refuses the cast, the icon still hides itself for a while.
+
 # AllClassPlan 0.1.17
 
 - **The flower egg is calmer and only starts now and then.** The herbalist's own addon rolls the dice, 10% for each flower picked (change it with `/acp flowerchance 0-100`), and tells the party, so everybody sees it at the same moment. This means she needs this version for others to see it. The effect is also a little smaller and quieter.

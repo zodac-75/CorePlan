@@ -159,6 +159,46 @@ local PROF_ICON = {
 }
 
 -- The window is a list of rows (see Rows.lua): { text, icon, items, bar, indent }.
+-- Arrow to a profession trainer. The trainers for your faction at one rank are listed as
+-- "Name (Place) / Name (Place)"; a click points at the one that has a known position
+-- (the nearest one first) and the next click moves on to the next.
+local trainerTurn = {}
+local function TrainerList(prof, rank)
+  local entry = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][rank]
+  local list = {}
+  for part in (entry and ns.Tx(entry) or ""):gmatch("[^/]+") do
+    local name, place = part:match("^%s*(.-)%s*%((.-)%)%s*$")
+    local pos = name and ns.TRAINER_POS and ns.TRAINER_POS[name]
+    if pos then table.insert(list, { name = name, place = place, pos = pos }) end
+  end
+  return list
+end
+
+function ns.CanWayToTrainer(prof, rank) return #TrainerList(prof, rank) > 0 end
+
+function ns.WayToTrainer(prof, rank, openMap)
+  local list = TrainerList(prof, rank)
+  if #list == 0 then ns.Print(ns.T("DG_NOWAY")); return end
+  -- Nearest first (same continent); with no position known the listed order is kept.
+  local pc, pn, pw
+  if ns.PlayerWorldPos then pc, pn, pw = ns.PlayerWorldPos() end
+  for i, t in ipairs(list) do
+    local c, n, w
+    if ns.WorldPos then c, n, w = ns.WorldPos(t.pos[1], t.pos[2], t.pos[3]) end
+    t.d = (pc and c == pc and n and pn) and ((n - pn) ^ 2 + (w - pw) ^ 2) or math.huge
+    t.i = i
+  end
+  table.sort(list, function(x, y) if x.d ~= y.d then return x.d < y.d end return x.i < y.i end)
+  -- Clicking again within 20 seconds moves on to the next one.
+  local key, now = prof .. rank, GetTime and GetTime() or 0
+  local st = trainerTurn[key]
+  local i = (st and now - st.at < 20) and st.i % #list + 1 or 1
+  trainerTurn[key] = { i = i, at = now }
+  local t = list[i]
+  ns.SetWaypoint(t.pos[1], t.pos[2], t.pos[3], t.name .. " – " .. t.place)
+  if openMap and ns.OpenMap then ns.OpenMap(t.pos[1]) end
+end
+
 local function Header(prof, out)
   local skill, maxRank = ns.GetProfSkill(prof)
   local row = { icon = PROF_ICON[prof], text = "|cffffffff" .. prof .. "|r" }
@@ -176,19 +216,27 @@ local function Header(prof, out)
   local cap = (maxRank and maxRank > 0) and maxRank or 300
   local warn = maxRank and maxRank < 300 and skill >= maxRank - 25
   local rankNote = warn and ns.RANK_NOTES and ns.RANK_NOTES[prof] and ns.RANK_NOTES[prof][maxRank]
-  local trainer
+  local trainer, trainerRank
   if warn and not rankNote then
     local lvl = ns.RANK_LEVEL[maxRank]
     row.text = row.text .. "  |cffff9900" .. (lvl and ns.T("CR_TRAIN_LVL", lvl) or ns.T("CR_TRAIN")) .. "|r"
     -- Who teaches the next rank, for your faction (Journeyman at 50, Expert 125, Artisan 200).
     local who = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][maxRank - 25]
-    if who then trainer = ns.T("CR_TRAIN_AT", ns.Tx(who)) end
+    if who then trainer = ns.T("CR_TRAIN_AT", ns.Tx(who)); trainerRank = maxRank - 25 end
   end
   -- Orange when you're close to the cap and need to train, blue otherwise.
   row.bar = { value = skill, max = cap, color = warn and { 1, 0.6, 0.1 } or { 0.35, 0.75, 1 } }
   -- Secondary skills say exactly where the next rank is (a book or a quest).
   if rankNote then table.insert(out, { indent = 22, text = "|cffff9900" .. ns.Tx(rankNote) .. "|r" }) end
-  if trainer then table.insert(out, { indent = 22, text = "|cffff9900" .. trainer .. "|r" }) end
+  if trainer then
+    local trow = { indent = 22, text = "|cffff9900" .. trainer .. "|r" }
+    if ns.CanWayToTrainer(prof, trainerRank) then
+      trow.click = function() ns.WayToTrainer(prof, trainerRank) end
+      trow.rclick = function() ns.WayToTrainer(prof, trainerRank, true) end
+      trow.tip = ns.T("CR_TRAIN_WAY")
+    end
+    table.insert(out, trow)
+  end
   return skill
 end
 

@@ -175,6 +175,8 @@ local function OpenMap(map)
   end
 end
 
+ns.OpenMap = OpenMap
+
 local function WayTo(id, button)
   local g = Giver(ns.DQUESTS[id])
   if g and g.item and g.from and g[2] then

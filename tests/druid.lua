@@ -916,7 +916,7 @@ do
     end
   end
   if motwShown() then table.insert(errors, "Gift of the Wild från någon annan: Mark of the Wild visas ändå") end
-  -- Might of Stormwind på mig: Mark of the Wild går inte att kasta, ingen ikon.
+  -- Might of Stormwind på mig: blockerar inte Mark of the Wild i sig (bara låga rangar, och det lärs via studs).
   local function mosAura(u, i) if u == "player" and i == 1 then return "Might of Stormwind", 0 end end
   if C_UnitAuras then
     C_UnitAuras = { GetAuraDataByIndex = function(u, i)
@@ -929,7 +929,7 @@ do
       if n then return n, 0, 0, nil, 3600, now + 1800, "party1", false, false, 1 end
     end
   end
-  if motwShown() then table.insert(errors, "Might of Stormwind: Mark of the Wild visas ändå") end
+  if not motwShown() then table.insert(errors, "Might of Stormwind: Mark of the Wild visas inte (ska påminna)") end
   -- Utan den auran: ikonen kommer tillbaka, ett klick som nekas ("more powerful spell") gömmer den.
   if C_UnitAuras then C_UnitAuras = { GetAuraDataByIndex = function() end } else UnitAura = function() end end
   if not motwShown() then table.insert(errors, "Mark of the Wild saknas men visas inte") end

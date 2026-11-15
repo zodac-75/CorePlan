@@ -745,7 +745,8 @@ function ns.ProfGoalLine(prof, level)
     else
       note = ns.T("GOAL_PACE")
     end
-    return "|cffff6060" .. ns.T("GOAL_BEHIND", prof, rank, target.skill) .. "|r - " .. note, true
+    local way = target.train and (not maxRank or maxRank <= target.train + 25) and target.train or nil
+    return "|cffff6060" .. ns.T("GOAL_BEHIND", prof, rank, target.skill) .. "|r - " .. note, true, way
   end
   return string.format("|cff60ff60%s %d|r ", prof, rank) .. ns.T("GOAL_DONE", target.skill), false
 end
@@ -847,10 +848,16 @@ local function BuildModel()
   end
 
   for _, prof in ipairs(ns.SelectedProfs and ns.SelectedProfs() or {}) do
-    local line, behind = ns.ProfGoalLine(prof, level)
+    local line, behind, way = ns.ProfGoalLine(prof, level)
     if line then
-      table.insert(behind and m.actions or m.info, { icon = PROF_ICON[prof], text = line, action = behind,
-        click = function() ns.RunCommand("craft") end, tip = ns.T("PW_CLICK_CRAFT") })
+      local row = { icon = PROF_ICON[prof], text = line, action = behind,
+        click = function() ns.RunCommand("craft") end, tip = ns.T("PW_CLICK_CRAFT") }
+      if way and ns.CanWayToTrainer and ns.CanWayToTrainer(prof, way) then
+        row.click = function() ns.WayToTrainer(prof, way) end
+        row.rclick = function() ns.WayToTrainer(prof, way, true) end
+        row.tip = ns.T("CR_TRAIN_WAY")
+      end
+      table.insert(behind and m.actions or m.info, row)
     end
   end
 

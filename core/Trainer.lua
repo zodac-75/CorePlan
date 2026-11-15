@@ -69,6 +69,33 @@ local function Ping(force)
   end
 end
 
+-- Arrow to your class trainer: the one nearest to you (same continent), friendly to your faction.
+-- Clicking again within 20 seconds moves on to the next nearest, up to three.
+local wayTurn, wayAt = 0, 0
+function ns.WayToClassTrainer(openMap)
+  local class = select(2, UnitClass("player"))
+  local fac = ns.IsHorde() and "H" or "A"
+  local pc, pn, pw
+  if ns.PlayerWorldPos then pc, pn, pw = ns.PlayerWorldPos() end
+  local list = {}
+  for _, t in ipairs(ns.CLASS_TRAINERS or {}) do
+    if t[1] == class and (not t[6] or t[6]:find(fac, 1, true)) then
+      local c, n, w
+      if ns.WorldPos then c, n, w = ns.WorldPos(t[3], t[4], t[5]) end
+      local d = (pc and c == pc and n and pn) and ((n - pn) ^ 2 + (w - pw) ^ 2) or math.huge
+      table.insert(list, { t = t, d = d })
+    end
+  end
+  if #list == 0 then ns.Print(ns.T("DG_NOWAY")); return end
+  table.sort(list, function(a, b) if a.d ~= b.d then return a.d < b.d end return a.t[2] < b.t[2] end)
+  local now = GetTime and GetTime() or 0
+  wayTurn = (now - wayAt < 20) and (wayTurn % math.min(3, #list)) + 1 or 1
+  wayAt = now
+  local t = list[wayTurn].t
+  ns.SetWaypoint(t[3], t[4], t[5], t[2] .. " – " .. ns.T("TR_TRAINER"))
+  if openMap and ns.OpenMap then ns.OpenMap(t[3]) end
+end
+
 ns.RegisterModule(function()
   if ns.db.trainerVisited == nil then
     ns.db.trainerVisited = LastEven(UnitLevel("player") or 1)
@@ -98,7 +125,8 @@ ns.RegisterModule(function()
       if #list > 0 then
         return { action = true, icon = "Interface\\Icons\\INV_Misc_Book_09", spells = list,
           text = "|cff9d9dff" .. ns.T("TR_CAN") .. "|r " .. table.concat(list, ", "),
-          click = function() Ping(true) end, tip = ns.T("PW_CLICK_TRAIN") }
+          click = function() ns.WayToClassTrainer() end, rclick = function() ns.WayToClassTrainer(true) end,
+          tip = ns.T("TR_WAY") }
       end
       return nil
     end

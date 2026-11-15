@@ -168,20 +168,10 @@ local function Outranked(names, ids, spell)
   return false
 end
 
--- Buffs from someone else that make your own cast fail with "a more powerful spell is
--- already active" (Might of Stormwind over Mark of the Wild). Anything not listed here is
--- learned the first time the game says so (see Bounced below).
-local BLOCKED_BY = {
-  ["Mark of the Wild"] = { "Might of Stormwind" },
-  ["Gift of the Wild"] = { "Might of Stormwind" },
-}
-local function BlockedByAura(spell, auras)
-  for _, n in ipairs(BLOCKED_BY[spell] or {}) do
-    if auras and auras[n] then return true end
-  end
-  return false
-end
-
+-- No fixed list of "this buff blocks that one": Might of Stormwind was once listed as
+-- blocking Mark of the Wild, but it only does so for low ranks, so a druid with a higher
+-- rank got no reminder at all. Real conflicts are learned when the game refuses the cast
+-- (see Bounced below).
 -- Learned: the click on this icon was refused as "a more powerful spell is already
 -- active". No icon for that spell on that player for a while.
 local bounced, lastClick = {}, nil
@@ -269,7 +259,7 @@ local function Needed()
         if best then left = best elseif not unsure then left = 0
         elseif not e.match then left = LookupByName("player", e.buffs) end
         if best and Outranked(e.buffs, ids, spell) then left = nil end
-        if BlockedByAura(spell, buffs) or IsBounced(nil, spell) then left = nil end
+        if IsBounced(nil, spell) then left = nil end
       end
       local warn = e.warn or WARN
       -- Out of combat: warn earlier, but at most a third of the buff's length, so a
@@ -313,7 +303,7 @@ local function Needed()
             local left = best or (not unsureP and 0 or nil)
             if left == nil and not e.match then left = LookupByName(unit, e.buffs) end
             if best and Outranked(e.buffs, theirIds, spell) then left = nil end
-            if BlockedByAura(spell, theirs) or IsBounced(unit, spell) then left = nil end
+            if IsBounced(unit, spell) then left = nil end
             local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
             -- Out of buff range: no icon until they come closer (checked every second).
             if left and (left == 0 or left < warn) and InRange(unit, spell) then

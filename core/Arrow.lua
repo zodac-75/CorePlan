@@ -29,6 +29,9 @@ local function PlayerWorldPos()
   return WorldPos(map, x * 100, y * 100)
 end
 
+ns.WorldPos = WorldPos
+ns.PlayerWorldPos = PlayerWorldPos
+
 local function MapName(map)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(map)
   return info and info.name or "?"
