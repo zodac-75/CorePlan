@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.17
+
+- **The flower egg is calmer and only starts now and then.** The herbalist's own addon rolls the dice, 10% for each flower picked (change it with `/acp flowerchance 0-100`), and tells the party, so everybody sees it at the same moment. This means she needs this version for others to see it. The effect is also a little smaller and quieter.
+- **New pictures for the easter eggs.** The disco ball, violin, fish, cake, heart, crown, cloud, note, beer mug, egg, pumpkin, rainbow, star and train are redrawn, and the flower is now an orchid, in one consistent, much nicer style.
+
 # AllClassPlan 0.1.16
 
 - **Windows hide in combat.** The plan window, crafting window, dungeon guide and settings go away when a fight starts and come back when it ends. New tick box "Show windows in combat" (`/acp combatwin`) keeps them open. A window you open yourself during the fight stays. The bag check is included: with the tick box on it stays open in combat, but its sell and destroy buttons don't work until the fight is over.

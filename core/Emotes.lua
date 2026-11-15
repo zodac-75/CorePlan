@@ -907,12 +907,12 @@ EFFECTS.FLOWER = function(from)
   wash:SetPoint("CENTER", 0, 0)
   wash.tex:SetVertexColor(1, 0.45, 0.75, 1)
   wash:SetAlpha(0)
-  Fade(wash, 0, 0.28, 1, 0.25)
-  Fade(wash, 0.28, 0.12, 2, 0.6)
-  Fade(wash, 0.12, 0, 3, 1.4, 1.6)
+  Fade(wash, 0, 0.18, 1, 0.25)
+  Fade(wash, 0.18, 0.08, 2, 0.6)
+  Fade(wash, 0.08, 0, 3, 1.4, 1.6)
   Play(wash)
   -- the big flower: pops in, wobbles, fades
-  local big = Piece(ns.MEDIA .. "Flower", 300, 300)
+  local big = Piece(ns.MEDIA .. "Flower", 250, 250)
   big:SetPoint("CENTER", 0, 90)
   big:SetAlpha(0)
   Fade(big, 0, 1, 1, 0.25)
@@ -925,9 +925,9 @@ EFFECTS.FLOWER = function(from)
   Fade(big, 1, 0, 7, 0.8, 1.2)
   Play(big)
   -- rain: our own flower, the game's flower icons and pink petals (hearts), right across the screen
-  Rain(26, function(i)
+  Rain(14, function(i)
     local p
-    if i % 3 == 1 then p = Piece(ns.MEDIA .. "Flower", 90, 90)
+    if i % 3 == 1 then p = Piece(ns.MEDIA .. "Flower", 80, 80)
     elseif i % 3 == 2 then
       p = Piece(FLOWER_ICONS[(i % #FLOWER_ICONS) + 1], 56, 56)
     else
@@ -936,7 +936,7 @@ EFFECTS.FLOWER = function(from)
     end
     return p
   end, 900, 3.4)
-  BigText(ns.T("EM_FLOWER_BIG"), 72, 1, 0.55, 0.85, -130, 2.2)
+  BigText(ns.T("EM_FLOWER_BIG"), 60, 1, 0.55, 0.85, -130, 2)
   Say(ns.T("EM_FLOWER_" .. math.random(3), Short(from)))
   Sound("UI_EPICLOOT_TOAST")
 end
@@ -1141,17 +1141,34 @@ end
 local function IsFlowerName(name)
   return type(name) == "string" and not (issecretvalue and issecretvalue(name)) and Short(name):lower() == FLOWER_NAME:lower()
 end
--- Start the flower egg unless one just ran. Returns true if it started.
-local function Flower(from)
-  if GetTime() - lastFlower < FLOWER_COOLDOWN then return false end
-  lastFlower = GetTime()
+-- Only the herbalist's own addon rolls the dice (ns.db.flowerChance percent, default 10: she picks
+-- all the time) and, when it wins, tells the group ("L:FLOWER"), so the egg comes for everybody at the
+-- same moment. The others never roll: they show it when her message arrives ("certain"). One pick
+-- gives one roll however many signs of it there are (the cast, the loot line), and an egg is not
+-- repeated within FLOWER_COOLDOWN seconds. Returns true if the egg started.
+local lastFlowerShown = -1000
+local function FlowerChance()
+  local c = tonumber(ns.db.flowerChance)
+  if c == nil then c = 10 end
+  return math.max(0, math.min(100, c))
+end
+local function Flower(from, certain)
+  local t = GetTime()
+  if certain then
+    if t - lastFlowerShown < FLOWER_COOLDOWN then return false end
+  else
+    if t - lastFlower < FLOWER_COOLDOWN then return false end
+    lastFlower = t
+    if math.random() * 100 >= FlowerChance() then return false end
+  end
+  lastFlower, lastFlowerShown = t, t
   lastShown.FLOWER = nil
   ns.ShowEmoteEgg("FLOWER", from) -- (Show is defined further down)
   return true
 end
 local function OnCast(unit, spellID)
   if ns.db.eggsOff or type(unit) ~= "string" then return end
-  if unit ~= "player" and not unit:find("^party%d") and not unit:find("^raid%d") then return end
+  if unit ~= "player" then return end -- only your own cast: you are the herbalist, you roll
   local ok, name = pcall(UnitName, unit)
   if not ok or not IsFlowerName(name) or not IsHerbCast(spellID) then return end
   if not Flower(name) then return end
@@ -1163,9 +1180,8 @@ local function OnCast(unit, spellID)
   end
 end
 
--- The loot line is the surest sign: "Faithlezz Nightwhisper receives loot: [Earthroot]x2." goes to the
--- whole party, whatever her addon version is. An herb (trade goods, herb) in a line that starts with
--- her name is a flower picked.
+-- Your own loot line is the second sign of a pick ("You receive loot: [Earthroot]x2."): when you are
+-- the herbalist and the item is an herb, it counts like the cast.
 local function ItemIsHerb(id)
   if not GetItemInfoInstant then return false end
   local ok, _, _, _, _, _, classID, subClassID = pcall(GetItemInfoInstant, id)
@@ -1173,14 +1189,24 @@ local function ItemIsHerb(id)
   local cls = (Enum and Enum.ItemClass and Enum.ItemClass.Tradegoods) or 7
   return classID == cls and subClassID == 9
 end
+local function IsOwnLootLine(msg)
+  for _, g in ipairs({ LOOT_ITEM_SELF or "", LOOT_ITEM_PUSHED_SELF or "" }) do
+    local pre = g:match("^(.-)%%s")
+    if pre and pre ~= "" and msg:sub(1, #pre) == pre then return true end
+  end
+  return false
+end
 local function OnHerbLoot(msg)
   if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
   local pos, _, id = msg:find("|Hitem:(%d+)")
-  if not pos then return end
-  local before = msg:sub(1, pos - 1):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|H.-|h%[?(.-)%]?|h", "%1")
-  if not before:find(FLOWER_NAME, 1, true) then return end
-  if not ItemIsHerb(tonumber(id)) then return end
-  Flower(FLOWER_NAME)
+  if not pos or not IsOwnLootLine(msg) then return end
+  local ok, name = pcall(UnitName, "player")
+  if not ok or not IsFlowerName(name) or not ItemIsHerb(tonumber(id)) then return end
+  if not Flower(name) then return end
+  local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+  if send and IsInGroup and IsInGroup() then
+    pcall(send, PREFIX, "L:FLOWER", (IsInRaid and IsInRaid()) and "RAID" or "PARTY")
+  end
 end
 
 local lastBagsFull = -1000
@@ -1453,7 +1479,7 @@ local function OnMessage(msg, sender)
   end
   -- Faithlezz picked a flower (only she may send this one).
   if msg == "L:FLOWER" then
-    if not IsMe(sender) and IsFlowerName(sender) then Flower(sender) end
+    if not IsMe(sender) and IsFlowerName(sender) then Flower(sender, true) end
     return
   end
   -- A roll egg from the roller's addon.
@@ -1655,6 +1681,12 @@ end
 ns.RegisterCommand("eggs", true, function()
   ns.db.eggsOff = not ns.db.eggsOff
   ns.Print(ns.db.eggsOff and ns.T("EM_OFF") or ns.T("EM_ON"))
+end)
+
+ns.RegisterCommand("flowerchance", false, function(arg)
+  local n = tonumber(arg)
+  if n then ns.db.flowerChance = math.max(0, math.min(100, math.floor(n))) end
+  ns.Print("flower egg chance: " .. FlowerChance() .. "% per flower picked (/@SLASH@ flowerchance 0-100).")
 end)
 
 ns.RegisterCommand("eggdebug", false, function()

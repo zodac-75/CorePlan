@@ -1,4 +1,7 @@
-"""Draws the easter-egg pictures that were made in code (flat style, like Mug.tga):
+"""NOTE: since 0.1.17 all the egg pictures come from tools/importmedia.py (ChatGPT drawings).
+Running this script overwrites them with the old hand-drawn ones; it is kept only as history.
+
+Draws the easter-egg pictures that were made in code (flat style, like Mug.tga):
 Violin, Crown, Fish, Cake, Pumpkin, Note and Flower. Writes 256x256 32-bit TGAs to core/Media.
 
     python3 tools/drawmedia.py

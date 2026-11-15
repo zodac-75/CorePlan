@@ -2075,111 +2075,132 @@ do
   a:Hide(); b:Hide(); c:Hide()
 end
 
--- Easter egg: Faithlezz plockar blomma (casten syns på partyramen, eller hennes egen addon säger till)
+-- Easter egg: Faithlezz plockar blomma. Bara hennes egen addon slår tärningen (standard 10 %) och
+-- säger till gruppen (L:FLOWER); de andra visar bara när meddelandet kommer, så alla ser det samtidigt.
 do
-  local oldUN, oldGroup, oldRaid, oldCSpell = UnitName, IsInGroup, IsInRaid, C_Spell
+  local oldUN, oldGroup, oldRaid, oldCSpell, oldGII = UnitName, IsInGroup, IsInRaid, C_Spell, GetItemInfoInstant
+  local me = "Faithlezz" -- the character the test is "playing"
   UnitName = function(u)
-    if u == "party1" then return "Faithlezz", "Realm" elseif u == "party2" then return "Bob", nil
-    elseif u == "party3" then return "Faithlezz", nil end
+    if u == "player" then return me, nil elseif u == "party1" then return "Faithlezz", "Realm" end
     return oldUN(u)
   end
   IsInGroup = function() return true end
   IsInRaid = function() return false end
-  local function cast(unit, id)
-    now = now + 20; runTimers(now)
-    ns.lastEggLine = nil
-    fire("UNIT_SPELLCAST_START", unit, "guid", id)
-    return ns.lastEggLine
-  end
+  LOOT_ITEM_SELF = "You receive loot: %s."
+  GetItemInfoInstant = function(id) if id == 2449 then return id, "Trade Goods", "Herb", "", 1, 7, 9 end return id, "Trade Goods", "Cloth", "", 1, 7, 5 end
+  local oldSend, sent = C_ChatInfo.SendAddonMessage, {}
+  C_ChatInfo.SendAddonMessage = function(pfx, m, ch) if pfx == "ZodacPlan" and m == "L:FLOWER" then table.insert(sent, ch) end end
+  local function step() now = now + 20; runTimers(now); ns.lastEggLine = nil end
+  local function cast(unit, id) step(); fire("UNIT_SPELLCAST_START", unit, "guid", id); return ns.lastEggLine end
+  local herb = "|cffffffff|Hitem:2449:0:0|h[Earthroot]|h|rx2"
+  local function loot(text) step(); fire("CHAT_MSG_LOOT", text); return ns.lastEggLine end
+  local function msg(text, sender, ch) step(); fire("CHAT_MSG_ADDON", "ZodacPlan", text, ch or "PARTY", sender); return ns.lastEggLine end
   local function isFlower(l)
     for i = 1, 3 do if l == ns.T("EM_FLOWER_" .. i, "Faithlezz") then return true end end
     return false
   end
-  local l = cast("party1", 2366)
-  if not isFlower(l) then table.insert(errors, "Faithlezz plockar blomma (party1) gav inget flower-egg: " .. tostring(l)) end
+  -- default chance is 10 %
+  ns.db.flowerChance = nil
+  math.randomseed(7)
+  local hits, picks = 0, 1000
+  for i = 1, picks do if cast("player", 2366) then hits = hits + 1 end end
+  print("  blomma standard-chans: " .. hits .. " av " .. picks)
+  if hits < picks * 0.06 or hits > picks * 0.14 then table.insert(errors, "standardchansen (10%) gav " .. hits .. " av " .. picks) end
+  -- 0 % never, 100 % always (and tells the group each time)
+  ns.db.flowerChance = 0
+  for i = 1, 20 do if cast("player", 2366) then table.insert(errors, "0% gav ändå ett flower-egg") end end
+  ns.db.flowerChance = 100
+  sent = {}
+  local l = cast("player", 2366)
+  if not isFlower(l) then table.insert(errors, "egen blomma gav inget egg: " .. tostring(l)) end
   print("  blomma: " .. tostring(l))
-  -- one flower after another: only the first (10 s)
+  if #sent ~= 1 or sent[1] ~= "PARTY" then table.insert(errors, "egen blomma skickade L:FLOWER fel: " .. table.concat(sent, ",")) end
+  -- one pick, one roll, one message (10 s)
   ns.lastEggLine = nil
   now = now + 3; runTimers(now)
-  fire("UNIT_SPELLCAST_START", "party1", "guid", 2366)
-  if ns.lastEggLine then table.insert(errors, "andra blomman inom 10 s gav ett nytt egg") end
-  l = cast("party1", 2366)
-  if not isFlower(l) then table.insert(errors, "blomma efter 20 s gav inget egg: " .. tostring(l)) end
-  l = cast("party2", 2366)
-  if l then table.insert(errors, "Bob plockar blomma gav egg") end
-  l = cast("party1", 7322)
-  if l then table.insert(errors, "Faithlezz casta Frostbolt gav blom-egg") end
-  l = cast("target", 2366)
-  if l then table.insert(errors, "casten på target gav egg") end
-  -- the herb spell by its (translated) name, in a language where the id isn't known
+  fire("UNIT_SPELLCAST_START", "player", "guid", 2366)
+  if ns.lastEggLine or #sent ~= 1 then table.insert(errors, "andra blomman inom 10 s gav nytt egg/meddelande") end
+  fire("CHAT_MSG_LOOT", "You receive loot: " .. herb .. ".")
+  if ns.lastEggLine or #sent ~= 1 then table.insert(errors, "loot-raden direkt efter casten gav dubbelt") end
+  l = cast("player", 2366)
+  if not isFlower(l) or #sent ~= 2 then table.insert(errors, "blomma efter 20 s gav inget egg/meddelande") end
+  -- raid
+  IsInRaid = function() return true end
+  cast("player", 2366)
+  if sent[#sent] ~= "RAID" then table.insert(errors, "blomma i raid skickades fel: " .. tostring(sent[#sent])) end
+  IsInRaid = function() return false end
+  -- not herbs, not you
+  if cast("player", 7322) then table.insert(errors, "Frostbolt gav blom-egg") end
+  if cast("target", 2366) then table.insert(errors, "casten på target gav egg") end
+  if cast("party1", 2366) then table.insert(errors, "andras cast ska inte slå tärningen/visa egg") end
+  -- the herb spell by its (translated) name
   C_Spell = { GetSpellName = function(id) if id == 2366 or id == 99366 then return "Kräuterkunde" end end }
-  l = cast("party3", 99366)
+  l = cast("player", 99366)
   if not isFlower(l) then table.insert(errors, "blomma via spellnamn gav inget egg: " .. tostring(l)) end
   C_Spell = oldCSpell
   -- channeled gathering too
-  now = now + 20; runTimers(now); ns.lastEggLine = nil
-  fire("UNIT_SPELLCAST_CHANNEL_START", "party1", "guid", 2366)
+  step(); fire("UNIT_SPELLCAST_CHANNEL_START", "player", "guid", 2366)
   if not isFlower(ns.lastEggLine) then table.insert(errors, "kanaliserad blomma gav inget egg") end
-  -- the secret spell id of a party member in combat: no egg, no error
-  now = now + 20; runTimers(now); ns.lastEggLine = nil
+  -- a secret spell id: no egg, no error
+  step()
   local oldIS = issecretvalue
   issecretvalue = function(v) return v == "SECRET" end
-  fire("UNIT_SPELLCAST_START", "party1", "guid", "SECRET")
+  fire("UNIT_SPELLCAST_START", "player", "guid", "SECRET")
   issecretvalue = oldIS
   if ns.lastEggLine then table.insert(errors, "hemligt spell-id gav egg") end
-  -- the loot line of the herb (works without her addon): egg once, only herbs, only her
-  local oldGII = GetItemInfoInstant
-  GetItemInfoInstant = function(id) if id == 2449 then return id, "Trade Goods", "Herb", "", 1, 7, 9 end return id, "Trade Goods", "Cloth", "", 1, 7, 5 end
-  local function loot(text) now = now + 20; runTimers(now); ns.lastEggLine = nil; fire("CHAT_MSG_LOOT", text); return ns.lastEggLine end
-  local herb = "|cffffffff|Hitem:2449:0:0|h[Earthroot]|h|rx2"
+  -- your own loot line (when the cast wasn't seen): herbs only
+  n = #sent
+  l = loot("You receive loot: " .. herb .. ".")
+  if not isFlower(l) or #sent ~= n + 1 then table.insert(errors, "egen herb-loot gav inget egg/meddelande: " .. tostring(l)) end
+  l = loot("You receive loot: |Hitem:2589:0|h[Linen Cloth]|h.")
+  if l then table.insert(errors, "eget tyg gav blom-egg") end
   l = loot("Faithlezz Nightwhisper receives loot: " .. herb .. ".")
-  if not isFlower(l) then table.insert(errors, "herb-loot gav inget blom-egg: " .. tostring(l)) end
-  l = loot("|Hplayer:Faithlezz-Realm:1|h[Faithlezz]|h receives loot: " .. herb .. ".")
-  if not isFlower(l) then table.insert(errors, "herb-loot med spelarlänk gav inget egg: " .. tostring(l)) end
-  ns.lastEggLine = nil
-  fire("CHAT_MSG_LOOT", "Faithlezz Nightwhisper receives loot: " .. herb .. ".")
-  if ns.lastEggLine then table.insert(errors, "andra herb-loot inom 10 s gav nytt egg") end
-  l = loot("Bob receives loot: " .. herb .. ".")
-  if l then table.insert(errors, "Bobs herb gav blom-egg") end
-  l = loot("Faithlezz Nightwhisper receives loot: |Hitem:2589:0|h[Linen Cloth]|h.")
-  if l then table.insert(errors, "Faithlezz tyg gav blom-egg") end
-  GetItemInfoInstant = oldGII
-  -- the message from her own addon (also from far away)
-  local function msg(text, sender, ch)
-    now = now + 20; runTimers(now)
-    ns.lastEggLine = nil
-    fire("CHAT_MSG_ADDON", "ZodacPlan", text, ch or "PARTY", sender)
-    return ns.lastEggLine
-  end
+  if l then table.insert(errors, "andras loot-rad ska inte ge egg (bara L:FLOWER)") end
+  -- one pick, several signs, one roll: the cast loses, the loot line must not roll again
+  ns.db.flowerChance = 0
+  cast("player", 2366)
+  ns.db.flowerChance = 100
+  fire("CHAT_MSG_LOOT", "You receive loot: " .. herb .. ".")
+  if ns.lastEggLine then table.insert(errors, "samma blomma slog tärningen två gånger") end
+  ns.db.flowerChance = nil
+  -- the others: they only show it when her message arrives (also from far away)
+  me = "Bob"
   l = msg("L:FLOWER", "Faithlezz-Realm")
   if not isFlower(l) then table.insert(errors, "L:FLOWER från Faithlezz gav inget egg: " .. tostring(l)) end
+  ns.lastEggLine = nil
+  now = now + 3; runTimers(now)
+  fire("CHAT_MSG_ADDON", "ZodacPlan", "L:FLOWER", "PARTY", "Faithlezz-Realm")
+  if ns.lastEggLine then table.insert(errors, "L:FLOWER inom 10 s gav nytt egg") end
   l = msg("L:FLOWER", "Bob-Realm")
   if l then table.insert(errors, "L:FLOWER från Bob gav egg") end
-  l = msg("L:FLOWER", "Me-Realm")
-  if l then table.insert(errors, "mitt eget L:FLOWER-eko gav egg") end
+  l = msg("L:FLOWER", "Bob2-Realm")
+  if l then table.insert(errors, "L:FLOWER från Bob2 gav egg") end
   l = msg("E:FLOWER", "Faithlezz-Realm", "WHISPER")
   if l then table.insert(errors, "E:FLOWER (som emote) gav egg") end
-  -- it is you (a character called Faithlezz): shows, and tells the group, once
-  UnitName = function(u) if u == "player" then return "Faithlezz", nil end return oldUN(u) end
-  local oldSend, sentTo = C_ChatInfo.SendAddonMessage, {}
-  C_ChatInfo.SendAddonMessage = function(pfx, m, ch) if pfx == "ZodacPlan" and m == "L:FLOWER" then table.insert(sentTo, ch) end end
-  now = now + 20; runTimers(now)
-  ns.lastEggLine = nil
-  fire("UNIT_SPELLCAST_START", "player", "guid", 2366)
-  if not isFlower(ns.lastEggLine) then table.insert(errors, "egen blomma gav inget egg: " .. tostring(ns.lastEggLine)) end
-  if #sentTo ~= 1 or sentTo[1] ~= "PARTY" then table.insert(errors, "egen blomma skickade L:FLOWER fel: " .. table.concat(sentTo, ",")) end
-  fire("UNIT_SPELLCAST_START", "player", "guid", 2366)
-  if #sentTo ~= 1 then table.insert(errors, "andra blomman inom 10 s skickade igen") end
-  IsInRaid = function() return true end
-  now = now + 20; runTimers(now)
-  fire("UNIT_SPELLCAST_START", "player", "guid", 2366)
-  if #sentTo ~= 2 or sentTo[2] ~= "RAID" then table.insert(errors, "blomma i raid skickades fel: " .. table.concat(sentTo, ",")) end
-  C_ChatInfo.SendAddonMessage = oldSend
-  -- the hidden preview
+  ns.db.flowerChance = 100
+  l = cast("party1", 2366)
+  if l then table.insert(errors, "andra klienter ska inte slå egen tärning") end
+  l = loot("Faithlezz Nightwhisper receives loot: " .. herb .. ".")
+  if l then table.insert(errors, "andra klienter visade egg från loot-raden") end
+  ns.db.flowerChance = nil
+  -- it is you again, as Faithlezz: your own echo doesn't show twice
+  me = "Faithlezz"
+  l = msg("L:FLOWER", "Faithlezz-Realm")
+  if l then table.insert(errors, "mitt eget L:FLOWER-eko gav egg") end
+  -- the command
+  local slash = SlashCmdList and SlashCmdList[next(SlashCmdList)]
+  if slash then
+    slash("flowerchance 35"); if ns.db.flowerChance ~= 35 then table.insert(errors, "/flowerchance 35 satte " .. tostring(ns.db.flowerChance)) end
+    slash("flowerchance 500"); if ns.db.flowerChance ~= 100 then table.insert(errors, "/flowerchance 500 klampades inte") end
+    ns.db.flowerChance = nil
+  end
+  -- the hidden preview always shows
   UnitName = oldUN
+  C_ChatInfo.SendAddonMessage = oldSend
   ns.lastEggLine = nil
   pcall(SlashCmdList[next(SlashCmdList)], "egg flower")
   if not isFlower(ns.lastEggLine) then table.insert(errors, "/mp egg flower visade inget: " .. tostring(ns.lastEggLine)) end
+  GetItemInfoInstant = oldGII
   IsInGroup, IsInRaid = oldGroup, oldRaid
 end
 
