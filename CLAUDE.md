@@ -16,7 +16,7 @@ tests and release steps. This file has the rules and the things that bit us befo
   uploads to CurseForge. Check the upload:
   `gh api 'repos/zodac-75/CorePlan/actions/runs?per_page=1'` then
   `gh run view <id> -R zodac-75/CorePlan --log | grep Uploading` (`gh run list` doesn't work).
-- **Release zips on his NAS** (when the PC is linked and `Z:\` is connected): after each AllClassPlan release put `AllClassPlan-<version>.zip` (the same folders as the CurseForge package) in `Z:\AllClassPlan\Releases\`, like his FaithHeals addon. Logos, icons and screenshots live in `Z:\AllClassPlan\Bilder\`. `Z:\AllClassPlan\Claude\` has an overview CLAUDE.md of the whole setup (for new chats on other Claude accounts) and a paste-in prompt; update them when the setup changes.
+- **Release zips on his NAS** (when the PC is linked and `Z:\` is connected): after each AllClassPlan release put `AllClassPlan-<version>.zip` (the same folders as the CurseForge package) in `Z:\AllClassPlan\Releases\`, like his FaithHeals addon. Logos, icons and screenshots live in `Z:\AllClassPlan\Bilder\`. `Z:\AllClassPlan\Claude\` has an overview CLAUDE.md of the whole setup (for new chats on other Claude accounts) and a paste-in prompt. After every addon change or release (when Z:\ is connected), update its "Läge just nu" section and add a line at the top of its "Logg"; update the paste-in prompt when the way of working changes.
 - **Never** paste or ask for the CurseForge API token. It lives only in the repo secret `CF_API_KEY`.
 - **Install on his PC** when the session is linked to his computer:
   `D:\Blizzard\World of Warcraft\_forever_\Interface\AddOns\<Addon>\`, copying from the build
