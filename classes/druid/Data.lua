@@ -103,6 +103,7 @@ ns.STATS.weights = {
 }
 ns.STATS.patterns = {
   { "%((%d+%.?%d*) damage per second%)", "wdps" },
+  { "[Rr]anged [Aa]ttack [Pp]ower", "rap" }, -- no weight: not a stat for this class
   { "[Aa]ttack [Pp]ower by (%d+) in Cat", "ap" },
   { "[Aa]ttack [Pp]ower by (%d+)", "ap" },
   { "^%+(%d+) Attack Power", "ap" },
@@ -110,13 +111,16 @@ ns.STATS.patterns = {
   { "chance to hit with spells by (%d+)%%", "shit" },
   { "critical strike by (%d+)%%", "crit" },
   { "chance to hit by (%d+)%%", "hit" },
+  { "Nature spells and effects by up to (%d+)", "school" },
+  { "Arcane spells and effects by up to (%d+)", "school" },
+  { "^%+(%d+) %a+ Spell Damage", "school" },
   { "healing done by spells and effects by up to (%d+)", "heal" },
   { "^%+(%d+) Healing Spells", "heal" },
   { "magical spells and effects by up to (%d+)", "sp" },
   { "[Ss]pell [Pp]ower by (%d+)", "sp" },
   { "^%+(%d+) Spell Damage", "sp" },
   { "^%+(%d+) Damage and Healing Spells", "sp" },
-  { "(%d+) mana per 5 sec", "mp5" },
+  { "(%d+) [Mm]ana per 5 sec", "mp5" },
   { "^%+(%d+) Strength", "str" },
   { "^%+(%d+) Agility", "agi" },
   { "^%+(%d+) Intellect", "int" },
@@ -178,7 +182,7 @@ ns.PLAN_STEPS = {
 -- Stat weights per spec: attack power for Feral, spell power for Balance, healing for Restoration.
 ns.PLAN_WEIGHTS = {
   -- Int and Spirit give no spell power in WoW Forever: Int is only mana and a little crit, Spirit only regen.
-  balance = { sp = 1.0, int = 0.2, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.05, sta = 0.25 },
+  balance = { sp = 1.0, school = 0.6, int = 0.2, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.05, sta = 0.25 },
   resto = { heal = 1.0, sp = 1.0, int = 0.8, mp5 = 2.0, spi = 0.6, scrit = 6, sta = 0.25 },
 }
 ns.COMBAT_CMD = "combat"

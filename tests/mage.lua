@@ -266,6 +266,9 @@ TOOLTIP_TEXT = {
   [6000] = { "Silky Robe", "+5 Intellect", "+2 Spirit", "Equip: Increases damage done by Frost spells and effects by up to 9.", "(2) Set: Increases damage and healing done by magical spells and effects by up to 20." },
   [6001] = { "Old Robe", "+3 Intellect" },
   [6003] = { "Future Gloves", "Equip: Increases spell power by 12." },
+  [6004] = { "Healing And Damage Bracers", "Equip: Increases healing done by up to 9 and damage done by up to 3 for all magical spells and effects." },
+  [6006] = { "Trinket", "Use: Increases damage and healing done by magical spells and effects by up to 30 for 15 sec.", "Equip: Increases damage done to Undead by magical spells and effects by up to 35.", "+4 Intellect" },
+  [6005] = { "Plain Bangles", "Equip: Increases damage and healing done by magical spells and effects by up to 1.", "Enchanted: Stamina +3" },
 }
 local function ttLines(link) local id = tonumber(tostring(link):match("item:(%d+)")); return TOOLTIP_TEXT[id] or { "x" } end
 function methods:SetHyperlink(link)
@@ -1097,6 +1100,14 @@ print("--- Tooltip-test (uppgradering) ---") -- DEBUGUP
 for _, id in ipairs({6000, 6003, 6002}) do
   local ok, d, lvl = pcall(ns.CompareToEquipped, "|Hitem:" .. id .. "|h[x]|h")
   print("  compare", id, ok, d, lvl, "score", pcall(ns.ItemScore, "|Hitem:" .. id .. "|h[x]|h"))
+end
+do -- "healing done by up to 9 and damage done by up to 3": a Frost mage counts the 3, not 0
+  local a = ns.ItemScore("|Hitem:6004|h[x]|h")
+  local b = ns.ItemScore("|Hitem:6005|h[x]|h")
+  if math.abs(a - 3) > 0.001 then table.insert(errors, "uppgradering: 'healing 9 and damage 3'-raden ger " .. tostring(a) .. ", väntade 3") end
+  local t = ns.ItemScore("|Hitem:6006|h[x]|h")
+  if math.abs(t - 1.6) > 0.001 then table.insert(errors, "uppgradering: Use:/'done to Undead'-rader räknades som vanliga stats: " .. tostring(t) .. ", väntade 1.6") end
+  if math.abs(b - 1) > 0.001 then table.insert(errors, "uppgradering: 'damage and healing by up to 1' ger " .. tostring(b) .. ", väntade 1") end
 end
 tipFor(6003, "Future Gloves"); tipFor(6002, "Leather Vest"); tipFor(6001, "Old Robe")
 GameTooltip.__lines = nil

@@ -83,7 +83,18 @@ local function Stats(link)
   if #lines == 0 then return {} end
   local s = {}
   for _, line in ipairs(lines) do
-    if not line:find("Set:") then -- set bonuses only count with the full set
+    local heal, dmg = line:match("healing done by up to (%d+) and damage done by up to (%d+) for all magical spells")
+    if heal then
+      -- "Increases healing done by up to 9 and damage done by up to 3 for all magical spells and
+      -- effects": two separate numbers on one line. A healer cares about the first, the rest of
+      -- the casters about the second.
+      s.heal = (s.heal or 0) + tonumber(heal)
+      s.dmgsp = (s.dmgsp or 0) + tonumber(dmg)
+    elseif line:find("Set:") or line:find("^Use:") or line:find("^Chance on hit:")
+        or line:find("when fighting") or line:find("done to ") then
+      -- set bonuses only count with the full set; Use:/proc lines are temporary; "when fighting
+      -- Undead" and "damage done to Undead" only apply against some mobs: none of them are stats
+    else
       for _, p in ipairs(PATTERNS) do
         local v = line:match(p[1])
         if v then
@@ -100,7 +111,11 @@ end
 function ns.ItemScore(link)
   if not link or not ns.IsEnglishClient() then return 0 end
   local total, weights = 0, ns.STATS.weights -- follows the chosen talent plan
-  for k, v in pairs(Stats(link)) do total = total + v * (weights[k] or 0) end
+  for k, v in pairs(Stats(link)) do
+    local w = weights[k]
+    if k == "dmgsp" then w = weights.heal and 0 or weights.sp end -- damage side of a healing + damage line
+    total = total + v * (w or 0)
+  end
   return total
 end
 

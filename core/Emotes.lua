@@ -1650,7 +1650,10 @@ ns.RegisterModule(function()
       end
       return
     end
-    if a1 == PREFIX and type(a2) == "string" then pcall(OnMessage, a2, a4) end
+    if a1 == PREFIX and type(a2) == "string" then
+      if ns.eggDebug then ns.Print("eggdebug addon message from " .. tostring(a4) .. " (" .. tostring(a3) .. "): " .. a2 .. (ns.db.eggsOff and "  [Easter eggs are OFF: ignored]" or "")) end
+      pcall(OnMessage, a2, a4)
+    end
   end)
 end)
 

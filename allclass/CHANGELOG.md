@@ -1,3 +1,12 @@
+# AllClassPlan 0.1.22
+
+- **Fixed wrong "Downgrade" / "Upgrade" in item tooltips.** The upgrade check now understands more tooltip lines:
+  - "Increases healing done by up to X and damage done by up to Y for all magical spells and effects" (damage counts for casters, healing for healers). Before, such items counted as 0 and could show as a downgrade.
+  - Shaman and druid: damage to one school (for example Nature spell damage) now counts, a bit lower than general spell power.
+  - "+X Mana per 5 sec" with a capital M now counts as mp5.
+- **No longer counted as stats:** "Use:" and "Chance on hit:" effects (they only last a short time), bonuses that only work against some mobs ("when fighting Undead", "damage done to Undead"), and ranged attack power for shaman, druid, warrior and paladin.
+- `/acp eggdebug` also shows addon messages from other players (for finding out why a group ding notice didn't show).
+
 # AllClassPlan 0.1.21
 
 - **One "Unlock UI" switch.** It replaces "Move shatter indicator & buffs" and "Lock windows". Tick it and you can drag the combat helper, the buff icons, the campfire button, the drink alert, the Walk on Air timer and all windows; Ctrl + mouse wheel changes their size. Untick it when you are done. It is in the minimap quick menu, in the settings under "Look & windows" and as `/acp unlock`. (`/acp lock` and `/acp move` still work.)

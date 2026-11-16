@@ -121,7 +121,7 @@ ns.STATS.patterns = {
   { "chance to hit with spells by (%d+)%%", "shit" },
   { "critical strike by (%d+)%%", "crit" },
   { "chance to hit by (%d+)%%", "hit" },
-  { "(%d+) mana per 5 sec", "mp5" },
+  { "(%d+) [Mm]ana per 5 sec", "mp5" },
   { "^%+(%d+) Strength", "str" },
   { "^%+(%d+) Agility", "agi" },
   { "^%+(%d+) Intellect", "int" },

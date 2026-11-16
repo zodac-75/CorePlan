@@ -100,23 +100,28 @@ ns.RANK_CHECK = {
 ns.STATS = {}
 ns.STATS.weights = {
   wdps = 14, ap = 1.0, str = 2.0, agi = 1.2, int = 1.4, spi = 0.3, sta = 0.3,
-  crit = 20, hit = 15, sp = 0.4, mp5 = 1.5,
+  crit = 20, hit = 15, sp = 0.4, school = 0.2, mp5 = 1.5,
 }
 ns.STATS.patterns = {
   { "%((%d+%.?%d*) damage per second%)", "wdps" },
+  { "[Rr]anged [Aa]ttack [Pp]ower", "rap" }, -- no weight: not a stat for this class
   { "[Aa]ttack [Pp]ower by (%d+)", "ap" },
   { "^%+(%d+) Attack Power", "ap" },
   { "critical strike with spells by (%d+)%%", "scrit" },
   { "chance to hit with spells by (%d+)%%", "shit" },
   { "critical strike by (%d+)%%", "crit" },
   { "chance to hit by (%d+)%%", "hit" },
+  { "Nature spells and effects by up to (%d+)", "school" },
+  { "Fire spells and effects by up to (%d+)", "school" },
+  { "Frost spells and effects by up to (%d+)", "school" },
+  { "^%+(%d+) %a+ Spell Damage", "school" },
   { "healing done by spells and effects by up to (%d+)", "heal" },
   { "^%+(%d+) Healing Spells", "heal" },
   { "magical spells and effects by up to (%d+)", "sp" },
   { "[Ss]pell [Pp]ower by (%d+)", "sp" },
   { "^%+(%d+) Spell Damage", "sp" },
   { "^%+(%d+) Damage and Healing Spells", "sp" },
-  { "(%d+) mana per 5 sec", "mp5" },
+  { "(%d+) [Mm]ana per 5 sec", "mp5" },
   { "^%+(%d+) Strength", "str" },
   { "^%+(%d+) Agility", "agi" },
   { "^%+(%d+) Intellect", "int" },
@@ -179,7 +184,7 @@ ns.PLAN_STEPS = {
 }
 -- Stat weights per spec: attack power for Enhancement, spell power for Elemental, healing for Restoration.
 ns.PLAN_WEIGHTS = {
-  elemental = { sp = 1.0, int = 0.4, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.1, sta = 0.25 },
+  elemental = { sp = 1.0, school = 0.6, int = 0.4, scrit = 9, shit = 9, mp5 = 1.2, spi = 0.1, sta = 0.25 },
   resto = { heal = 1.0, sp = 1.0, int = 0.8, mp5 = 2.0, scrit = 8, spi = 0.2, sta = 0.25 },
 }
 ns.COMBAT_CMD = "combat"

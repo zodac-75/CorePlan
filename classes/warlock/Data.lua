@@ -152,7 +152,7 @@ ns.STATS.patterns = {
   { "^%+(%d+) Damage and Healing Spells", "sp" },
   { "critical strike with spells by (%d+)%%", "crit" },
   { "chance to hit with spells by (%d+)%%", "hit" },
-  { "(%d+) mana per 5 sec", "mp5" },
+  { "(%d+) [Mm]ana per 5 sec", "mp5" },
   { "^%+(%d+) Intellect", "int" },
   { "^%+(%d+) Spirit", "spi" },
   { "^%+(%d+) Stamina", "sta" },
