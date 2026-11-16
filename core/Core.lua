@@ -1080,10 +1080,27 @@ ns.RegisterCommand("combatwin", true, function()
   Print(db.combatShow and ns.T("COMBATWIN_ON") or ns.T("COMBATWIN_OFF"))
 end)
 
-ns.RegisterCommand("lock", true, function()
+-- /@SLASH@ lock only locks the windows (kept for old habits); /@SLASH@ unlock is the one switch
+-- to use: it frees the windows AND the combat helper, buff icons and buttons; off locks the buttons.
+ns.RegisterCommand("lock", false, function()
   db.locked = not db.locked
   Print(db.locked and ns.T("LOCKED") or ns.T("UNLOCKED"))
   if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
+end)
+
+ns.RegisterCommand("unlock", true, function()
+  local want = not db.shatterUnlocked
+  if ns.commands.move then
+    ns.quietMove = true
+    ns.RunCommand("move") -- flips db.shatterUnlocked and updates the helper
+    ns.quietMove = nil
+  end
+  db.shatterUnlocked = want and true or false
+  if want then db.locked = false end -- windows are movable by default; unlocking also frees ones locked with /@SLASH@ lock
+  Print(want and ns.T("UI_UNLOCKED") or ns.T("UI_LOCKED"))
+  if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
+  if ns.RefreshCampfire then ns.RefreshCampfire() end
+  if ns.RefreshMenu then ns.RefreshMenu() end
 end)
 
 -- Other windows (dungeon guide, bag check, settings, ...) add how they go back to default.

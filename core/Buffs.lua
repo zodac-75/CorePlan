@@ -669,6 +669,8 @@ ns.RegisterCommand("buffdebug", false, function()
       byName == nil and "?" or (byName > 0 and "yes" or "no"),
       (found and Outranked(e.buffs, ids, spell)) and ", higher rank from someone else (not watched until it ends)" or ""))
   end
+  -- Find Minerals / Find Herbs only show for the tracking you last had on (remembered here).
+  ns.Print(string.format("  tracking remembered: %s", tostring(ns.db.trackSeen or "none yet (turn the tracking on once)")))
   -- Party: what the game lets us see of each member's buffs.
   ns.Print(string.format("  boss fight %s, party buffs %s", InEncounter() and "YES" or "no",
     ns.db.partyBuffsOff and "OFF" or "on"))

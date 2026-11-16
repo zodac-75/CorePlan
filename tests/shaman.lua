@@ -396,6 +396,12 @@ for _, cmd in ipairs({ "help", "craft", "ranks", "all", "lock", "lock", "combat"
   slash(cmd)
 end
 ShamanPlanGlobal.lang = arg[3] -- /lang cycles through all the languages: back to the one under test
+
+-- Unlock UI: one switch frees windows AND buttons, and locks them all again
+slash("unlock")
+if not (ns.db.shatterUnlocked and not ns.db.locked) then table.insert(errors, "unlock: should free windows and buttons") end
+slash("unlock")
+if ns.db.shatterUnlocked then table.insert(errors, "unlock: should lock the buttons again") end
 now = now + 5; runTimers(now)
 
 -- Fönster: dra hörnet, Ctrl+mushjul

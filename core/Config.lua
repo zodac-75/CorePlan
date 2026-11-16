@@ -41,7 +41,6 @@ end
 local FEATURES = {
   { group = "CAT_COMBAT", key = "MM_SHATTER", on = function() return not ns.db.shatterOff end, cmd = ns.COMBAT_CMD or "combat" },
   { group = "CAT_COMBAT", key = "MM_COMBATWIN", on = function() return ns.db.combatShow end, cmd = "combatwin" },
-  { group = "CAT_COMBAT", key = "MM_MOVE", on = function() return ns.db.shatterUnlocked end, cmd = "move" },
   { group = "CAT_BUFFS", key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
   { group = "CAT_BUFFS", key = "MM_PARTYBUFF", on = function() return not ns.db.partyBuffsOff end, cmd = "partybuffs", party = true },
   { group = "CAT_BUFFS", key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
@@ -60,7 +59,7 @@ local FEATURES = {
   { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
   { group = "CAT_LOOK", key = "MM_CAMPFIRE", on = function() return not ns.db.campfireOff end,
     toggle = function() ns.RunCommand("campfire", "toggle") end },
-  { group = "CAT_LOOK", key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
+  { group = "CAT_LOOK", key = "MM_UNLOCK", on = function() return ns.db.shatterUnlocked end, cmd = "unlock" },
   { group = "CAT_LOOK", key = "MM_FREEH", on = function() return ns.db.freeHeight end, cmd = "height" },
   { group = "CAT_LOOK", key = "CFG_MINIMAP", on = function() return not ns.db.minimapHidden end, cmd = "minimap" },
   { group = "CAT_LOOK", key = "MM_EGGS", on = function() return not ns.db.eggsOff end, cmd = "eggs" },
@@ -233,11 +232,8 @@ end
 
 -- Combat helper: on/off, the class's own call-outs, "Move", then how it looks and sounds.
 local function CombatRows()
-  local rows, move = {}, nil
-  for _, f in ipairs(Group(FEATURES, "CAT_COMBAT")) do
-    if f.key == "MM_MOVE" then move = f else table.insert(rows, f) end
-  end
-  if move then table.insert(rows, move) end
+  local rows = {}
+  for _, f in ipairs(Group(FEATURES, "CAT_COMBAT")) do table.insert(rows, f) end
   for _, key in ipairs({ "CFG_HELPERSIZE", "CFG_ALERTSTYLE", "CFG_SOUND", "CFG_SOUNDKIT" }) do
     local sel = Selector(ALERT_SELECTORS, key)
     if sel then table.insert(rows, sel) end
@@ -621,7 +617,7 @@ local QUICK_TOOLS = {
 
 -- The quick menu only has the switches you reach for while playing; everything else is
 -- in the settings window ("All settings...").
-local QUICK_KEYS = { MM_SHATTER = true, MM_MOVE = true, MM_BUFFS = true, MM_PARTYBUFF = true, MM_GROUPBAR = true, MM_LOCK = true }
+local QUICK_KEYS = { MM_SHATTER = true, MM_UNLOCK = true, MM_BUFFS = true, MM_PARTYBUFF = true, MM_GROUPBAR = true }
 local QUICK_TOGGLES = {}
 for _, f in ipairs(FEATURES) do
   if f.key and QUICK_KEYS[f.key] then table.insert(QUICK_TOGGLES, f) end

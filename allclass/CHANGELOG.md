@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.21
+
+- **One "Unlock UI" switch.** It replaces "Move shatter indicator & buffs" and "Lock windows". Tick it and you can drag the combat helper, the buff icons, the campfire button, the drink alert, the Walk on Air timer and all windows; Ctrl + mouse wheel changes their size. Untick it when you are done. It is in the minimap quick menu, in the settings under "Look & windows" and as `/acp unlock`. (`/acp lock` and `/acp move` still work.)
+- `/acp buffdebug` also shows which tracking (Find Minerals / Find Herbs) the addon remembers, to find out why the reminder doesn't show.
+
 # AllClassPlan 0.1.20
 
 - **Works on more game languages.** Spells, buffs, talents and professions are now looked up by their spell ID instead of their English name, so the combat helper, buff watcher, rank check, talent plan and the rest also work on a German, French, Spanish, Portuguese, Russian or Italian game client (the game language is detected on its own). English clients behave exactly as before. I can only play on an English client myself, so please tell me if something is still off on yours. `/acp ids` shows which names the game gives back on your client.

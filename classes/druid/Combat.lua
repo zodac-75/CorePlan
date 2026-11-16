@@ -151,10 +151,10 @@ ns.RegisterCommand("combat", true, function()
   ns.Print(ns.db.shatterOff and ns.T("SH_OFF") or ns.T("SH_ON"))
 end)
 
-ns.RegisterCommand("move", true, function()
+ns.RegisterCommand("move", false, function()
   ns.db.shatterUnlocked = not ns.db.shatterUnlocked
   f:EnableMouse(ns.db.shatterUnlocked and true or false)
   f:EnableMouseWheel(ns.db.shatterUnlocked and true or false)
   if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
-  ns.Print(ns.db.shatterUnlocked and ns.T("SH_UNLOCKED") or ns.T("SH_LOCKED"))
+  if not ns.quietMove then ns.Print(ns.db.shatterUnlocked and ns.T("UI_UNLOCKED") or ns.T("UI_LOCKED")) end
 end)

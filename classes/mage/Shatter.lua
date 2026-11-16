@@ -183,12 +183,12 @@ ns.RegisterCommand("novaguess", true, function()
   if ns.RefreshMenu then ns.RefreshMenu() end
 end)
 
-ns.RegisterCommand("move", true, function()
+ns.RegisterCommand("move", false, function()
   ns.db.shatterUnlocked = not ns.db.shatterUnlocked
   f:EnableMouse(ns.db.shatterUnlocked and true or false)
   f:EnableMouseWheel(ns.db.shatterUnlocked and true or false)
   if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
-  ns.Print(ns.db.shatterUnlocked and ns.T("SH_UNLOCKED") or ns.T("SH_LOCKED"))
+  if not ns.quietMove then ns.Print(ns.db.shatterUnlocked and ns.T("UI_UNLOCKED") or ns.T("UI_LOCKED")) end
 end)
 
 -- /@SLASH@ shatterdebug: prints what the shatter indicator sees right now (target a frozen enemy first).
