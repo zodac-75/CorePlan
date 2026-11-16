@@ -58,6 +58,8 @@ local FEATURES = {
   { group = "CAT_LEVEL", key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
   { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
   { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
+  { group = "CAT_LOOK", key = "MM_CAMPFIRE", on = function() return not ns.db.campfireOff end,
+    toggle = function() ns.RunCommand("campfire", "toggle") end },
   { group = "CAT_LOOK", key = "MM_LOCK", on = function() return ns.db.locked end, cmd = "lock" },
   { group = "CAT_LOOK", key = "MM_FREEH", on = function() return ns.db.freeHeight end, cmd = "height" },
   { group = "CAT_LOOK", key = "CFG_MINIMAP", on = function() return not ns.db.minimapHidden end, cmd = "minimap" },

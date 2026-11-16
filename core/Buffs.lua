@@ -78,6 +78,7 @@ local function Hidden(key) return ns.db.buffHide and ns.db.buffHide[key] end
 function ns.BuffWatchToggles()
   local out = {}
   local function add(e, i, party)
+    if e.needKnown and not Spells(e) then return end -- tracking you can't cast
     local key = EntryKey(e, i, party)
     table.insert(out, {
       text = function() return EntryLabel(e, party) end,
@@ -540,6 +541,33 @@ local function Update()
   holder.label:SetShown(unlocked)
   holder.bg:SetShown(unlocked)
 end
+
+-- Gathering tracking (Find Minerals / Find Herbs) falls off when you die. Shared by every
+-- class; the icon only shows for a tracking you know and have had on before, and not while
+-- another tracking is active (they exclude each other), so it never nags someone who
+-- tracks something else on purpose. Each icon has its own tick box in the settings.
+local OTHER_TRACKING = {
+  "Find Minerals", "Find Herbs", "Find Treasure", "Track Beasts", "Track Humanoids", "Track Undead",
+  "Track Hidden", "Track Elementals", "Track Giants", "Track Demons", "Track Dragonkin",
+  "Sense Undead", "Sense Demons",
+}
+local function TrackingEntry(spell)
+  return {
+    spells = { spell }, buffs = { spell }, warn = 0, needKnown = true,
+    only = function()
+      if not ns.db then return false end
+      if not ns.AuraMissing("player", "HELPFUL", unpack(OTHER_TRACKING)) then
+        -- Something is on. Remember it when it is this one.
+        if ns.AuraByName("player", "HELPFUL", spell) == true then ns.db.trackSeen = spell end
+        return false
+      end
+      return ns.db.trackSeen == spell
+    end,
+  }
+end
+ns.BUFF_WATCH = ns.BUFF_WATCH or {}
+table.insert(ns.BUFF_WATCH, TrackingEntry("Find Minerals"))
+table.insert(ns.BUFF_WATCH, TrackingEntry("Find Herbs"))
 
 ns.RegisterModule(function()
   if not ns.BUFF_WATCH or #ns.BUFF_WATCH == 0 then return end

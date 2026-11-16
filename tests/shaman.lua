@@ -770,6 +770,35 @@ do
     GetSpellCooldown, IsUsableSpell = oldGCD, oldGU
   end
   issecretvalue = nil; SIM_SHIELD = nil
+  -- Maelstrom Weapon in combat: the aura list hides names, but a lookup by name still works.
+  if MODE == "modern" then
+    local oldSecret, oldC = issecretvalue, C_UnitAuras
+    SIM_SECRET = {}
+    issecretvalue = function(v) return v == SIM_SECRET end
+    SIM_SHIELD = "Lightning Shield"
+    GetWeaponEnchantInfo = function() return true end
+    C_UnitAuras = {
+      GetAuraDataByIndex = function(u, i, f)
+        if u == "player" and f == "HELPFUL" and i == 1 then return { name = SIM_SECRET, spellId = SIM_SECRET, applications = SIM_SECRET } end
+      end,
+      GetAuraDataBySpellName = function(u, n)
+        if u == "player" and n == "Maelstrom Weapon" then return { name = n, applications = 5 } end
+      end,
+    }
+    if not dump("maelstrom by name, list hidden"):find("MAELSTROM 5", 1, true) then
+      table.insert(errors, "Maelstrom 5 syns inte i strid när auralistan är dold")
+    end
+    C_UnitAuras.GetAuraDataBySpellName = function(u, n)
+      if u == "player" and n == "Maelstrom Weapon" then return { name = n, applications = SIM_SECRET } end
+    end
+    if dump("maelstrom by name, stacks secret"):find("MAELSTROM 5", 1, true) then
+      table.insert(errors, "Maelstrom 5 visas fast antalet är dolt")
+    end
+    local okD, errD = pcall(ns.commands.mwdebug)
+    if not okD then table.insert(errors, "mwdebug: " .. tostring(errD)) end
+    issecretvalue, C_UnitAuras = oldSecret, oldC
+    SIM_SHIELD = nil
+  end
   print("--- Ljud vid varningar: " .. SIM_SOUNDS .. " ---")
   if SIM_SOUNDS == 0 then table.insert(errors, "inget ljud trots alertSound = all") end
   ns.db.alertSound = nil
@@ -850,6 +879,51 @@ do
   end)
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
+end
+print("--- Find Minerals / Find Herbs ---")
+do
+  spells["Find Minerals"] = { 2580, 1 }; byId[2580] = "Find Minerals"
+  local oldC, oldU, oldCombat = C_UnitAuras, UnitAura, UnitAffectingCombat
+  local list = {}
+  if MODE == "modern" then
+    C_UnitAuras = { GetAuraDataByIndex = function(u, i, f)
+      if u == "player" and f == "HELPFUL" and list[i] then return { name = list[i], spellId = 1, applications = 0 } end
+    end }
+  else
+    UnitAura = function(u, i, f)
+      if u == "player" and f == "HELPFUL" and list[i] then return list[i], 0, 0, nil, 0, 0, "player", false, false, 1 end
+    end
+  end
+  ns.db.buffsOff = false; ns.db.shatterUnlocked = false; ns.db.buffHide = nil; ns.db.trackSeen = nil
+  local function shownFM()
+    for i = 1, 10 do
+      local b = rawget(_G, "ShamanPlanBuff" .. i)
+      if b and b.__shown and rawget(b, "spell") == "Find Minerals" then return true end
+    end
+    return false
+  end
+  local function check(label, want)
+    ns.RefreshBuffWatch()
+    local got = shownFM()
+    print("  " .. label .. ": " .. tostring(got))
+    if got ~= want then table.insert(errors, "Find Minerals " .. label .. ": väntade " .. tostring(want) .. ", fick " .. tostring(got)) end
+  end
+  list = {}; check("aldrig använd", false)
+  list = { "Find Minerals" }; check("aktiv", false)
+  if ns.db.trackSeen ~= "Find Minerals" then table.insert(errors, "Find Minerals kommer inte ihåg att den varit på") end
+  list = {}; check("borta efter död", true)
+  list = { "Track Humanoids" }; check("annan spårning aktiv", false)
+  list = {}; ns.db.buffHide = { ["Find Minerals"] = true }; check("avstängd i inställningarna", false)
+  ns.db.buffHide = nil; check("påslagen igen", true)
+  local found = false
+  for _, t in ipairs(ns.BuffWatchToggles()) do
+    if tostring(t.text()) == "Find Minerals" then found = true end
+    if tostring(t.text()) == "Find Herbs" then table.insert(errors, "Find Herbs har en tickbox fast den inte är lärd") end
+  end
+  if not found then table.insert(errors, "Find Minerals saknar tickbox") end
+  ns.db.trackSeen = nil; list = {}
+  C_UnitAuras, UnitAura = oldC, oldU
+  ns.RefreshBuffWatch()
 end
 print("--- Okända globaler som lästes ---")
 local names = {}

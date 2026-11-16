@@ -19,6 +19,16 @@ end
 
 -- Stacks of a buff on you, or nil when the game hides the number.
 local function Stacks(buff)
+  -- In combat the game hides names in the aura list, but looking the buff up by name
+  -- still works, so ask for it that way first.
+  if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
+    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, "player", buff, "HELPFUL")
+    if ok and a then
+      local count = a.applications
+      if Readable(count) then return count end
+      return nil
+    end
+  end
   for i = 1, 40 do
     local name, count
     if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
@@ -179,6 +189,24 @@ ns.RegisterCommand("move", true, function()
   f:EnableMouseWheel(ns.db.shatterUnlocked and true or false)
   if ns.RefreshBuffWatch then ns.RefreshBuffWatch() end
   ns.Print(ns.db.shatterUnlocked and ns.T("SH_UNLOCKED") or ns.T("SH_LOCKED"))
+end)
+
+-- "/acp mwdebug" (also in combat): what can the game tell us about the Maelstrom stacks?
+ns.RegisterCommand("mwdebug", false, function()
+  local function say(s) ns.Print("mwdebug: " .. s) end
+  local CU = C_UnitAuras
+  say("combat " .. tostring(UnitAffectingCombat("player")) .. ", spell known " .. tostring(ns.SpellInfo(MAELSTROM) ~= nil))
+  if not (CU and CU.GetAuraDataBySpellName) then say("GetAuraDataBySpellName is missing") return end
+  local ok, a = pcall(CU.GetAuraDataBySpellName, "player", MAELSTROM, "HELPFUL")
+  if not ok then say("by name: error " .. tostring(a):sub(1, 160)) return end
+  if not a then say("by name: nothing (no buff, or hidden)") return end
+  local n = a.applications
+  say("by name: found, applications " .. (Readable(n) and tostring(n) or "SECRET") .. ", auraInstanceID " .. tostring(a.auraInstanceID ~= nil))
+  if CU.GetAuraApplicationDisplayCount and a.auraInstanceID then
+    local ok2, s = pcall(CU.GetAuraApplicationDisplayCount, "player", a.auraInstanceID, 5, 5)
+    say("display count (5..5): " .. (not ok2 and "error" or (issecretvalue and issecretvalue(s)) and "SECRET" or tostring(s)))
+  end
+  say("Stacks() gives " .. tostring(Stacks(MAELSTROM)))
 end)
 
 ns.RegisterCommand("stormstrike", true, function()

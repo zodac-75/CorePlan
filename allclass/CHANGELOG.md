@@ -1,3 +1,9 @@
+# AllClassPlan 0.1.19
+
+- **New: campfire talk.** Sit by a campfire and a button shows up when you have the "Campfire Nearby" buff. Click it and your character says a funny line (jokes, greetings, weather talk, hundreds to pick from). `/acp campfire` says one too, and there is a tick box to turn the button off.
+- **Reminder for Find Minerals and Find Herbs.** When the tracking falls off (you died, say), an icon in the buff row reminds you and a click casts it again. It only shows for a tracking you know and have had on before, never while another tracking is active, and each one has its own tick box in the settings.
+- **Shaman: Maelstrom Weapon 5/5 now works in combat.** The call-out looks the buff up by name instead of reading the buff list, which the game hides in combat. `/acp mwdebug` shows what the game tells the addon, if it still doesn't show.
+
 # AllClassPlan 0.1.18
 
 - **Arrow to your trainers.** Click the "Trainer: ..." line in the crafting window, or the "train Expert: ..." goal line in the plan, and an arrow points to the nearest profession trainer; click again for the next one. Right-click also opens the map there.

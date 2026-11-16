@@ -2369,6 +2369,48 @@ do
   IsInGroup, IsInRaid = oldGroup, oldRaid
 end
 
+-- Lägereldsprat: knappen syns bara med lägerelds-buffen, ett klick /says en replik.
+do
+  local said = {}
+  local oldSend, oldCI, oldUA = rawget(_G, "SendChatMessage"), C_ChatInfo, C_UnitAuras
+  SendChatMessage = function(msg, chan) said[#said + 1] = { msg, chan } end
+  C_ChatInfo = nil
+  local fire = false
+  C_UnitAuras = { GetAuraDataBySpellName = function(u, n) if fire and u == "player" and n == "Campfire Nearby" then return { name = n } end end,
+    GetAuraDataByIndex = function() return nil end }
+  local unlocked = ns.db.shatterUnlocked
+  ns.db.shatterUnlocked = false
+  ns.RefreshCampfire()
+  local b = rawget(_G, "MagePlanCampfireButton")
+  if not b then table.insert(errors, "lägereldsknappen finns inte")
+  else
+    if b.__shown then table.insert(errors, "lägereldsknappen syns utan eld") end
+    fire = true
+    ns.RefreshCampfire()
+    if not b.__shown then table.insert(errors, "lägereldsknappen syns inte vid elden") end
+    b.__scripts.OnClick(b, "LeftButton")
+    b.__scripts.OnClick(b, "LeftButton") -- inom 6 s: ingen ny replik
+    if #said ~= 1 or said[1][2] ~= "SAY" then table.insert(errors, "lägereldsklick sa inte exakt en /say: " .. #said) end
+    print("  lägereld: " .. tostring(said[1] and said[1][1]))
+    ns.db.campfireOff = true; ns.RefreshCampfire()
+    if b.__shown then table.insert(errors, "lägereldsknappen syns fast avslagen") end
+    ns.db.campfireOff = nil
+  end
+  -- Alla repliker: inga kvarlämnade %-platshållare, under 255 tecken, inget %target% utan mål.
+  for i = 1, 400 do
+    local t = ns.CampfireLine()
+    if not t then table.insert(errors, "CampfireLine gav nil"); break end
+    if t:find("%%%a+%%") then table.insert(errors, "platshållare kvar: " .. t); break end
+    if #t > 255 then table.insert(errors, "för lång replik: " .. t); break end
+    if t:find("friend, you look like") then table.insert(errors, "mål-replik utan mål: " .. t); break end
+  end
+  for _, c in ipairs({ "MAGE", "PRIEST", "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "WARLOCK", "SHAMAN", "DRUID" }) do
+    if not (ns.CAMPFIRE_LINES.class[c] and #ns.CAMPFIRE_LINES.class[c] >= 5) then table.insert(errors, "klassrepliker saknas: " .. c) end
+  end
+  SendChatMessage, C_ChatInfo, C_UnitAuras = oldSend, oldCI, oldUA
+  ns.db.shatterUnlocked = unlocked
+  ns.RefreshCampfire()
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end
