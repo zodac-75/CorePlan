@@ -108,12 +108,24 @@ local function TraitMap()
   return map
 end
 
+-- The plans name talents in English; on another client language the game gives them in
+-- that language, so each talent is also filed under its English name (ns.Eng).
+local function AddEnglish(map)
+  local add = {}
+  for name, v in pairs(map) do
+    local en = ns.Eng(name)
+    if en ~= name and not map[en] then add[en] = v end
+  end
+  for en, v in pairs(add) do map[en] = v end
+  return map
+end
+
 -- All talents: name -> {tab, index, tier, rank, max, icon, nodeID}
 local cachedMap, cachedAt = nil, -10
 local function TalentMap()
   if cachedMap and GetTime() - cachedAt < 0.5 then return cachedMap end
   local map = TraitMap()
-  if map then cachedMap, cachedAt = map, GetTime(); return map end
+  if map then cachedMap, cachedAt = AddEnglish(map), GetTime(); return map end
   map = {}
   cachedMap, cachedAt = map, GetTime()
   if not (GetNumTalentTabs and GetNumTalents and GetTalentInfo) then return map end
@@ -131,7 +143,7 @@ local function TalentMap()
       end
     end
   end
-  return map
+  return AddEnglish(map)
 end
 
 -- Talents you chose to skip in this plan (right-click the next talent, or /@SLASH@ skip):

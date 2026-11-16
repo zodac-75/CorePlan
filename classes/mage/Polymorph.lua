@@ -64,7 +64,7 @@ end
 -- The sheep on one of these units: aura table (up), false (not there), nil (can't tell).
 local function AuraOn(unit, name)
   if not (C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName and UnitExists and UnitExists(unit)) then return nil end
-  local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, name, "HARMFUL")
+  local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, ns.Loc(name), "HARMFUL")
   if not ok then return nil end
   if a == nil then return false end
   if type(a) ~= "table" or not Readable(a) then return nil end

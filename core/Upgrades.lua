@@ -98,7 +98,7 @@ local function Stats(link)
 end
 
 function ns.ItemScore(link)
-  if not link then return 0 end
+  if not link or not ns.IsEnglishClient() then return 0 end
   local total, weights = 0, ns.STATS.weights -- follows the chosen talent plan
   for k, v in pairs(Stats(link)) do total = total + v * (weights[k] or 0) end
   return total
@@ -118,6 +118,7 @@ end
 
 -- Returns diff (or nil if not comparable) and the required level.
 function ns.CompareToEquipped(link)
+  if not ns.IsEnglishClient() then return nil end
   local ok, name, _, _, _, minLevel, _, _, _, equipLoc, _, _, classID, subclassID = pcall(ns.ItemInfo, link)
   if not ok or not name or not equipLoc then return nil end
   local slots = SLOTS[equipLoc]
@@ -168,6 +169,7 @@ local function ArmorAndDps(link)
 end
 
 function ns.PlainGearBetter(link)
+  if not ns.IsEnglishClient() then return false end
   local ok, name, _, _, _, _, _, _, _, equipLoc, _, _, classID, subclassID = pcall(ns.ItemInfo, link)
   if not ok or not name or not equipLoc then return false end
   local slots = SLOTS[equipLoc]
@@ -191,7 +193,7 @@ function ns.PlainGearBetter(link)
 end
 
 local function OnTooltip(tt)
-  if ns.db and ns.db.upgradeOff then return end
+  if (ns.db and ns.db.upgradeOff) or not ns.IsEnglishClient() then return end
   if not tt or tt == scanTip or not tt.GetItem then return end
   local ok, _, link = pcall(tt.GetItem, tt)
   if not ok or not link then return end

@@ -24,7 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LANG_DIR = os.path.join(ROOT, "lang")
 
 # code -> name in the language itself, in the order the menu cycles them
-LANGS = [("deDE", "Deutsch"), ("ruRU", "Русский"), ("frFR", "Français"), ("esES", "Español"), ("ptBR", "Português")]
+LANGS = [("deDE", "Deutsch"), ("ruRU", "Русский"), ("frFR", "Français"), ("esES", "Español"), ("ptBR", "Português"), ("itIT", "Italiano")]
 
 STR = r'"((?:[^"\\]|\\.)*)"'
 KEY = r'(?:\.([A-Za-z0-9_]+)|\["([^"]+)"\])'
@@ -73,6 +73,8 @@ def data_strings(text):
     out = {}
     for a, _ in PAIR.findall(text):
         a = unlua(a)
+        if re.fullmatch(r"[a-z]+", a):  # unit lists like { "target", "player" } aren't texts
+            continue
         if not re.search(r"%[^ ]", a) and a != "English":  # tooltip search patterns and the doc comment aren't texts
             out[h(a)] = a
     return out

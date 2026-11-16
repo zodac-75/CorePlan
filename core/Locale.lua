@@ -2,11 +2,11 @@
 local _, ns = ...
 
 local E, S = {}, {}
-ns.LOCALES = { enUS = E, svSE = S, deDE = {}, ruRU = {}, frFR = {}, esES = {}, ptBR = {} }
+ns.LOCALES = { enUS = E, svSE = S, deDE = {}, ruRU = {}, frFR = {}, esES = {}, ptBR = {}, itIT = {} }
 ns.LANGS = {
   { key = "enUS", name = "English" }, { key = "svSE", name = "Svenska" }, { key = "deDE", name = "Deutsch" },
   { key = "ruRU", name = "Русский" }, { key = "frFR", name = "Français" }, { key = "esES", name = "Español" },
-  { key = "ptBR", name = "Português" },
+  { key = "ptBR", name = "Português" }, { key = "itIT", name = "Italiano" },
 }
 ns.TX = ns.TX or {} -- data texts per language: [English text] = translation (Languages.lua)
 
@@ -98,7 +98,7 @@ E.CMD_lock = "lock/unlock all windows"
 E.CMD_reset = "reset window positions"
 E.CMD_all = "print the full talent plan"
 E.CMD_font = "change text size (Small, Normal, Large)"
-E.CMD_lang = "switch language: /@SLASH@ lang, or pick one: en, sv, de, ru, fr, es, pt"
+E.CMD_lang = "switch language: /@SLASH@ lang, or pick one: en, sv, de, ru, fr, es, pt, it"
 E.CMD_ranks = "check spell ranks and missing spells on your bars"
 E.CMD_craft = "show/hide the crafting assistant"
 E.CMD_minimap = "show/hide the minimap icon"
@@ -606,7 +606,7 @@ S.CMD_lock = "lås/lås upp alla fönster"
 S.CMD_reset = "återställ fönstrens positioner"
 S.CMD_all = "skriv ut hela talentplanen"
 S.CMD_font = "byt textstorlek (Liten, Normal, Stor)"
-S.CMD_lang = "byt språk: /@SLASH@ lang, eller välj: en, sv, de, ru, fr, es, pt"
+S.CMD_lang = "byt språk: /@SLASH@ lang, eller välj: en, sv, de, ru, fr, es, pt, it"
 S.CMD_ranks = "kolla spell-ranks och saknade spells på dina bars"
 S.CMD_craft = "visa/dölj crafting-assistenten"
 S.CMD_minimap = "visa/dölj minimap-ikonen"

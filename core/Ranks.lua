@@ -76,7 +76,7 @@ local function MacroSpells(body)
       for part in args:gmatch("[^;,]+") do
         part = part:gsub("^%s*!?", ""):gsub("%s+$", "")
         if part ~= "" then
-          local rank = tonumber(part:match("%(%s*[Rr]ank%s*(%d+)%s*%)"))
+          local rank = tonumber(part:match("%(%s*[Rr]ank%s*(%d+)%s*%)")) or tonumber(part:match("%([^%d%(%)]*(%d+)%s*%)%s*$"))
           local name = part:gsub("%s*%(.-%)%s*$", "")
           table.insert(out, { name = name:lower(), rank = rank })
         end

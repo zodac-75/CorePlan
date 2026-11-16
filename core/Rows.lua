@@ -20,11 +20,11 @@ local BASE_ROW_ICON, BASE_SMALL_ICON = 16, 18
 function ns.SpellIcon(name)
   local tex
   if C_Spell and C_Spell.GetSpellTexture then
-    local ok, t = pcall(C_Spell.GetSpellTexture, name)
+    local ok, t = pcall(C_Spell.GetSpellTexture, ns.Loc(name))
     if ok then tex = t end
   end
   if not tex and GetSpellTexture then
-    local ok, t = pcall(GetSpellTexture, name)
+    local ok, t = pcall(GetSpellTexture, ns.Loc(name))
     if ok then tex = t end
   end
   if issecretvalue and issecretvalue(tex) then return nil end

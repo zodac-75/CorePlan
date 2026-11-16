@@ -48,7 +48,7 @@ def test(cls, addon_dir):
     run([sys.executable, os.path.join(ROOT, "tools", "langs.py"), "check"], cwd=ROOT)  # placeholders in lang/
     run([sys.executable, os.path.join(ROOT, "tests", "luablocks.py")] + glob.glob(os.path.join(addon_dir, "*.lua")))
     for mode in ("classic", "modern"):
-        for lang in ("enUS", "svSE", "deDE", "ruRU", "frFR", "esES", "ptBR"):
+        for lang in ("enUS", "svSE", "deDE", "ruRU", "frFR", "esES", "ptBR", "itIT"):
             out = run([LUA, os.path.join(ROOT, "tests", cls + ".lua"), addon_dir, mode, lang], capture=True)
             if "--- FEL (0) ---" not in out:
                 print(out[-4000:])

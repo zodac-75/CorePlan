@@ -22,7 +22,7 @@ local function Stacks(buff)
   -- In combat the game hides names in the aura list, but looking the buff up by name
   -- still works, so ask for it that way first.
   if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
-    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, "player", buff, "HELPFUL")
+    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, "player", ns.Loc(buff), "HELPFUL")
     if ok and a then
       local count = a.applications
       if Readable(count) then return count end
@@ -197,7 +197,7 @@ ns.RegisterCommand("mwdebug", false, function()
   local CU = C_UnitAuras
   say("combat " .. tostring(UnitAffectingCombat("player")) .. ", spell known " .. tostring(ns.SpellInfo(MAELSTROM) ~= nil))
   if not (CU and CU.GetAuraDataBySpellName) then say("GetAuraDataBySpellName is missing") return end
-  local ok, a = pcall(CU.GetAuraDataBySpellName, "player", MAELSTROM, "HELPFUL")
+  local ok, a = pcall(CU.GetAuraDataBySpellName, "player", ns.Loc(MAELSTROM), "HELPFUL")
   if not ok then say("by name: error " .. tostring(a):sub(1, 160)) return end
   if not a then say("by name: nothing (no buff, or hidden)") return end
   local n = a.applications

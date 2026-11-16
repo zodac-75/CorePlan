@@ -1,3 +1,11 @@
+# AllClassPlan 0.1.20
+
+- **Works on more game languages.** Spells, buffs, talents and professions are now looked up by their spell ID instead of their English name, so the combat helper, buff watcher, rank check, talent plan and the rest also work on a German, French, Spanish, Portuguese, Russian or Italian game client (the game language is detected on its own). English clients behave exactly as before. I can only play on an English client myself, so please tell me if something is still off on yours. `/acp ids` shows which names the game gives back on your client.
+- **Italian added** as an interface language (Italiano), next to English, Svenska, Deutsch, Русский, Français, Español and Português. Try `/acp lang it`.
+- **The upgrade check in tooltips is off on non-English clients for now.** It reads the item tooltip text, which is English only. It works as before on English clients.
+- Rank check also understands macros with a non-English rank in brackets, for example "(Rang 1)".
+- Fixed a language check that wrongly reported a missing text.
+
 # AllClassPlan 0.1.19
 
 - **New: campfire talk.** Sit by a campfire and a button shows up when you have the "Campfire Nearby" buff. Click it and your character says a funny line (jokes, greetings, weather talk, hundreds to pick from). `/acp campfire` says one too, and there is a tick box to turn the button off.

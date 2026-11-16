@@ -14,7 +14,7 @@ local lastState
 local function HasAny(unit, filter, names)
   if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
     for name in pairs(names) do
-      local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, name, filter)
+      local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, ns.Loc(name), filter)
       if ok and a then return true end
     end
   end
@@ -252,7 +252,7 @@ ns.RegisterCommand("shatterdebug", false, function()
   -- Does Ice Lance light up (the game's proc glow)?
   local lanceId
   pcall(function()
-    local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo("Ice Lance")
+    local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(ns.Loc("Ice Lance"))
     lanceId = info and info.spellID
     if not lanceId and GetSpellInfo then lanceId = select(7, GetSpellInfo("Ice Lance")) end
   end)

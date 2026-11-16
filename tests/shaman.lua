@@ -925,6 +925,37 @@ do
   C_UnitAuras, UnitAura = oldC, oldU
   ns.RefreshBuffWatch()
 end
+print("--- Annat klientspråk (spell-ID) ---")
+do
+  local oldCS, oldC, oldU, oldGSI = C_Spell, C_UnitAuras, UnitAura, GetSpellInfo
+  local idName = {}
+  for en, id in pairs(ns.SPELL_IDS) do idName[id] = en end
+  -- A "German" client: every spell has its name in another language.
+  C_Spell = setmetatable({ GetSpellName = function(id) local en = idName[id]; return en and ("DE " .. en) end }, { __index = oldCS })
+  ns.LocReset()
+  local function want(label, got, exp)
+    print("  " .. label .. ": " .. tostring(got))
+    if got ~= exp then table.insert(errors, "klientspråk " .. label .. ": väntade " .. tostring(exp) .. ", fick " .. tostring(got)) end
+  end
+  want("Loc", ns.Loc("Lightning Shield"), "DE Lightning Shield")
+  want("Eng", ns.Eng("DE Lightning Shield"), "Lightning Shield")
+  want("okänt namn", ns.Loc("Not A Spell"), "Not A Spell")
+  local list = { "DE Lightning Shield" }
+  if MODE == "modern" then
+    C_UnitAuras = { GetAuraDataByIndex = function(u, i, f)
+      if u == "player" and f == "HELPFUL" and list[i] then return { name = list[i], spellId = 1, applications = 0 } end
+    end }
+  else
+    UnitAura = function(u, i, f)
+      if u == "player" and f == "HELPFUL" and list[i] then return list[i], 0, 0, nil, 0, 0, "player", false, false, 1 end
+    end
+  end
+  want("aura på", ns.AuraByName("player", "HELPFUL", "Lightning Shield"), true)
+  want("aura saknas", ns.AuraByName("player", "HELPFUL", "Water Shield"), false)
+  C_Spell, C_UnitAuras, UnitAura, GetSpellInfo = oldCS, oldC, oldU, oldGSI
+  ns.LocReset()
+  want("tillbaka till engelska", ns.Loc("Lightning Shield"), "Lightning Shield")
+end
 print("--- Okända globaler som lästes ---")
 local names = {}
 for k in pairs(missingGlobals) do table.insert(names, k) end

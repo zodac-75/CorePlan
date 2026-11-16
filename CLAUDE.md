@@ -66,6 +66,11 @@ description for the project; descriptions are generated from the same text for e
   secret. Check with `ns.Readable(v)`. For mana use `C_CurveUtil.CreateCurve` (Step) +
   `UnitPowerPercent(unit, 0, false, curve)` and feed the secret into `frame:SetAlpha`.
   For buffs, fall back to `C_UnitAuras.GetAuraDataBySpellName`.
+- **Client language**: data and code name spells, auras and talents in English. Anything that asks
+  the game by name goes through `ns.Loc(name)` (English -> client name), and names from the game
+  through `ns.Eng(name)` (`ns.ForEachAura` already does that). Both need the spell's ID in
+  `core/SpellIds.lua`; a new spell name needs `python3 tools/genspellids.py SpellName.csv` (the csv
+  from wago.tools for the current build; the sandbox can't reach wago, fetch it in his Chrome).
 - **Secure buttons** (buff watcher, bag check): set `type1`/`spell1`/`macrotext1` only out of
   combat; clear them and hide on `PLAYER_REGEN_DISABLED`. Right-click handled in `OnMouseUp`.
   Register clicks `("AnyUp", "AnyDown")`.

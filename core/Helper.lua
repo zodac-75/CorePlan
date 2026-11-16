@@ -42,14 +42,14 @@ castWatch:SetScript("OnEvent", function(_, _, _, _, spellID)
   pcall(function()
     local name = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID))
       or (GetSpellInfo and GetSpellInfo(spellID))
-    if type(name) == "string" and not (issecretvalue and issecretvalue(name)) then lastCast[name] = GetTime() end
+    if type(name) == "string" and not (issecretvalue and issecretvalue(name)) then lastCast[ns.Eng(name)] = GetTime() end
   end)
 end)
 ns.lastCast = lastCast
 
 -- The spell's cooldown in seconds without talents (for when the live one is hidden).
 local function BaseCooldown(spell)
-  local ok, ms = pcall(GetSpellBaseCooldown, spell)
+  local ok, ms = pcall(GetSpellBaseCooldown, ns.Loc(spell))
   if ok and ns.Readable(ms) and ms > 0 then return ms / 1000 end
   return 8
 end
@@ -61,9 +61,9 @@ function ns.SpellUsable(spell)
   if not ns.SpellInfo(spell) then return false end
   local ok, usable, noPower
   if C_Spell and C_Spell.IsSpellUsable then
-    ok, usable, noPower = pcall(C_Spell.IsSpellUsable, spell)
+    ok, usable, noPower = pcall(C_Spell.IsSpellUsable, ns.Loc(spell))
   elseif IsUsableSpell then
-    ok, usable, noPower = pcall(IsUsableSpell, spell)
+    ok, usable, noPower = pcall(IsUsableSpell, ns.Loc(spell))
   end
   if not ok or (issecretvalue and (issecretvalue(usable) or issecretvalue(noPower))) then return false end
   if not usable or noPower then return false end

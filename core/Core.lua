@@ -26,9 +26,93 @@ function ns.RegisterCommand(cmd, help, fn)
   if help then table.insert(ns.helpLines, cmd) end
 end
 
+-- Spells by English name in any client language. ns.SPELL_IDS (core/SpellIds.lua) has the
+-- spell ID for each English name the addon uses, and the game knows that ID's name in the
+-- client's language. Loc: English -> client name. Eng: client name -> English. On an English
+-- client both give the name back unchanged; a name we have no ID for passes through as is.
+local toLocal, toEnglish = {}, nil
+function ns.Loc(name)
+  if type(name) ~= "string" then return name end
+  local l = toLocal[name]
+  if l then return l end
+  local id = ns.SPELL_IDS and ns.SPELL_IDS[name]
+  if not id then return name end
+  local n
+  if C_Spell and C_Spell.GetSpellName then
+    local ok, v = pcall(C_Spell.GetSpellName, id)
+    if ok then n = v end
+  end
+  if n == nil and GetSpellInfo then
+    local ok, v = pcall(GetSpellInfo, id)
+    if ok then n = type(v) == "table" and v.name or v end
+  end
+  if type(n) ~= "string" or n == "" or (issecretvalue and issecretvalue(n)) then return name end
+  toLocal[name] = n
+  if toEnglish and n ~= name then toEnglish[n] = name end
+  return n
+end
+
+function ns.Eng(name)
+  if type(name) ~= "string" then return name end
+  if not toEnglish then
+    toEnglish = {}
+    for en in pairs(ns.SPELL_IDS or {}) do
+      local l = ns.Loc(en)
+      if l ~= en then toEnglish[l] = en end
+    end
+  end
+  return toEnglish[name] or name
+end
+
+-- "/@SLASH@ ids": do the spell IDs resolve in this client? On an English client every name must
+-- come back unchanged; on another language they come back translated.
+ns.RegisterCommand("ids", false, function()
+  local total, same, translated, missing, wrong = 0, 0, 0, {}, {}
+  for en, id in pairs(ns.SPELL_IDS or {}) do
+    total = total + 1
+    local n
+    if C_Spell and C_Spell.GetSpellName then
+      local ok, v = pcall(C_Spell.GetSpellName, id)
+      if ok then n = v end
+    end
+    if n == nil and GetSpellInfo then
+      local ok, v = pcall(GetSpellInfo, id)
+      if ok then n = type(v) == "table" and v.name or v end
+    end
+    if type(n) ~= "string" or n == "" or (issecretvalue and issecretvalue(n)) then
+      table.insert(missing, en)
+    elseif n == en then
+      same = same + 1
+    else
+      translated = translated + 1
+      if ns.IsEnglishClient() then table.insert(wrong, en .. " = " .. n) end
+    end
+  end
+  table.sort(missing); table.sort(wrong)
+  local loc = "?"
+  if GetLocale then local ok, l = pcall(GetLocale); if ok then loc = tostring(l) end end
+  Print("ids: client " .. loc .. ", " .. total .. " spell names: " .. same .. " same, " .. translated .. " translated, " .. #missing .. " unknown to the game")
+  if #missing > 0 then Print("  unknown: " .. table.concat(missing, ", ", 1, math.min(#missing, 25)) .. (#missing > 25 and ", ..." or "")) end
+  if #wrong > 0 then Print("  DIFFERENT from English on an English client: " .. table.concat(wrong, "; ", 1, math.min(#wrong, 10))) end
+  if ns.IsEnglishClient() and #wrong == 0 then Print("  English client: no name changed, good.") end
+end)
+
+-- Is the game client in English? The upgrade check reads English tooltip text, so it only
+-- works there; other clients skip it rather than guess.
+function ns.IsEnglishClient()
+  if not GetLocale then return true end
+  local ok, loc = pcall(GetLocale)
+  if not ok or type(loc) ~= "string" then return true end
+  return loc == "enUS" or loc == "enGB"
+end
+
+-- Forget the names (tests switch the client language).
+function ns.LocReset() toLocal, toEnglish = {}, nil end
+
 -- Returnerar namn och spellID för en spell (namn eller ID), eller nil om okänd.
 function ns.SpellInfo(spell)
   if spell == nil then return nil end
+  spell = ns.Loc(spell)
   if C_Spell and C_Spell.GetSpellInfo then
     local ok, info = pcall(C_Spell.GetSpellInfo, spell)
     if ok and type(info) == "table" and info.name then return info.name, info.spellID end
@@ -41,6 +125,7 @@ function ns.SpellInfo(spell)
 end
 
 function ns.SpellCooldown(spell)
+  spell = ns.Loc(spell)
   if C_Spell and C_Spell.GetSpellCooldown then
     local ok, info = pcall(C_Spell.GetSpellCooldown, spell)
     if ok and type(info) == "table" then return info.startTime or 0, info.duration or 0 end
@@ -114,7 +199,7 @@ function ns.ForEachAura(unit, filter, fn)
     if issecretvalue and issecretvalue(name) then
       unsure = true
     else
-      local ok2, stop = pcall(fn, name, spellId)
+      local ok2, stop = pcall(fn, ns.Eng(name), spellId)
       if not ok2 then unsure = true elseif stop then return true end
     end
   end
@@ -124,7 +209,7 @@ end
 -- Has the unit this aura? true, false, or nil when we can't tell.
 function ns.AuraByName(unit, filter, name)
   if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
-    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, name, filter)
+    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, ns.Loc(name), filter)
     if ok and a then return true end
   end
   local found, unsure = ns.ForEachAura(unit, filter, function(n) return n == name end)
@@ -167,7 +252,7 @@ local function FromProfessionsAPI(profName)
   for _, idx in ipairs({ a or false, b or false, c or false, d or false, e or false, f or false }) do
     if idx then
       local okI, name, _, rank, maxRank = pcall(GetProfessionInfo, idx)
-      if okI and name == profName and type(rank) == "number" then return rank, maxRank end
+      if okI and (name == profName or name == ns.Loc(profName)) and type(rank) == "number" then return rank, maxRank end
     end
   end
   return nil
@@ -179,7 +264,7 @@ local function FromSkillLines(profName)
   if not ok or not n then return nil end
   for i = 1, n do
     local okLine, skillName, isHeader, _, rank, _, _, maxRank = pcall(GetSkillLineInfo, i)
-    if okLine and not isHeader and skillName == profName and type(rank) == "number" then
+    if okLine and not isHeader and (skillName == profName or skillName == ns.Loc(profName)) and type(rank) == "number" then
       return rank, maxRank
     end
   end
@@ -188,6 +273,7 @@ end
 
 function ns.RememberProf(profName, rank, maxRank)
   if not (ns.db and profName and type(rank) == "number") then return end
+  profName = ns.Eng(profName) -- filed under the English name, whatever the client language
   ns.db.profCache = ns.db.profCache or {}
   local old = ns.db.profCache[profName] or {}
   ns.db.profCache[profName] = { rank = rank, max = maxRank or old.max }
@@ -228,10 +314,23 @@ end
 profEvents:SetScript("OnEvent", function(_, event, msg)
   if not ns.db or ns.retired then return end
   if event == "CHAT_MSG_SKILL" then
-    local name, rank = (msg or ""):match("Your skill in (.+) has increased to (%d+)")
+    -- The game's own message formats (any client language), then the English ones.
+    local function Pattern(fmt)
+      if type(fmt) ~= "string" or fmt == "" then return nil end
+      local p = fmt:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1"):gsub("%%%%s", "(.+)"):gsub("%%%%d", "(%%d+)")
+      return "^" .. p .. "$"
+    end
+    msg = msg or ""
+    local name, rank
+    local p1 = Pattern(rawget(_G, "SKILL_RANK_UP"))
+    if p1 then name, rank = msg:match(p1) end
+    if not name then name, rank = msg:match("Your skill in (.+) has increased to (%d+)") end
     if name then ns.RememberProf(name, tonumber(rank)) end
-    local learned = (msg or ""):match("You have gained the (.+) skill")
-    if learned and not (ns.db.profCache and ns.db.profCache[learned]) then ns.RememberProf(learned, 1) end
+    local learned
+    local p2 = Pattern(rawget(_G, "ERR_SKILL_GAINED"))
+    if p2 then learned = msg:match(p2) end
+    if not learned then learned = msg:match("You have gained the (.+) skill") end
+    if learned and not (ns.db.profCache and ns.db.profCache[ns.Eng(learned)]) then ns.RememberProf(learned, 1) end
   else
     ReadOpenProfession()
   end

@@ -21,7 +21,7 @@ local function Readable(v) return v ~= nil and not (issecretvalue and issecretva
 function ns.NearCampfire()
   if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
     for _, n in ipairs(BUFFS) do
-      local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, "player", n, "HELPFUL")
+      local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, "player", ns.Loc(n), "HELPFUL")
       if ok and a then return true end
     end
   end

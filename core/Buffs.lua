@@ -198,7 +198,7 @@ end
 local function LookupByName(unit, names)
   if not (names and C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName) then return nil end
   for _, n in ipairs(names) do
-    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, n, "HELPFUL")
+    local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, unit, ns.Loc(n), "HELPFUL")
     if not ok then return nil end
     if a then
       local exp = a.expirationTime
@@ -327,7 +327,7 @@ end
 local function SpellRange(spell, unit)
   local f = (C_Spell and C_Spell.IsSpellInRange) or IsSpellInRange
   if not (f and spell) then return nil end
-  local ok, r = pcall(f, spell, unit)
+  local ok, r = pcall(f, ns.Loc(spell), unit)
   if not ok or r == nil or (issecretvalue and issecretvalue(r)) then return nil end
   return r == true or r == 1
 end
@@ -473,10 +473,10 @@ local function Update()
       -- Party: a /cast that names its target, so the game can never put it on you instead
       -- (auto self-cast); out of range, the click does nothing at all.
       b:SetAttribute("spell1", nil)
-      b:SetAttribute("macrotext1", "/cast [@" .. n.unit .. ",help,nodead] " .. n.spell)
+      b:SetAttribute("macrotext1", "/cast [@" .. n.unit .. ",help,nodead] " .. ns.Loc(n.spell))
     else
       b:SetAttribute("macrotext1", nil)
-      b:SetAttribute("spell1", n.spell)
+      b:SetAttribute("spell1", ns.Loc(n.spell))
     end
     b:SetAttribute("unit", n.unit or "player")
     b.who:SetText(n.who and n.who:sub(1, 7) or "")
