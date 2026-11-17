@@ -435,7 +435,7 @@ local function ShowDetail()
     if not name then
       waiting = true
       if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
-    elseif (quality or 0) >= 2 and ns.ItemScore(link) > 0 and ns.CompareToEquipped(link) ~= nil then
+    elseif (quality or 0) >= 2 and ns.ItemScore(link) > 0 and (ns.CompareToEquipped(link) or 0) > 0 then -- only upgrades
       local r = GetRow()
       r:SetHeight(ROW_H())
       r:SetPoint("TOPLEFT", 4, y)

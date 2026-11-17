@@ -1,3 +1,9 @@
+# AllClassPlan 0.1.23
+
+- **Shaman: the Maelstrom Weapon 5/5 call-out now works in combat.** The game doesn't list the talent as a known spell, so the call-out only checked the buff list, which is hidden in combat. It now always looks the buff up by name. `/acp mwdebug` also shows whether the talent is learned.
+- **Shaman: new Enhancement talent plan** (12/31/8), after player feedback: gear is Strength now, so only 2/5 Ancestral Knowledge; Maelstrom Weapon was nerfed, so 2/5; Tidal Focus 5/5 (hit) and Mindfulness 3/3 (mana) from Restoration; the rest goes into Elemental (Concussion, Elemental Devastation, Call of Flame).
+- **Dungeon guide: the loot list only shows upgrades** for you (also ones you are not high enough level for yet). Before, it also listed items that are worse than what you wear. When nothing is better, it says so instead of showing a raw text key.
+
 # AllClassPlan 0.1.22
 
 - **Fixed wrong "Downgrade" / "Upgrade" in item tooltips.** The upgrade check now understands more tooltip lines:

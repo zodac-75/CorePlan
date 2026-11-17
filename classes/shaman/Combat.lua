@@ -13,10 +13,6 @@ local function Readable(v)
   return type(v) == "number" and not (issecretvalue and issecretvalue(v))
 end
 
-local function PlayerHas(buff)
-  return ns.ForEachAura("player", "HELPFUL", function(n) return n == buff end)
-end
-
 -- Stacks of a buff on you, or nil when the game hides the number.
 local function Stacks(buff)
   -- In combat the game hides names in the aura list, but looking the buff up by name
@@ -70,7 +66,9 @@ local function Update()
   local main, state, sub
 
   -- Maelstrom Weapon: at 5 stacks Lightning Bolt is instant.
-  if ns.SpellInfo(MAELSTROM) or PlayerHas(MAELSTROM) then
+  -- No "do you know it" check first: the talent is passive and the game often doesn't find it by
+  -- name, and in combat the aura list hides names. The lookup by name works either way.
+  do
     local n = Stacks(MAELSTROM)
     if n and n >= 5 then
       state = "go"
@@ -195,7 +193,8 @@ end)
 ns.RegisterCommand("mwdebug", false, function()
   local function say(s) ns.Print("mwdebug: " .. s) end
   local CU = C_UnitAuras
-  say("combat " .. tostring(UnitAffectingCombat("player")) .. ", spell known " .. tostring(ns.SpellInfo(MAELSTROM) ~= nil))
+  say("combat " .. tostring(UnitAffectingCombat("player")) .. ", spell known " .. tostring(ns.SpellInfo(MAELSTROM) ~= nil)
+    .. ", talent " .. tostring(IsPlayerSpell and ns.SPELL_IDS and ns.SPELL_IDS[MAELSTROM] and IsPlayerSpell(ns.SPELL_IDS[MAELSTROM]) or false))
   if not (CU and CU.GetAuraDataBySpellName) then say("GetAuraDataBySpellName is missing") return end
   local ok, a = pcall(CU.GetAuraDataBySpellName, "player", ns.Loc(MAELSTROM), "HELPFUL")
   if not ok then say("by name: error " .. tostring(a):sub(1, 160)) return end

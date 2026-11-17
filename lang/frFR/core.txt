@@ -407,6 +407,7 @@ DG_UNKNOWN = Donneur de quête inconnu
 DG_NOQUESTS = Aucune quête ici pour votre personnage.
 DG_NEW = Nouveau dans WoW Forever : ses quêtes ne sont pas encore connues.
 DG_NEW_LOOT = Butin pas encore connu.
+DG_NOLOOT = Rien ici n'est meilleur que ton équipement.
 DG_LOADING = Chargement des objets…
 DG_DROPS = Tombe sur %s
 DG_REQ = niveau %d requis

@@ -794,6 +794,15 @@ do
     if not dump("maelstrom by name, list hidden"):find("MAELSTROM 5", 1, true) then
       table.insert(errors, "Maelstrom 5 syns inte i strid när auralistan är dold")
     end
+    -- The talent is passive: the game doesn't find it by name in the spellbook (a player's
+    -- /acp mwdebug said "spell known false"). The call-out must still work in combat.
+    local mwSpell = spells["Maelstrom Weapon"]; spells["Maelstrom Weapon"] = nil
+    if ns.LocReset then ns.LocReset() end
+    if not dump("maelstrom by name, talent not in spellbook"):find("MAELSTROM 5", 1, true) then
+      table.insert(errors, "Maelstrom 5 syns inte i strid när talangen inte hittas som spell")
+    end
+    spells["Maelstrom Weapon"] = mwSpell
+    if ns.LocReset then ns.LocReset() end
     C_UnitAuras.GetAuraDataBySpellName = function(u, n)
       if u == "player" and n == "Maelstrom Weapon" then return { name = n, applications = SIM_SECRET } end
     end

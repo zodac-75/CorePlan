@@ -14,6 +14,7 @@ local expect = {
   { "Equip: Restores 4 mana per 5 sec.", mage="mp5", shaman="mp5", druid="mp5", paladin="mp5", warlock="mp5", priest="mp5", hunter="mp5" },
   { "+4 Mana per 5 sec", mage="mp5", priest="mp5" },
   { "+5 Nature Spell Damage", shaman="school", druid="school" },
+  { "+8 Ranged Attack Power", warrior="rap", hunter="rap", rogue="rap" },
   { "Equip: Increases the attack power of your pet by 20.", mage=false, hunter=false, warlock=false },
 }
 local classes = { "mage", "shaman", "druid", "warrior", "paladin", "warlock", "priest", "hunter", "rogue" }

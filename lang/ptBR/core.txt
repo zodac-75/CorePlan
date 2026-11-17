@@ -407,6 +407,7 @@ DG_UNKNOWN = Quem dá a missão é desconhecido
 DG_NOQUESTS = Não há missões aqui para o seu personagem.
 DG_NEW = Novidade no WoW Forever: as missões ainda não são conhecidas.
 DG_NEW_LOOT = Butim ainda não conhecido.
+DG_NOLOOT = Nada aqui é melhor que seu equipamento.
 DG_LOADING = Carregando itens…
 DG_DROPS = Dropa de %s
 DG_REQ = requer nível %d

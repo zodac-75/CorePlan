@@ -5,11 +5,14 @@ local _, ns = ...
 -- Main professions until you pick or learn others.
 ns.DEFAULT_PROFS = { "Alchemy", "Herbalism" }
 
--- Talent point per level: Enhancement leveling (40/11/0 at 60).
--- Checked against the live tree (build 1.60.1.70790): every talent is taken only once
+-- Talent point per level: Enhancement leveling (12/31/8 at 60).
+-- Checked against the live tree (build 1.60.1.70938): every talent is taken only once
 -- its row has 5 points per row spent in that tree, and Flurry (Mental Dexterity 3/3),
 -- Improved Stormstrike (Stormstrike) and Rage of the Farseer (Mental Quickness 2/2)
 -- come after what they need.
+-- 2026-11-17, player feedback: gear went from Intellect to Strength, so only 2/5 Ancestral
+-- Knowledge; Maelstrom Weapon was nerfed, so only 2/5; Tidal Focus (hit) and Mindfulness (mana)
+-- from Restoration; the rest goes into Elemental.
 ns.talents = {
   [10] = "Thundering Strikes 1/5", [11] = "Thundering Strikes 2/5",
   [12] = "Thundering Strikes 3/5", [13] = "Thundering Strikes 4/5",
@@ -25,18 +28,20 @@ ns.talents = {
   [31] = "Improved Stormstrike 1/2", [32] = "Improved Stormstrike 2/2",
   [33] = "Improved Ghost Wolf 1/2", [34] = "Improved Ghost Wolf 2/2",
   [35] = "Mental Quickness 1/2", [36] = "Mental Quickness 2/2",
-  [37] = "Ancestral Knowledge 3/5",
-  [38] = "Maelstrom Weapon 1/5", [39] = "Maelstrom Weapon 2/5", [40] = "Maelstrom Weapon 3/5",
-  [41] = "Maelstrom Weapon 4/5", [42] = "Maelstrom Weapon 5/5",
-  [43] = "Rage of the Farseer 1/1",
-  [44] = "Ancestral Knowledge 4/5", [45] = "Ancestral Knowledge 5/5",
-  -- 46-60: Elemental for more Earth Shock / Lightning Bolt damage and melee crit after spell crits.
-  [46] = "Concussion 1/5", [47] = "Concussion 2/5", [48] = "Concussion 3/5",
-  [49] = "Concussion 4/5", [50] = "Concussion 5/5",
-  [51] = "Elemental Devastation 1/3", [52] = "Elemental Devastation 2/3",
-  [53] = "Elemental Devastation 3/3",
-  [54] = "Call of Flame 1/3", [55] = "Call of Flame 2/3", [56] = "Call of Flame 3/3",
-  [57] = "Toughness 1/5", [58] = "Toughness 2/5", [59] = "Toughness 3/5", [60] = "Toughness 4/5",
+  [37] = "Maelstrom Weapon 1/5", [38] = "Maelstrom Weapon 2/5",
+  [39] = "Toughness 1/5",
+  [40] = "Rage of the Farseer 1/1",
+  -- 41-48: Restoration for hit (Tidal Focus) and mana while casting (Mindfulness).
+  [41] = "Tidal Focus 1/5", [42] = "Tidal Focus 2/5", [43] = "Tidal Focus 3/5",
+  [44] = "Tidal Focus 4/5", [45] = "Tidal Focus 5/5",
+  [46] = "Mindfulness 1/3", [47] = "Mindfulness 2/3", [48] = "Mindfulness 3/3",
+  -- 49-60: Elemental for more Earth Shock / Lightning Bolt damage and melee crit after spell crits.
+  [49] = "Concussion 1/5", [50] = "Concussion 2/5", [51] = "Concussion 3/5",
+  [52] = "Concussion 4/5", [53] = "Concussion 5/5",
+  [54] = "Elemental Devastation 1/3", [55] = "Elemental Devastation 2/3",
+  [56] = "Elemental Devastation 3/3",
+  [57] = "Call of Flame 1/3", [58] = "Call of Flame 2/3", [59] = "Call of Flame 3/3",
+  [60] = "Reverberation 1/5",
 }
 
 -- Gear, quests and consumables worth knowing about at the level.
@@ -104,7 +109,8 @@ ns.STATS.weights = {
 }
 ns.STATS.patterns = {
   { "%((%d+%.?%d*) damage per second%)", "wdps" },
-  { "[Rr]anged [Aa]ttack [Pp]ower", "rap" }, -- no weight: not a stat for this class
+  { "[Rr]anged [Aa]ttack [Pp]ower by (%d+)", "rap" }, -- no weight: not a stat for this class
+  { "^%+(%d+) Ranged Attack Power", "rap" },
   { "[Aa]ttack [Pp]ower by (%d+)", "ap" },
   { "^%+(%d+) Attack Power", "ap" },
   { "critical strike with spells by (%d+)%%", "scrit" },

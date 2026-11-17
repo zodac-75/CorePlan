@@ -126,7 +126,8 @@ ns.PLAN_WEIGHTS = {
 ns.STATS.weights = ns.PLAN_WEIGHTS.prot
 ns.STATS.patterns = {
   { "%((%d+%.?%d*) damage per second%)", "wdps" },
-  { "[Rr]anged [Aa]ttack [Pp]ower", "rap" }, -- no weight: not a stat for this class
+  { "[Rr]anged [Aa]ttack [Pp]ower by (%d+)", "rap" }, -- no weight: not a stat for this class
+  { "^%+(%d+) Ranged Attack Power", "rap" },
   { "[Aa]ttack [Pp]ower by (%d+)", "ap" },
   { "^%+(%d+) Attack Power", "ap" },
   { "critical strike with spells by (%d+)%%", "scrit" },
