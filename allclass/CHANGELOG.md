@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.24
+
+- **Dungeon guide on non-English game clients:** the loot list now shows all loot your class can wear, with a note that the comparison with your gear needs an English client. Before, it was empty and said nothing was better than what you wear.
+
 # AllClassPlan 0.1.23
 
 - **Shaman: the Maelstrom Weapon 5/5 call-out now works in combat.** The game doesn't list the talent as a known spell, so the call-out only checked the buff list, which is hidden in combat. It now always looks the buff up by name. `/acp mwdebug` also shows whether the talent is learned.

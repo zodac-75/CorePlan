@@ -247,6 +247,10 @@ local items = {
   [6001] = { "Old Robe", 1, 12, "INVTYPE_CHEST", 50, 4, 1, 0, 1, 10 },
   [6002] = { "Leather Vest", 2, 22, "INVTYPE_CHEST", 400, 4, 1, 2, 2, 20 },
   [6003] = { "Future Gloves", 2, 30, "INVTYPE_HAND", 400, 4, 1, 2, 1, 30 },
+  -- Deadmines loot for the loot list: cloth a mage can wear, and plate it can't.
+  [1929] = { "Silk-threaded Trousers", 2, 20, "INVTYPE_LEGS", 400, 4, 1, 1, 1, 13 },
+  [5193] = { "Cape of the Brotherhood", 3, 24, "INVTYPE_CLOAK", 500, 4, 1, 1, 1, 19 },
+  [1930] = { "Test Plate Legs", 2, 20, "INVTYPE_LEGS", 400, 4, 1, 1, 4, 13 },
 }
 function GetItemInfoMock(item)
   local id = type(item) == "number" and item or tonumber(tostring(item):match("item:(%d+)"))
@@ -573,6 +577,31 @@ do
     end
     SIM_DONE, SIM_LOG = oldDone, oldLog
     fire("QUEST_LOG_UPDATE")
+    -- Loot list on a non-English client: no comparison, so it lists what the class can wear
+    -- (and says why) instead of "nothing is better" for everything.
+    local function lootRows(locale)
+      local oldLoc = rawget(_G, "GetLocale")
+      GetLocale = function() return locale end
+      for _, b in ipairs(listed) do if b.dungeon.name == "The Deadmines" then b.__scripts.OnClick(b) end end
+      local rows, note, none = 0, false, false
+      for _, w in ipairs(allFrames) do
+        if w.__shown then
+          local t = (w.text and w.text.__text) or w.__text or ""
+          if w.__kind == "Button" and t:find("item:", 1, true) then rows = rows + 1 end
+          if t:find(ns.T("DG_LOOT_EN"), 1, true) then note = true end
+          if t:find(ns.T("DG_NOLOOT"), 1, true) then none = true end
+        end
+      end
+      GetLocale = oldLoc
+      return rows, note, none
+    end
+    local rEn, nEn = lootRows("enUS")
+    local rDe, nDe, noneDe = lootRows("deDE")
+    print("  loot-rader Deadmines: enUS " .. rEn .. ", deDE " .. rDe)
+    if nEn then table.insert(errors, "engelsk klient visar 'kräver engelsk klient'") end
+    if not nDe then table.insert(errors, "tysk klient: loot-listan säger inte varför jämförelsen saknas") end
+    if noneDe then table.insert(errors, "tysk klient: loot-listan säger 'inget är bättre'") end
+    if rDe ~= 2 then table.insert(errors, "tysk klient: väntade 2 loot-rader (tyget, inte plåten), fick " .. rDe) end
     now = now + 2; runTimers(now)
     OpenWorldMap = oldOpen
   end

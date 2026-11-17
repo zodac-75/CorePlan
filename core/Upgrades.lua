@@ -131,6 +131,16 @@ local function IsTwoHander(link)
   return ok and equipLoc == "INVTYPE_2HWEAPON"
 end
 
+-- Can your class wear or wield this? Uses only item IDs and types, so it works on every
+-- client language (the stat comparison below needs English tooltips).
+function ns.CanWear(link)
+  local ok, name, _, _, _, _, _, _, _, equipLoc, _, _, classID, subclassID = pcall(ns.ItemInfo, link)
+  if not ok or not name or not equipLoc or not SLOTS[equipLoc] then return false end
+  if classID == 4 then return USABLE_ARMOR[subclassID] and true or false end
+  if classID == 2 then return USABLE_WEAPON[subclassID] and true or false end
+  return false
+end
+
 -- Returns diff (or nil if not comparable) and the required level.
 function ns.CompareToEquipped(link)
   if not ns.IsEnglishClient() then return nil end

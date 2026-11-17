@@ -429,13 +429,18 @@ local function ShowDetail()
   -- Loot for your class
   y = Header(y - 6, ns.T("DG_LOOT"))
   local lootShown, waiting = 0, false
+  -- The stat comparison reads English tooltips. On other clients list everything your class can
+  -- wear instead of only upgrades, and say why there is no comparison.
+  local english = ns.IsEnglishClient()
+  if not english then y = SmallText(y, ns.T("DG_LOOT_EN")) end
   for _, l in ipairs(d.loot) do
     local id, boss, req = l[1], l[2], l[3]
     local name, link, quality, _, _, _, _, _, _, icon, _, classID, subclassID = ns.ItemInfo(id)
     if not name then
       waiting = true
       if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
-    elseif (quality or 0) >= 2 and ns.ItemScore(link) > 0 and (ns.CompareToEquipped(link) or 0) > 0 then -- only upgrades
+    elseif (quality or 0) >= 2 and (english and ns.ItemScore(link) > 0 and (ns.CompareToEquipped(link) or 0) > 0 -- only upgrades
+        or not english and ns.CanWear(link)) then
       local r = GetRow()
       r:SetHeight(ROW_H())
       r:SetPoint("TOPLEFT", 4, y)
@@ -465,7 +470,7 @@ local function ShowDetail()
   if waiting then
     y = SmallText(y, ns.T("DG_LOADING"))
   elseif lootShown == 0 then
-    y = SmallText(y, ns.T(d.id == 0 and "DG_NEW_LOOT" or "DG_NOLOOT"))
+    y = SmallText(y, ns.T(d.id == 0 and "DG_NEW_LOOT" or english and "DG_NOLOOT" or "DG_NOLOOT_ANY"))
   end
 
   content:SetWidth(DetailW())
