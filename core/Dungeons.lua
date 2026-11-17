@@ -68,7 +68,7 @@ local function FindEntrance(d)
   if not (C_EncounterJournal and C_EncounterJournal.GetDungeonEntrancesForMap) then return end
   local ok, list = pcall(C_EncounterJournal.GetDungeonEntrancesForMap, d.zone)
   if not ok or type(list) ~= "table" then return end
-  local want = Simple(d.name)
+  local want = Simple(ns.DungeonName(d))
   for _, e in ipairs(list) do
     local n = Simple(e.name)
     if n ~= "" and (n == want or n:find(want, 1, true) or want:find(n, 1, true)) and e.position then
@@ -78,10 +78,98 @@ local function FindEntrance(d)
   end
 end
 
+-- Names in the client language. The data is English; the game names dungeons (area IDs) and
+-- quests it knows itself, and core/NameData.lua (from QuestieDB) has NPCs and the other quests.
+local clientNames, sortedNames
+local localized = {}
+local function ClientNames()
+  if clientNames == nil then
+    local ok, loc = pcall(GetLocale)
+    clientNames = ok and ns.NAMES and ns.NAMES[loc] or false
+    ns.NAMES = nil -- only the client's language is ever needed
+  end
+  return clientNames
+end
+
+-- Tests switch the client language: give them a fresh table and forget the cached one.
+function ns.ResetClientNames(names) ns.NAMES, clientNames, sortedNames, localized = names, nil, nil, {} end
+
+local function Npc(name)
+  local t = name and ClientNames()
+  return t and t.npc[name] or name
+end
+ns.NpcName = Npc
+
+-- Swap English names inside a sentence (zone tips, profession routes, gear notes) for the
+-- client's names: places and items from the game by ID, spells via ns.Loc, NPCs from
+-- core/NameData.lua. Longest first, through placeholders, so "Superior Mana Potion" isn't also
+-- hit by "Mana Potion". English clients get the text back as it is.
+local function ItemClientName(id, en, t)
+  local ok, n = pcall(ns.ItemInfo, id)
+  if ok and type(n) == "string" and not (issecretvalue and issecretvalue(n)) and n ~= "" then return n, true end
+  if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
+  return t and t.item and t.item[en] or en, false
+end
+
+local function AreaClientName(id, en)
+  if C_Map and C_Map.GetAreaInfo then
+    local ok, n = pcall(C_Map.GetAreaInfo, id)
+    if ok and type(n) == "string" and not (issecretvalue and issecretvalue(n)) and n ~= "" then return n end
+  end
+  return en
+end
+
+function ns.LocalizeNames(text)
+  if type(text) ~= "string" or text == "" or ns.IsEnglishClient() then return text end
+  if localized[text] then return localized[text] end
+  local t = ClientNames()
+  local list = ns.TEXT_NAMES or {}
+  if not sortedNames then
+    sortedNames = {}
+    for en in pairs(list) do sortedNames[#sortedNames + 1] = en end
+    table.sort(sortedNames, function(a, b) return #a > #b end)
+  end
+  local parts, done, out = {}, true, text
+  for _, en in ipairs(sortedNames) do
+    if out:find(en, 1, true) then
+      local e, n = list[en], en
+      if e[1] == "npc" then n = t and t.npc[en] or en
+      elseif e[1] == "item" then
+        local ok; n, ok = ItemClientName(e[2], en, t)
+        if not ok then done = false end
+      elseif e[1] == "area" then n = AreaClientName(e[2], en)
+      elseif e[1] == "spell" then n = ns.Loc and ns.Loc(en) or en
+      end
+      if n ~= en then
+        parts[#parts + 1] = n
+        out = out:gsub("%f[%w]" .. en:gsub("%p", "%%%0") .. "%f[%W]", "\1" .. #parts .. "\2")
+      end
+    end
+  end
+  out = out:gsub("\1(%d+)\2", function(i) return parts[tonumber(i)] end)
+  if done then localized[text] = out end -- an item not loaded yet gets its game name next time
+  return out
+end
+ns.LocalizeNpcNames = ns.LocalizeNames
+
+-- A data text (ns.Tx) with its names in the client language.
+function ns.TxL(entry) return ns.LocalizeNames(ns.Tx(entry)) end
+
+local function DName(d)
+  if d.id and d.id > 0 and C_Map and C_Map.GetAreaInfo then
+    local ok, n = pcall(C_Map.GetAreaInfo, d.id)
+    if ok and type(n) == "string" and n ~= "" then return n end
+  end
+  return d.name
+end
+ns.DungeonName = DName
+
 local function QuestName(id)
   local q = ns.DQUESTS[id]
   local t = C_QuestLog and C_QuestLog.GetTitleForQuestID and C_QuestLog.GetTitleForQuestID(id)
-  return (t and t ~= "") and t or (q and q.n) or ("#" .. id)
+  if t and t ~= "" then return t end
+  local names = ClientNames()
+  return names and names.quest[id] or (q and q.n) or ("#" .. id)
 end
 
 local function ForMe(id)
@@ -148,12 +236,12 @@ end
 local function GiverText(id)
   local g = Giver(ns.DQUESTS[id])
   if not g then return ns.T("DG_UNKNOWN") end
-  if g.inside then return ns.T("DG_INSIDE", g[1]) end
+  if g.inside then return ns.T("DG_INSIDE", Npc(g[1])) end
   if g.item and g.from and g[2] then
-    return ns.T("DG_ITEM_FROM", ns.ItemName(g.item, g[1]), g.from, ns.MapName(g[2]))
+    return ns.T("DG_ITEM_FROM", ns.ItemName(g.item, g[1]), Npc(g.from), ns.MapName(g[2]))
   end
   if g.item then return ns.T("DG_ITEM", ns.ItemName(g.item, g[1])) end
-  return g[1] .. ", " .. ns.MapName(g[2])
+  return Npc(g[1]) .. ", " .. ns.MapName(g[2])
 end
 
 -- Right-click on a row: open the world map on that zone. The player clicks, so this is their own
@@ -181,13 +269,13 @@ local function WayTo(id, button)
   local g = Giver(ns.DQUESTS[id])
   if g and g.item and g.from and g[2] then
     -- Item quest: point at the mob (or chest) that drops the item.
-    ns.SetWaypoint(g[2], g[3], g[4], g.from .. " – " .. ns.ItemName(g.item, g[1]))
+    ns.SetWaypoint(g[2], g[3], g[4], Npc(g.from) .. " – " .. ns.ItemName(g.item, g[1]))
     if button == "RightButton" then OpenMap(g[2]) end
   elseif g and g[2] then
-    ns.SetWaypoint(g[2], g[3], g[4], g[1] .. " – " .. QuestName(id))
+    ns.SetWaypoint(g[2], g[3], g[4], Npc(g[1]) .. " – " .. QuestName(id))
     if button == "RightButton" then OpenMap(g[2]) end
   elseif g and g.inside then
-    ns.Print(ns.T("DG_INSIDE", g[1]))
+    ns.Print(ns.T("DG_INSIDE", Npc(g[1])))
   elseif g and g.item then
     ns.Print(ns.T("DG_ITEM", ns.ItemName(g.item, g[1])))
   else
@@ -311,7 +399,7 @@ local function ShowDetail()
   t:SetPoint("TOPLEFT", 4, y)
   t:EnableMouse(false)
   t.text:SetFontObject(ns.Font("large", TK))
-  t.text:SetText(d.name)
+  t.text:SetText(DName(d))
   t.right:SetText(ns.T("DG_LEVELS", d.lo, d.hi))
   y = y - ns.TS(28, TK)
 
@@ -338,7 +426,7 @@ local function ShowDetail()
     r.text:SetText(ns.T("DG_ENTRANCE") .. (#d.ent > 1 and (" " .. i) or ""))
     r.sub:SetText(ns.MapName(e[1]) .. string.format(" (%.0f, %.0f) – ", e[2], e[3]) .. ns.T("DG_CLICK"))
     r:SetScript("OnClick", function(_, button)
-      ns.SetWaypoint(e[1], e[2], e[3], d.name)
+      ns.SetWaypoint(e[1], e[2], e[3], DName(d))
       if button == "RightButton" then OpenMap(e[1]) end
     end)
     y = y - ROW_H()
@@ -429,9 +517,9 @@ local function ShowDetail()
   -- Loot for your class
   y = Header(y - 6, ns.T("DG_LOOT"))
   local lootShown, waiting = 0, false
-  -- The stat comparison reads English tooltips. On other clients list everything your class can
-  -- wear instead of only upgrades, and say why there is no comparison.
-  local english = ns.IsEnglishClient()
+  -- Only upgrades, when the stats can be compared (English tooltips, or the game's own stat list
+  -- on other clients). Without that, list everything your class can wear and say why.
+  local english = ns.IsEnglishClient() or (C_Item and C_Item.GetItemStats or GetItemStats) ~= nil -- can compare
   if not english then y = SmallText(y, ns.T("DG_LOOT_EN")) end
   for _, l in ipairs(d.loot) do
     local id, boss, req = l[1], l[2], l[3]
@@ -447,7 +535,7 @@ local function ShowDetail()
       r.text:SetFontObject(ns.Font("small", TK))
       r.icon:SetTexture(icon)
       r.text:SetText(link)
-      r.sub:SetText(ns.T("DG_DROPS", boss) .. (req > 0 and (" – " .. ns.T("DG_REQ", req)) or ""))
+      r.sub:SetText(ns.T("DG_DROPS", Npc(boss)) .. (req > 0 and (" – " .. ns.T("DG_REQ", req)) or ""))
       local diff = ns.CompareToEquipped(link)
       if diff and diff > 0 then
         r.right:SetText("|cff33ff33" .. ns.T("DG_UPGRADE", math.floor(diff + 0.5)) .. "|r")
@@ -489,7 +577,7 @@ local function RefreshList()
     elseif level >= d.lo - 2 then color = "|cff33ff33"
     elseif level >= d.lo - 6 then color = "|cffffd100"
     else color = "|cffff8080" end
-    b.text:SetText(color .. d.name .. "|r")
+    b.text:SetText(color .. DName(d) .. "|r")
     b.lvl:SetText(color .. d.lo .. "–" .. d.hi .. "|r")
     local n = Doable(d)
     b.count:SetText(n > 0 and ("|cffffd100" .. n .. "!|r") or "")
@@ -709,7 +797,7 @@ function ns.ToggleDungeons(name)
   if name and name ~= "" then
     name = name:lower()
     for _, d in ipairs(ns.DUNGEONS) do
-      if Visible(d) and d.name:lower():find(name, 1, true) then
+      if Visible(d) and (d.name:lower():find(name, 1, true) or DName(d):lower():find(name, 1, true)) then
         win:Show()
         Select(d)
         return
@@ -749,7 +837,7 @@ local function OnZone()
           elseif st == "avail" then missing = missing + 1 end
         end
       end
-      if have + missing > 0 then ns.Print(ns.T("DG_ENTER", d.name, have, missing)) end
+      if have + missing > 0 then ns.Print(ns.T("DG_ENTER", DName(d), have, missing)) end
       return
     end
   end

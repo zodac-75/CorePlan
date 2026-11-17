@@ -840,7 +840,7 @@ function ns.ProfGoalLine(prof, level)
     local note
     if target.train and (not maxRank or maxRank <= target.train + 25) then
       local who = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][target.train]
-      note = ns.T("GOAL_TRAIN", target.rank, who and ns.Tx(who) or "?")
+      note = ns.T("GOAL_TRAIN", target.rank, who and ns.TxL(who) or "?")
     else
       note = ns.T("GOAL_PACE")
     end
@@ -916,7 +916,7 @@ local function ComingUp(level)
           text = "|cff9d9dff" .. ns.T("L_TRAIN") .. "|r " .. table.concat(ns.spells[l], ", ") })
       end
       for _, item in ipairs(ns.VisibleGear(l) or {}) do
-        table.insert(rows, { icon = GearIcon(item), text = "|cff1eff00" .. ns.T("L_CRAFT") .. "|r " .. ns.Tx(item) })
+        table.insert(rows, { icon = GearIcon(item), text = "|cff1eff00" .. ns.T("L_CRAFT") .. "|r " .. ns.TxL(item) })
       end
       if #rows > 0 then table.insert(levels, { level = l, rows = rows }) end
     end
@@ -961,7 +961,7 @@ local function BuildModel()
   end
 
   for _, item in ipairs(ns.VisibleGear(level) or {}) do
-    table.insert(m.now, { icon = GearIcon(item), text = ns.Tx(item) })
+    table.insert(m.now, { icon = GearIcon(item), text = ns.TxL(item) })
   end
   return m
 end

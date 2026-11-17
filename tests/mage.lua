@@ -602,6 +602,81 @@ do
     if not nDe then table.insert(errors, "tysk klient: loot-listan säger inte varför jämförelsen saknas") end
     if noneDe then table.insert(errors, "tysk klient: loot-listan säger 'inget är bättre'") end
     if rDe ~= 2 then table.insert(errors, "tysk klient: väntade 2 loot-rader (tyget, inte plåten), fick " .. rDe) end
+    -- NPC, quest and dungeon names in the client language (QuestieDB translations + the game's
+    -- area names): a German client sees "Rote Seidenkopftücher", not "Red Silk Bandanas".
+    do
+      local env = {}
+      loadfile(ADDON_DIR .. "/NameData.lua")(nil, env)
+      local oldLoc, oldArea = rawget(_G, "GetLocale"), C_Map.GetAreaInfo
+      GetLocale = function() return "deDE" end
+      C_Map.GetAreaInfo = function(id) if id == 1581 then return "Die Todesminen" end end
+      ns.ResetClientNames(env.NAMES)
+      for _, b in ipairs(listed) do if b.dungeon.name == "The Deadmines" then b.__scripts.OnClick(b) end end
+      local all = {}
+      for _, w in ipairs(allFrames) do
+        if w.__shown then
+          for _, fs in ipairs({ w, w.text or {}, w.sub or {} }) do
+            if type(fs.__text) == "string" then all[#all + 1] = fs.__text end
+          end
+        end
+      end
+      local text = table.concat(all, "\n")
+      for _, want in ipairs({ "Rote Seidenkopftücher", env.NAMES.deDE.npc["Scout Riell"] or "Scout Riell", "Die Todesminen" }) do
+        if not text:find(want, 1, true) then table.insert(errors, "tysk klient: dungeonguiden visar inte '" .. want .. "'") end
+      end
+      if text:find("Red Silk Bandanas", 1, true) then table.insert(errors, "tysk klient: questnamnet är kvar på engelska") end
+      -- NPC names inside a zone tip sentence (Russian client: Kitta Firewind is "Китта Огневетер").
+      GetLocale = function() return "ruRU" end
+      ns.ResetClientNames(env.NAMES)
+      local tip = ns.LocalizeNpcNames("Kitta Firewind trains Expert Enchanting here (level 20).")
+      if tip ~= "Китта Огневетер trains Expert Enchanting here (level 20)." then
+        table.insert(errors, "zontips: NPC-namnet byttes inte i meningen: " .. tip)
+      end
+      -- Item names too: the game's own name when the item is loaded (also Italian, which QuestieDB
+      -- has no table for), else QuestieDB's; "Mana Potion" must not hit inside the longer name.
+      local oldGII = ns.ItemInfo
+      ns.ItemInfo = function(id) if id == 3827 then return "Зелье маны (spelet)" end end
+      local it = ns.LocalizeNpcNames("Superior Mana Potion recipe, and Mana Potion.")
+      local wantSup = env.NAMES.ruRU.item["Superior Mana Potion"]
+      if it ~= wantSup .. " recipe, and Зелье маны (spelet)." then table.insert(errors, "zontips: itemnamn byttes fel: " .. it) end
+      GetLocale = function() return "itIT" end
+      ns.ResetClientNames(env.NAMES)
+      ns.ItemInfo = function(id) if id == 13443 then return "Pozione di mana superiore" end end
+      it = ns.LocalizeNpcNames("Ulthir sells the Superior Mana Potion recipe.")
+      if it ~= "Ulthir sells the Pozione di mana superiore recipe." then table.insert(errors, "zontips: italienskt itemnamn från spelet saknas: " .. it) end
+      ns.ItemInfo = oldGII
+      GetLocale = function() return "ruRU" end
+      ns.ResetClientNames(env.NAMES)
+      -- Profession texts: items (Questie until the game has loaded them), places (the game, by
+      -- area ID) and NPCs in one sentence, German client.
+      GetLocale = function() return "deDE" end
+      ns.ResetClientNames(env.NAMES)
+      local oldArea2 = C_Map.GetAreaInfo
+      C_Map.GetAreaInfo = function(id) if id == 87 then return "Goldhain" end end
+      ns.ItemInfo = function() return nil end
+      local fish = ns.TxL("Fishing Pole + Shiny Bauble: Tharynn Bouden (Goldshire)")
+      if fish ~= "Angel + Glänzendes Schmuckstück: Tharynn Bouden (Goldhain)" then
+        table.insert(errors, "professionstext översattes fel: " .. fish)
+      end
+      if ns.LocalizeNames("Bolt of Linen Cloth") ~= "Leinenstoffballen" then
+        table.insert(errors, "tillverkningsnamnet översattes inte: " .. ns.LocalizeNames("Bolt of Linen Cloth"))
+      end
+      -- English client: the text stays exactly as written.
+      GetLocale = function() return "enUS" end
+      if ns.TxL("Fishing Pole + Shiny Bauble: Tharynn Bouden (Goldshire)") ~= "Fishing Pole + Shiny Bauble: Tharynn Bouden (Goldshire)" then
+        table.insert(errors, "engelsk klient: professionstexten ändrades")
+      end
+      ns.ItemInfo = oldGII
+      C_Map.GetAreaInfo = oldArea2
+      GetLocale = function() return "ruRU" end
+      ns.ResetClientNames(env.NAMES)
+      if ns.LocalizeNpcNames("Enchanting and Tailoring here.") ~= "Enchanting and Tailoring here." then
+        table.insert(errors, "zontips: professionsnamn byttes ut som om de vore NPC:er")
+      end
+      GetLocale, C_Map.GetAreaInfo = oldLoc, oldArea
+      ns.ResetClientNames(nil)
+      for _, b in ipairs(listed) do if b.dungeon.name == "The Deadmines" then b.__scripts.OnClick(b) end end
+    end
     now = now + 2; runTimers(now)
     OpenWorldMap = oldOpen
   end
@@ -670,6 +745,25 @@ do
   fire("ZONE_CHANGED_NEW_AREA"); now = now + 3; runTimers(now)
   SIM_INST = { "Westfall", "none", 0 }
   fire("ZONE_CHANGED_NEW_AREA"); now = now + 3; runTimers(now)
+end
+
+-- Zone tips on a German client: the zone is "Drei Ecken" there, not "Three Corners". The game
+-- names the area ID itself (C_Map.GetAreaInfo), so the tip still shows.
+do
+  local tips = {}
+  local oldAdd, oldZone, oldMap = UIErrorsFrame.AddMessage, GetZoneText, C_Map.GetAreaInfo
+  UIErrorsFrame.AddMessage = function(_, text) tips[#tips + 1] = text end
+  C_Map.GetAreaInfo = function(id) if id == 1002 or id == 16121 then return "Drei Ecken" end end
+  GetZoneText = function() return "Drei Ecken" end
+  fire("ZONE_CHANGED_NEW_AREA"); now = now + 3; runTimers(now)
+  local found = false
+  for _, t in ipairs(tips) do if t:find("Merchant's Favor", 1, true) then found = true end end
+  if not found then table.insert(errors, "zontips: Three Corners-tipset visades inte på tysk klient (Drei Ecken)") end
+  GetZoneText = function() return "Dämmerwald" end
+  tips = {}
+  fire("ZONE_CHANGED_NEW_AREA"); now = now + 3; runTimers(now)
+  if #tips > 0 then table.insert(errors, "zontips: tips visades i fel zon: " .. tips[1]) end
+  UIErrorsFrame.AddMessage, GetZoneText, C_Map.GetAreaInfo = oldAdd, oldZone, oldMap
 end
 
 -- Profiles
@@ -1134,6 +1228,20 @@ do -- "healing done by up to 9 and damage done by up to 3": a Frost mage counts 
   local a = ns.ItemScore("|Hitem:6004|h[x]|h")
   local b = ns.ItemScore("|Hitem:6005|h[x]|h")
   if math.abs(a - 3) > 0.001 then table.insert(errors, "uppgradering: 'healing 9 and damage 3'-raden ger " .. tostring(a) .. ", väntade 3") end
+  -- Other client languages: the stats come from the game's own list (C_Item.GetItemStats, keys
+  -- that don't depend on the language), not from the English tooltip lines.
+  do
+    local oldLoc, oldCItem = rawget(_G, "GetLocale"), rawget(_G, "C_Item")
+    C_Item = setmetatable({}, { __index = oldCItem })
+    GetLocale = function() return "deDE" end
+    C_Item.GetItemStats = function(link)
+      if link:find("item:7004") then return { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 9, ITEM_MOD_SPELL_DAMAGE_DONE_SHORT = 3, RESISTANCE0_NAME = 20, ITEM_MOD_FIRE_RESISTANCE_SHORT = 7 } end
+      return {}
+    end
+    local de = ns.ItemScore("|Hitem:7004|h[x]|h")
+    if math.abs(de - a) > 0.001 then table.insert(errors, "uppgradering, tysk klient: spelets statlista gav " .. tostring(de) .. ", väntade " .. tostring(a)) end
+    GetLocale, C_Item = oldLoc, oldCItem
+  end
   local t = ns.ItemScore("|Hitem:6006|h[x]|h")
   if math.abs(t - 1.6) > 0.001 then table.insert(errors, "uppgradering: Use:/'done to Undead'-rader räknades som vanliga stats: " .. tostring(t) .. ", väntade 1.6") end
   if math.abs(b - 1) > 0.001 then table.insert(errors, "uppgradering: 'damage and healing by up to 1' ger " .. tostring(b) .. ", väntade 1") end

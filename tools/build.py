@@ -29,11 +29,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Load order. Class modules (class.json "modules") go where CLASS_MODULES is.
 ORDER = [
-    "Locale.lua", "LocaleClass.lua", "Languages.lua", "Data.lua", "SpellIds.lua", "TalentIds.lua", "TrainData.lua", "ProfData.lua", "TrainerData.lua", "ClassTrainerData.lua",
+    "Locale.lua", "LocaleClass.lua", "Languages.lua", "Data.lua", "SpellIds.lua", "AreaIds.lua", "TalentIds.lua", "TrainData.lua", "ProfData.lua", "TrainerData.lua", "ClassTrainerData.lua",
     "AllClass.lua", "Core.lua", "Rows.lua", "Plans.lua", "Import.lua", "Ranks.lua", "Talents.lua", "Trainer.lua", "Helper.lua",
     "CLASS_MODULES",
     "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "QuestReward.lua", "Bags.lua",
-    "Drink.lua", "Buffs.lua", "Marks.lua", "GroupBar.lua", "Glide.lua", "Minimap.lua", "DungeonData.lua", "Arrow.lua", "Dungeons.lua",
+    "Drink.lua", "Buffs.lua", "Marks.lua", "GroupBar.lua", "Glide.lua", "Minimap.lua", "DungeonData.lua", "NameData.lua", "Arrow.lua", "Dungeons.lua",
     "Config.lua", "Profiles.lua", "Emotes.lua", "CampfireLines.lua", "Campfire.lua",
 ]
 

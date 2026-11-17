@@ -195,7 +195,7 @@ function ns.WayToTrainer(prof, rank, openMap)
   local i = (st and now - st.at < 20) and st.i % #list + 1 or 1
   trainerTurn[key] = { i = i, at = now }
   local t = list[i]
-  ns.SetWaypoint(t.pos[1], t.pos[2], t.pos[3], t.name .. " – " .. t.place)
+  ns.SetWaypoint(t.pos[1], t.pos[2], t.pos[3], ns.NpcName(t.name) .. " – " .. ns.LocalizeNames(t.place))
   if openMap and ns.OpenMap then ns.OpenMap(t.pos[1]) end
 end
 
@@ -222,12 +222,12 @@ local function Header(prof, out)
     row.text = row.text .. "  |cffff9900" .. (lvl and ns.T("CR_TRAIN_LVL", lvl) or ns.T("CR_TRAIN")) .. "|r"
     -- Who teaches the next rank, for your faction (Journeyman at 50, Expert 125, Artisan 200).
     local who = ns.PROF_TRAINERS and ns.PROF_TRAINERS[prof] and ns.PROF_TRAINERS[prof][maxRank - 25]
-    if who then trainer = ns.T("CR_TRAIN_AT", ns.Tx(who)); trainerRank = maxRank - 25 end
+    if who then trainer = ns.T("CR_TRAIN_AT", ns.TxL(who)); trainerRank = maxRank - 25 end
   end
   -- Orange when you're close to the cap and need to train, blue otherwise.
   row.bar = { value = skill, max = cap, color = warn and { 1, 0.6, 0.1 } or { 0.35, 0.75, 1 } }
   -- Secondary skills say exactly where the next rank is (a book or a quest).
-  if rankNote then table.insert(out, { indent = 22, text = "|cffff9900" .. ns.Tx(rankNote) .. "|r" }) end
+  if rankNote then table.insert(out, { indent = 22, text = "|cffff9900" .. ns.TxL(rankNote) .. "|r" }) end
   if trainer then
     local trow = { indent = 22, text = "|cffff9900" .. trainer .. "|r" }
     if ns.CanWayToTrainer(prof, trainerRank) then
@@ -258,16 +258,16 @@ local function RouteSection(prof, out)
       local rawNeed = (need - have) * bolt.ratio
       local rawHave = ns.ItemCount(bolt.raw)
       local c = rawHave >= rawNeed and "|cff60ff60" or "|cffaaaaaa"
-      table.insert(extra, c .. ns.ItemName(id, fallback) .. " " .. ns.T("CR_EQUALS", rawNeed, bolt.name, rawHave) .. "|r")
+      table.insert(extra, c .. ns.ItemName(id, fallback) .. " " .. ns.T("CR_EQUALS", rawNeed, ns.ItemName(bolt.raw, bolt.name), rawHave) .. "|r")
     end
   end
   table.insert(out, { indent = 22, items = items,
-    text = string.format("|cffffd100%d-%d:|r %s, %s", s.from, s.to, s.craft, what) })
+    text = string.format("|cffffd100%d-%d:|r %s, %s", s.from, s.to, ns.LocalizeNames(s.craft), what) })
   for _, e in ipairs(extra) do table.insert(out, { indent = 22, text = e }) end
-  if s.note then table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.Tx(s.note) .. "|r" }) end
+  if s.note then table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.TxL(s.note) .. "|r" }) end
   if s.untested then table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("CR_UNTESTED") .. "|r" }) end
   if nxt then
-    table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("CR_THEN", nxt.from, nxt.to, nxt.craft) .. "|r" })
+    table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("CR_THEN", nxt.from, nxt.to, ns.LocalizeNames(nxt.craft)) .. "|r" })
   end
 end
 
@@ -284,16 +284,16 @@ local function NodeSection(prof, out, nodes, zones)
   end
   local items, names = {}, {}
   for i = math.max(1, #can - 2), #can do
-    table.insert(items, { id = can[i][1], extra = can[i][2] })
-    table.insert(names, can[i][2])
+    table.insert(items, { id = can[i][1], extra = ns.ItemName(can[i][1], can[i][2]) })
+    table.insert(names, ns.ItemName(can[i][1], can[i][2]))
   end
   table.insert(out, { indent = 22, items = items, text = "|cffaaaaaa" .. ns.T("HB_CAN", table.concat(names, ", ")) .. "|r" })
   if nextNode then
-    table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("HB_NEXT", nextNode[2], nextNode[3]) .. "|r" })
+    table.insert(out, { indent = 22, text = "|cff888888" .. ns.T("HB_NEXT", ns.ItemName(nextNode[1], nextNode[2]), nextNode[3]) .. "|r" })
   end
   for _, z in ipairs(zones) do
     if skill < z.to then
-      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.Tx(z.zones) })
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.TxL(z.zones) })
       break
     end
   end
@@ -306,12 +306,13 @@ local function SkinSection(out)
   local best
   for _, l in ipairs(ns.LEATHER) do if skill >= l[3] then best = l end end
   if best then
-    table.insert(out, { indent = 22, items = { { id = best[1], extra = best[2] } },
-      text = "|cff888888" .. ns.T("SK_LEATHER", best[2]) .. "|r" })
+    local leather = ns.ItemName(best[1], best[2])
+    table.insert(out, { indent = 22, items = { { id = best[1], extra = leather } },
+      text = "|cff888888" .. ns.T("SK_LEATHER", leather) .. "|r" })
   end
   for _, z in ipairs(ns.SKIN_ZONES or {}) do
     if skill < z.to then
-      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.Tx(z.zones) })
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.TxL(z.zones) })
       break
     end
   end
@@ -322,13 +323,13 @@ local function FishSection(out)
   if not skill then return end
   for _, z in ipairs(ns.FISH_ZONES) do
     if skill < z.to then
-      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.Tx(z.zones) })
+      table.insert(out, { indent = 22, text = "|cffffd100" .. ns.T("GA_ZONES") .. "|r " .. ns.TxL(z.zones) })
       break
     end
   end
   for _, g in ipairs(ns.FISH_GEAR) do
     if skill < g.to then
-      table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.Tx(g.text) .. "|r" })
+      table.insert(out, { indent = 22, text = "|cffaaaaaa" .. ns.TxL(g.text) .. "|r" })
       break
     end
   end

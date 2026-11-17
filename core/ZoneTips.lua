@@ -5,11 +5,11 @@ local _, ns = ...
 local TIPS = {
   { zone = "Shadowfang Keep", prof = "Tailoring",
     text = { "The Filigreed Silky Gown and Leggings patterns drop here.", "Mönstren för Filigreed Silky Gown och Leggings droppar här." } },
-  { zone = "Deadmines", prof = "Tailoring",
+  { zone = "The Deadmines", prof = "Tailoring",
     text = { "The Filigreed Silky Gown pattern drops here.", "Mönstret för Filigreed Silky Gown droppar här." } },
   { zone = "Tower of Azora", prof = "Enchanting",
     text = { "Kitta Firewind trains Expert Enchanting here (level 20).", "Kitta Firewind tränar Expert Enchanting här (level 20)." } },
-  { zone = "Theramore", prof = "Tailoring",
+  { zone = "Theramore Isle", prof = "Tailoring",
     text = { "Timothy Worthington trains Artisan Tailoring here (level 35).", "Timothy Worthington tränar Artisan Tailoring här (level 35)." } },
   { zone = "Uldaman", prof = "Enchanting",
     text = { "Annora, the Artisan Enchanting trainer, is in here. Clear the way to her room.", "Annora, Artisan-trainern i Enchanting, finns här inne. Rensa vägen till hennes rum." } },
@@ -21,9 +21,9 @@ local TIPS = {
     text = { "Aisarra Nightmeadow sells the Malleable Essence of Nature pattern here (for Manaflare).", "Aisarra Nightmeadow säljer mönstret för Malleable Essence of Nature här (för Manaflare)." } },
   { zone = "Ironforge", prof = "Alchemy",
     text = { "Alchemy here: Vosur Brakthel (Apprentice, Tinker Town) and Tally Berryfizz (Journeyman, level 10).", "Alchemy här: Vosur Brakthel (Apprentice, Tinker Town) och Tally Berryfizz (Journeyman, level 10)." } },
-  { zone = "Feathermoon", prof = "Alchemy",
+  { zone = "Feathermoon Stronghold", prof = "Alchemy",
     text = { "Kylanna Windwhisper trains Artisan Alchemy here (level 35), and Logannas sells the Nature Protection Potion recipe.", "Kylanna Windwhisper tränar Artisan Alchemy här (level 35), och Logannas säljer receptet på Nature Protection Potion." } },
-  { zone = "Stormwind", prof = "Alchemy",
+  { zone = "Stormwind City", prof = "Alchemy",
     text = { "Maria Lumere sells the Elixir of Shadow Power recipe (Alchemy 275-290).", "Maria Lumere säljer receptet på Elixir of Shadow Power (Alchemy 275-290)." } },
   { zone = "Three Corners", prof = "Alchemy",
     text = { "Nina Surefire sells Alchemy recipes for Merchant's Favor here, including Major Frenzy Potion (290-300).", "Nina Surefire säljer Alchemy-recept för Merchant's Favor här, bland annat Major Frenzy Potion (290-300)." } },
@@ -52,7 +52,7 @@ local TIPS = {
     text = { "Bronk sells the Nature Protection Potion recipe here (Alchemy 195).", "Bronk säljer receptet på Nature Protection Potion här (Alchemy 195)." } },
   { zone = "Camp Mojache", prof = "Leatherworking",
     text = { "Hahrana Ironhide trains Artisan Leatherworking here (level 35).", "Hahrana Ironhide tränar Artisan Leatherworking här (level 35)." } },
-  { zone = "Crossroads", prof = "Alchemy",
+  { zone = "The Crossroads", prof = "Alchemy",
     text = { "Apothecary Durelle (supply camp outside the Crossroads) sells Alchemy recipes for Merchant's Favor, including Major Frenzy Potion (290-300).", "Apothecary Durelle (förrådslägret utanför Crossroads) säljer Alchemy-recept för Merchant's Favor, bland annat Major Frenzy Potion (290-300)." } },
   { zone = "Booty Bay", prof = "Blacksmithing",
     text = { "Brikk Keencraft trains Artisan Blacksmithing here (level 35), for both factions.", "Brikk Keencraft tränar Artisan Blacksmithing här (level 35), för båda fraktionerna." } },
@@ -83,11 +83,37 @@ local function Places()
   return table.concat(list, " | ")
 end
 
+-- The tip's zone in the client language: the game names each area ID (core/AreaIds.lua) itself.
+local clientNames = {}
+local function ZoneNames(zone)
+  if clientNames[zone] then return clientNames[zone] end
+  local list = { zone }
+  local getInfo = C_Map and C_Map.GetAreaInfo
+  local ids = ns.AREA_IDS and ns.AREA_IDS[zone] or {}
+  local answered = #ids == 0
+  for _, id in ipairs(getInfo and ids or {}) do
+    local ok, n = pcall(getInfo, id)
+    if ok and type(n) == "string" and n ~= "" then
+      answered = true
+      if n ~= zone then table.insert(list, n) end
+    end
+  end
+  if answered then clientNames[zone] = list end -- ask again later if the game had no name yet
+  return list
+end
+
+local function IsHere(here, zone)
+  for _, n in ipairs(ZoneNames(zone)) do
+    if here:find(n, 1, true) then return true end
+  end
+  return false
+end
+
 local function Check()
   if ns.db.zoneTipsOff then return end
   local here = Places()
   for i, tip in ipairs(TIPS) do
-    if not shown[i] and here:find(tip.zone, 1, true) then
+    if not shown[i] and IsHere(here, tip.zone) then
       local relevant = true
       if tip.prof then
         local skill = ns.GetProfSkill(tip.prof)
@@ -96,6 +122,7 @@ local function Check()
       if relevant then
         shown[i] = true
         local text = ns.Tx(tip.text)
+        if ns.LocalizeNpcNames then text = ns.LocalizeNpcNames(text) end
         if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(text, 0.4, 0.8, 1) end
         ns.Print("|cff66ccff" .. text .. "|r")
       end

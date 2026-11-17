@@ -92,7 +92,7 @@ function ns.WayToClassTrainer(openMap)
   wayTurn = (now - wayAt < 20) and (wayTurn % math.min(3, #list)) + 1 or 1
   wayAt = now
   local t = list[wayTurn].t
-  ns.SetWaypoint(t[3], t[4], t[5], t[2] .. " – " .. ns.T("TR_TRAINER"))
+  ns.SetWaypoint(t[3], t[4], t[5], (ns.NpcName and ns.NpcName(t[2]) or t[2]) .. " – " .. ns.T("TR_TRAINER"))
   if openMap and ns.OpenMap then ns.OpenMap(t[3]) end
 end
 

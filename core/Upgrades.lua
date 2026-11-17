@@ -29,7 +29,7 @@ local function KnowsSkill(name)
   if not ok or type(n) ~= "number" then return false end
   for i = 1, n do
     local okLine, skillName, isHeader = pcall(GetSkillLineInfo, i)
-    if okLine and not isHeader and skillName == name then return true end
+    if okLine and not isHeader and (skillName == name or (ns.Loc and skillName == ns.Loc(name))) then return true end
   end
   return false
 end
@@ -77,8 +77,46 @@ local function TooltipLines(link)
   return out
 end
 
+-- Other client languages: the game's own stat list (C_Item.GetItemStats), whose keys don't depend
+-- on the language. It has the Equip: effects too ("healing 9 and damage 3" comes as two keys) and
+-- leaves out Use:, procs and set bonuses. Keys we don't know are left out.
+local STAT_KEYS = {
+  ITEM_MOD_STRENGTH_SHORT = "str", ITEM_MOD_AGILITY_SHORT = "agi", ITEM_MOD_STAMINA_SHORT = "sta",
+  ITEM_MOD_INTELLECT_SHORT = "int", ITEM_MOD_SPIRIT_SHORT = "spi",
+  ITEM_MOD_ATTACK_POWER_SHORT = "ap", ITEM_MOD_RANGED_ATTACK_POWER_SHORT = "rap",
+  ITEM_MOD_SPELL_DAMAGE_DONE_SHORT = "dmgsp", ITEM_MOD_SPELL_HEALING_DONE_SHORT = "heal",
+  ITEM_MOD_SPELL_POWER_SHORT = "sp",
+  ITEM_MOD_MANA_REGENERATION_SHORT = "mp5", ITEM_MOD_POWER_REGEN0_SHORT = "mp5",
+  ITEM_MOD_HIT_RATING_SHORT = "hit", ITEM_MOD_CRIT_RATING_SHORT = "crit",
+  ITEM_MOD_HIT_MELEE_RATING_SHORT = "hit", ITEM_MOD_CRIT_MELEE_RATING_SHORT = "crit",
+  ITEM_MOD_HIT_SPELL_RATING_SHORT = "shit", ITEM_MOD_CRIT_SPELL_RATING_SHORT = "scrit",
+  ITEM_MOD_DEFENSE_SKILL_RATING_SHORT = "def", ITEM_MOD_DODGE_RATING_SHORT = "dodge",
+  ITEM_MOD_PARRY_RATING_SHORT = "parry", ITEM_MOD_BLOCK_RATING_SHORT = "block",
+  ITEM_MOD_BLOCK_VALUE_SHORT = "blockv", ITEM_MOD_DAMAGE_PER_SECOND_SHORT = "wdps",
+  RESISTANCE0_NAME = "armor",
+}
+ns.STAT_KEYS = STAT_KEYS
+
+local function GameStats(link)
+  local get = C_Item and C_Item.GetItemStats or GetItemStats
+  if not get then return nil end
+  local ok, t = pcall(get, link)
+  if not ok or type(t) ~= "table" then return nil end
+  local s = {}
+  for key, v in pairs(t) do
+    local k = STAT_KEYS[key]
+    if k and type(v) == "number" then s[k] = (s[k] or 0) + v end
+  end
+  return s
+end
+
 local function Stats(link)
   if cache[link] then return cache[link] end
+  if not ns.IsEnglishClient() then
+    local s = GameStats(link)
+    if s then cache[link] = s; return s end
+    return {}
+  end
   local lines = TooltipLines(link)
   if #lines == 0 then return {} end
   local s = {}
@@ -109,7 +147,7 @@ local function Stats(link)
 end
 
 function ns.ItemScore(link)
-  if not link or not ns.IsEnglishClient() then return 0 end
+  if not link then return 0 end
   local total, weights = 0, ns.STATS.weights -- follows the chosen talent plan
   for k, v in pairs(Stats(link)) do
     local w = weights[k]
@@ -143,7 +181,6 @@ end
 
 -- Returns diff (or nil if not comparable) and the required level.
 function ns.CompareToEquipped(link)
-  if not ns.IsEnglishClient() then return nil end
   local ok, name, _, _, _, minLevel, _, _, _, equipLoc, _, _, classID, subclassID = pcall(ns.ItemInfo, link)
   if not ok or not name or not equipLoc then return nil end
   local slots = SLOTS[equipLoc]
@@ -184,6 +221,10 @@ end
 -- damage per second) than what you wear there.
 local function ArmorAndDps(link)
   local armor, dps = 0, 0
+  if not ns.IsEnglishClient() then
+    local s = Stats(link)
+    return s.armor or 0, s.wdps or 0
+  end
   for _, line in ipairs(TooltipLines(link)) do
     local a = line:match("^(%d+) Armor$")
     if a then armor = tonumber(a) or armor end
@@ -194,7 +235,6 @@ local function ArmorAndDps(link)
 end
 
 function ns.PlainGearBetter(link)
-  if not ns.IsEnglishClient() then return false end
   local ok, name, _, _, _, _, _, _, _, equipLoc, _, _, classID, subclassID = pcall(ns.ItemInfo, link)
   if not ok or not name or not equipLoc then return false end
   local slots = SLOTS[equipLoc]
@@ -218,7 +258,7 @@ function ns.PlainGearBetter(link)
 end
 
 local function OnTooltip(tt)
-  if (ns.db and ns.db.upgradeOff) or not ns.IsEnglishClient() then return end
+  if ns.db and ns.db.upgradeOff then return end
   if not tt or tt == scanTip or not tt.GetItem then return end
   local ok, _, link = pcall(tt.GetItem, tt)
   if not ok or not link then return end

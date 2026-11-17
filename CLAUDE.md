@@ -71,6 +71,9 @@ description for the project; descriptions are generated from the same text for e
   through `ns.Eng(name)` (`ns.ForEachAura` already does that). Both need the spell's ID in
   `core/SpellIds.lua`; a new spell name needs `python3 tools/genspellids.py SpellName.csv` (the csv
   from wago.tools for the current build; the sandbox can't reach wago, fetch it in his Chrome).
+  Zone tips match zones by area ID (`core/AreaIds.lua`, the client name comes from
+  `C_Map.GetAreaInfo`); a new tip zone must be the exact area name, then
+  `python3 tools/genareaids.py AreaTable.csv` (wago's CSV button, he can attach the file).
 - **Secure buttons** (buff watcher, bag check): set `type1`/`spell1`/`macrotext1` only out of
   combat; clear them and hide on `PLAYER_REGEN_DISABLED`. Right-click handled in `OnMouseUp`.
   Register clicks `("AnyUp", "AnyDown")`.
@@ -88,6 +91,10 @@ Copy the closest class folder (PriestPlan is the newest pattern). Data sources:
   table and prints `ns.spells` for Data.lua (drop racial spells).
 - Dungeons: clone https://github.com/Questie/QuestieDB, run its `tools/export-forever.lua
   --include-authored`, then `QDB=QuestieDB texlua tools/gendungeons.lua <class> classes/<class>/DungeonData.lua`.
+  After any DungeonData, ProfData, ZoneTips or class text change run
+  `QDB=QuestieDB texlua tools/gennames.lua AreaTable.csv` (core/NameData.lua: NPC and quest names in
+  de/fr/es/pt/ru from QuestieDB's l10n, Italian has none there; plus the NPC, item, place and spell
+  names inside data texts, which `ns.TxL` swaps for the client's names). Show data texts with `ns.TxL`.
 - Tests: copy `tests/priest.lua` to `tests/<class>.lua`, adjust names/spells, and run all four
   modes: `texlua tests/<class>.lua <out>/<Addon> classic|modern enUS|svSE` must end with
   `--- FEL (0) ---`. Run every class's tests after a core change.

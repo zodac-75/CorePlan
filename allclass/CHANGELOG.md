@@ -1,3 +1,12 @@
+# AllClassPlan 0.1.25
+
+**Better on non-English game clients** (German, French, Spanish, Portuguese, Russian, Italian):
+- **Upgrade check works on every client language.** It now reads the stats from the game's own stat list instead of the English tooltip text, so tooltips and the dungeon loot list show upgrades again.
+- **Zone tips show up in every language.** Zones are matched by their ID, not their English name.
+- **Names in your game's language:** the dungeon guide shows dungeon, quest and NPC names as your client names them, and the zone tips and profession help show trainers, vendors, places, items and recipes the same way (also on the map arrow). NPC and quest names come from QuestieDB's translations (not available for Italian); items, places and spells come from the game itself.
+
+On English clients nothing changes.
+
 # AllClassPlan 0.1.24
 
 - **Dungeon guide on non-English game clients:** the loot list now shows all loot your class can wear, with a note that the comparison with your gear needs an English client. Before, it was empty and said nothing was better than what you wear.
