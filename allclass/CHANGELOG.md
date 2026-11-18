@@ -1,3 +1,11 @@
+# AllClassPlan 0.1.26
+
+- **Where to level:** a new line in the plan window suggests the one or two zones that fit your level best and the next one coming up, per faction (worked out from WoW Forever's quests, including Forever's own zones). Click it for an arrow to the zone's quest hub, right-click for the second zone. Turn it off in the settings or with `/acp levelzones`.
+- **Hunter ammo tracker:** counts only ammo that fits your weapon (arrows for bows and crossbows, bullets for guns), shows your ammo and the next best you carry in the plan window, tells you when vendors sell better ammo for your level, and at a vendor says how many stacks to buy. New setting "Ammo to carry" (default: what your quiver or ammo pouch holds).
+- **Shaman:** new plan "Enhancement (drakeosvr's build)" (17/26/8), a player's build: no Rage of the Farseer, Tidal Focus and Mindfulness, the rest in Elemental with Convection. Pick it with `/acp plan`.
+- **Mage:** the Frost leveling plan takes Shatter (level 25-27) before Improved Frost Nova; it doesn't need Improved Frost Nova in WoW Forever.
+- **Tailoring:** the 95-140 route follows WoW Forever's recipe levels: Woolen Boots (95-110), Double-stitched Woolen Shoulders from the trainer at 110 (110-125), then Gloves of Meditation (125-140).
+
 # AllClassPlan 0.1.25
 
 **Better on non-English game clients** (German, French, Spanish, Portuguese, Russian, Italian):
