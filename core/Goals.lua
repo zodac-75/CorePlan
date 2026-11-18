@@ -34,9 +34,33 @@ local function FavorCount()
   return nil
 end
 
+-- Gold goal in the settings: a tick box (keeps the amount when off) and the amount in steps.
+ns.GOLD_STEPS = { 10, 25, 50, 75, 100, 150, 200, 300, 400, 500, 750, 1000 } -- gold
+
+function ns.GoldGoalOn()
+  local g = ns.db.goldGoal
+  return g and g.amount and g.amount > 0 and not ns.db.goldGoalOff or false
+end
+
+function ns.StepGoldGoal(dir)
+  local g = ns.db.goldGoal or {}
+  local cur = math.floor((g.amount or 0) / 10000)
+  local steps, pick = ns.GOLD_STEPS, nil
+  if dir > 0 then
+    for _, v in ipairs(steps) do if v > cur then pick = v; break end end
+    pick = pick or steps[#steps]
+  else
+    for i = #steps, 1, -1 do if steps[i] < cur then pick = steps[i]; break end end
+    pick = pick or steps[1]
+  end
+  ns.db.goldGoal = { amount = pick * 10000, label = g.label }
+  ns.db.goldGoalOff = nil
+  ns.RefreshMain()
+end
+
 local function GoldLine()
   local goal = ns.db.goldGoal
-  if not goal or not goal.amount or goal.amount <= 0 then return nil end
+  if ns.db.goldGoalOff or not goal or not goal.amount or goal.amount <= 0 then return nil end
   local money = (GetMoney and GetMoney()) or 0
   local label = goal.label and goal.label ~= "" and (" (" .. goal.label .. ")") or ""
   local line = ns.T("GOAL_LINE", ns.Money(money), ns.Money(goal.amount), label)
@@ -68,6 +92,18 @@ ns.RegisterModule(function()
   ev:SetScript("OnEvent", function() ns.Debounce("main", 1, ns.RefreshMain) end)
 end)
 
+-- /@SLASH@ goldgoal: the settings tick box (a new goal starts at 100 gold).
+ns.RegisterCommand("goldgoal", false, function()
+  local g = ns.db.goldGoal
+  if not (g and g.amount and g.amount > 0) then
+    ns.db.goldGoal, ns.db.goldGoalOff = { amount = 100 * 10000 }, nil
+  else
+    ns.db.goldGoalOff = not ns.db.goldGoalOff or nil
+  end
+  ns.Print(ns.GoldGoalOn() and ns.T("GOAL_SET", ns.Money(ns.db.goldGoal.amount), "") or ns.T("GOAL_HIDDEN"))
+  ns.RefreshMain()
+end)
+
 ns.RegisterCommand("goal", true, function(rest)
   rest = rest or ""
   local amount = tonumber(rest:match("^(%d+)"))
@@ -80,7 +116,7 @@ ns.RegisterCommand("goal", true, function(rest)
     ns.Print(ns.T("GOAL_CLEARED"))
   else
     local label = rest:match("^%d+%s+(.+)$")
-    ns.db.goldGoal = { amount = amount * 10000, label = label }
+    ns.db.goldGoal, ns.db.goldGoalOff = { amount = amount * 10000, label = label }, nil
     ns.Print(ns.T("GOAL_SET", amount .. "g", label and (" (" .. label .. ")") or ""))
   end
   ns.RefreshMain()

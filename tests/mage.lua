@@ -807,6 +807,34 @@ do
   ns.RunCommand("levelzones", "")
 end
 
+-- Gold goal in the settings: the tick box starts a 100 g goal, hides it (keeping the amount)
+-- and shows it again; the amount steps through fixed amounts.
+do
+  local saved, savedOff = ns.db.goldGoal, ns.db.goldGoalOff
+  ns.db.goldGoal, ns.db.goldGoalOff = nil, nil
+  local function goldShown()
+    for _, p in ipairs(ns.statusProviders) do
+      local ok, r = pcall(p.fn)
+      local t = type(r) == "table" and r.text or r
+      if ok and type(t) == "string" and t:find(ns.T("GOAL_LINE", "", "", ""):sub(1, 4), 1, true) then return true end
+    end
+    return false
+  end
+  ns.RunCommand("goldgoal", "")
+  if not ns.GoldGoalOn() or ns.db.goldGoal.amount ~= 1000000 then table.insert(errors, "guldmål: bocken startar inte ett mål på 100 g") end
+  if not goldShown() then table.insert(errors, "guldmål: raden syns inte") end
+  ns.StepGoldGoal(1)
+  if ns.db.goldGoal.amount ~= 1500000 then table.insert(errors, "guldmål: steget upp blev " .. tostring(ns.db.goldGoal.amount)) end
+  ns.StepGoldGoal(-1); ns.StepGoldGoal(-1)
+  if ns.db.goldGoal.amount ~= 750000 then table.insert(errors, "guldmål: steget ner blev " .. tostring(ns.db.goldGoal.amount)) end
+  ns.RunCommand("goldgoal", "")
+  if ns.GoldGoalOn() or goldShown() then table.insert(errors, "guldmål: bocken döljer inte målet") end
+  if ns.db.goldGoal.amount ~= 750000 then table.insert(errors, "guldmål: beloppet försvann när målet doldes") end
+  ns.RunCommand("goldgoal", "")
+  if not ns.GoldGoalOn() then table.insert(errors, "guldmål: bocken visar inte målet igen") end
+  ns.db.goldGoal, ns.db.goldGoalOff = saved, savedOff
+end
+
 -- Profiles
 do
   local function chk(cond, msg) if not cond then table.insert(errors, "profil: " .. msg) end end

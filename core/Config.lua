@@ -58,6 +58,7 @@ local FEATURES = {
   { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
   { group = "CAT_LEVEL", key = "MM_LZ", on = function() return not ns.db.levelZonesOff end, cmd = "levelzones" },
   { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
+  { group = "CAT_LEVEL", key = "MM_GOLDGOAL", on = function() return ns.GoldGoalOn and ns.GoldGoalOn() end, cmd = "goldgoal" },
   { group = "CAT_LOOK", key = "MM_CAMPFIRE", on = function() return not ns.db.campfireOff end,
     toggle = function() ns.RunCommand("campfire", "toggle") end },
   { group = "CAT_LOOK", key = "MM_UNLOCK", on = function() return ns.db.shatterUnlocked end, cmd = "unlock" },
@@ -173,6 +174,15 @@ local LOOK_SELECTORS = {
     step = function(dir) ns.CycleLang(ns.NextLang(dir)) end },
 }
 
+-- The gold goal's amount, right under its tick box.
+local LEVEL_SELECTORS = {
+  { key = "CFG_GOLDGOAL",
+    value = function()
+      local g = ns.db.goldGoal
+      return (g and g.amount and g.amount > 0) and ns.Money(g.amount) or ns.T("CFG_OFF")
+    end,
+    step = function(dir) if ns.StepGoldGoal then ns.StepGoldGoal(dir) end end },
+}
 local ALERT_SELECTORS = {
   { key = "CFG_HELPERSIZE",
     value = function() return math.floor((ns.db.shatterScale or 1) * 100 + 0.5) .. "%" end,
@@ -541,7 +551,7 @@ local function CreateConfig()
       return y - 26
     end },
     { head = "CAT_PROFS", rows = Concat(PROF_SELECTORS, Group(FEATURES, "CAT_PROFS")) },
-    { head = "CAT_LEVEL", rows = Group(FEATURES, "CAT_LEVEL") },
+    { head = "CAT_LEVEL", rows = Concat(Group(FEATURES, "CAT_LEVEL"), LEVEL_SELECTORS) },
     -- Profiles are shared by all characters.
     { head = "CFG_PROFILES", rows = PROFILE_SELECTORS, after = function(x, y)
       SmallButton("CFG_NEW", x, y, function() ns.AskNewProfile() end)
