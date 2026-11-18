@@ -808,7 +808,7 @@ do
 end
 
 -- Gold goal in the settings: the tick box starts a 100 g goal, hides it (keeping the amount)
--- and shows it again; the amount steps through fixed amounts.
+-- and shows it again; the amount is typed in a box.
 do
   local saved, savedOff = ns.db.goldGoal, ns.db.goldGoalOff
   ns.db.goldGoal, ns.db.goldGoalOff = nil, nil
@@ -823,15 +823,18 @@ do
   ns.RunCommand("goldgoal", "")
   if not ns.GoldGoalOn() or ns.db.goldGoal.amount ~= 1000000 then table.insert(errors, "guldmål: bocken startar inte ett mål på 100 g") end
   if not goldShown() then table.insert(errors, "guldmål: raden syns inte") end
-  ns.StepGoldGoal(1)
-  if ns.db.goldGoal.amount ~= 1500000 then table.insert(errors, "guldmål: steget upp blev " .. tostring(ns.db.goldGoal.amount)) end
-  ns.StepGoldGoal(-1); ns.StepGoldGoal(-1)
-  if ns.db.goldGoal.amount ~= 750000 then table.insert(errors, "guldmål: steget ner blev " .. tostring(ns.db.goldGoal.amount)) end
+  ns.db.goldGoal.label = "mount"
+  ns.SetGoldGoal("1234")
+  if ns.db.goldGoal.amount ~= 12340000 or ns.db.goldGoal.label ~= "mount" then table.insert(errors, "guldmål: inskrivet belopp blev " .. tostring(ns.db.goldGoal.amount)) end
+  ns.SetGoldGoal("75")
+  if ns.db.goldGoal.amount ~= 750000 then table.insert(errors, "guldmål: inskrivet belopp blev " .. tostring(ns.db.goldGoal.amount)) end
   ns.RunCommand("goldgoal", "")
   if ns.GoldGoalOn() or goldShown() then table.insert(errors, "guldmål: bocken döljer inte målet") end
   if ns.db.goldGoal.amount ~= 750000 then table.insert(errors, "guldmål: beloppet försvann när målet doldes") end
   ns.RunCommand("goldgoal", "")
   if not ns.GoldGoalOn() then table.insert(errors, "guldmål: bocken visar inte målet igen") end
+  ns.SetGoldGoal("")
+  if ns.db.goldGoal or goldShown() then table.insert(errors, "guldmål: tom ruta tar inte bort målet") end
   ns.db.goldGoal, ns.db.goldGoalOff = saved, savedOff
 end
 

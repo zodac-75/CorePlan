@@ -11,7 +11,7 @@ local LOGO = ns.LOGO or { h = 1, size = 200, y = 62, panel = 260 }
 local LOGO_H = LOGO.h
 
 local win
-local checks, selectors, labels = {}, {}, {}
+local checks, selectors, labels, inputs = {}, {}, {}, {}
 
 local function Run(cmd, arg)
   local fn = ns.commands[cmd]
@@ -174,14 +174,14 @@ local LOOK_SELECTORS = {
     step = function(dir) ns.CycleLang(ns.NextLang(dir)) end },
 }
 
--- The gold goal's amount, right under its tick box.
+-- The gold goal's amount, typed in a box right under its tick box.
 local LEVEL_SELECTORS = {
-  { key = "CFG_GOLDGOAL",
-    value = function()
+  { key = "CFG_GOLDGOAL", input = true,
+    get = function()
       local g = ns.db.goldGoal
-      return (g and g.amount and g.amount > 0) and ns.Money(g.amount) or ns.T("CFG_OFF")
+      return (g and g.amount and g.amount > 0) and tostring(math.floor(g.amount / 10000)) or ""
     end,
-    step = function(dir) if ns.StepGoldGoal then ns.StepGoldGoal(dir) end end },
+    set = function(text) if ns.SetGoldGoal then ns.SetGoldGoal(text) end end },
 }
 local ALERT_SELECTORS = {
   { key = "CFG_HELPERSIZE",
@@ -311,6 +311,13 @@ local function Refresh()
     local ok, v = pcall(s.item.value)
     s.value:SetText(Val(ok and v or "?"))
   end
+  for _, r in ipairs(inputs) do
+    r.label:SetText((ns.T(r.item.key):gsub(":$", "")))
+    if not r.box:HasFocus() then
+      local ok, v = pcall(r.item.get)
+      r.box:SetText(ok and v or "")
+    end
+  end
   for _, b in ipairs(win.tools) do b:SetText(ns.T(b.key)) end
   for _, b in ipairs(markCells) do
     local ok, v = pcall(b.item.value)
@@ -390,6 +397,39 @@ local function SelectorRow(parent, item, x, y)
   prev:SetScript("OnClick", function() Go(-1) end)
   nextB:SetScript("OnClick", function() Go(1) end)
   table.insert(selectors, s)
+end
+
+-- A label and a box to type a number in (the gold goal). Enter or clicking away saves,
+-- Escape puts the old value back.
+local function InputRow(parent, item, x, y)
+  local r = { item = item }
+  r.label = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  r.label:SetPoint("TOPLEFT", x, y - 5)
+  r.label:SetWidth(92)
+  r.label:SetJustifyH("LEFT")
+  local box = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
+  box:SetSize(80, 20)
+  box:SetPoint("TOPLEFT", x + 104, y - 1)
+  box:SetAutoFocus(false)
+  box:SetNumeric(true)
+  box:SetMaxLetters(6)
+  box:SetJustifyH("RIGHT")
+  r.box = box
+  local unit = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  unit:SetPoint("LEFT", box, "RIGHT", 4, 0)
+  unit:SetText("|cffffd700g|r")
+  local cancel = false
+  box:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+  box:SetScript("OnEscapePressed", function(self) cancel = true; self:ClearFocus() end)
+  box:SetScript("OnEditFocusLost", function(self)
+    if not cancel then
+      local ok, err = pcall(item.set, self:GetText())
+      if not ok then ns.Print(ns.T("ERROR", tostring(err))) end
+    end
+    cancel = false
+    Refresh()
+  end)
+  table.insert(inputs, r)
 end
 
 local function Version()
@@ -515,7 +555,9 @@ local function CreateConfig()
         -- A row with arrows (step) is a selector, anything else a tick box; they keep
         -- the order given, so a feature's options sit right under its on/off box.
         for _, item in ipairs(rows) do
-          if item.step then
+          if item.input then
+            InputRow(win, item, x, y); y = y - SEL_H
+          elseif item.step then
             SelectorRow(win, item, x, y); y = y - SEL_H
           else
             CheckRow(win, item, x - 2 + (item.indent or 0), y); y = y - CHECK_H

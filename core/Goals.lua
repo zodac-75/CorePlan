@@ -35,26 +35,21 @@ local function FavorCount()
 end
 
 -- Gold goal in the settings: a tick box (keeps the amount when off) and the amount in steps.
-ns.GOLD_STEPS = { 10, 25, 50, 75, 100, 150, 200, 300, 400, 500, 750, 1000 } -- gold
-
 function ns.GoldGoalOn()
   local g = ns.db.goldGoal
   return g and g.amount and g.amount > 0 and not ns.db.goldGoalOff or false
 end
 
-function ns.StepGoldGoal(dir)
+-- The amount typed in the settings (whole gold). 0 or empty removes the goal.
+function ns.SetGoldGoal(text)
+  local gold = tonumber((tostring(text or ""):gsub("[^%d]", "")))
   local g = ns.db.goldGoal or {}
-  local cur = math.floor((g.amount or 0) / 10000)
-  local steps, pick = ns.GOLD_STEPS, nil
-  if dir > 0 then
-    for _, v in ipairs(steps) do if v > cur then pick = v; break end end
-    pick = pick or steps[#steps]
+  if not gold or gold <= 0 then
+    ns.db.goldGoal = nil
   else
-    for i = #steps, 1, -1 do if steps[i] < cur then pick = steps[i]; break end end
-    pick = pick or steps[1]
+    ns.db.goldGoal = { amount = math.min(gold, 999999) * 10000, label = g.label }
+    ns.db.goldGoalOff = nil
   end
-  ns.db.goldGoal = { amount = pick * 10000, label = g.label }
-  ns.db.goldGoalOff = nil
   ns.RefreshMain()
 end
 
