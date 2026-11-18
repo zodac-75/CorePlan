@@ -645,6 +645,17 @@ fire("TRADE_SKILL_SHOW"); now = now + 1; runTimers(now)
 slash("plan"); table.insert(chat, "[sim] talent 10 = " .. tostring(ns.talents[10]) .. ", 60 = " .. tostring(ns.talents[60]))
 slash("plan"); table.insert(chat, "[sim] talent 10 = " .. tostring(ns.talents[10]) .. ", 42 = " .. tostring(ns.talents[42]) .. ", 60 = " .. tostring(ns.talents[60]))
 slash("plan"); table.insert(chat, "[sim] talent 25 = " .. tostring(ns.talents[25]))
+slash("plan") -- four plans: back to Enhancement leveling
+-- drakeosvr's build is its own plan and plays like Enhancement (call-outs, stat weights).
+do
+  ns.db.plan = "drakeosvr"; ns.ApplyPlan()
+  if ns.PlanKey() ~= "enhancement" then table.insert(errors, "drakeosvrs plan beter sig inte som Enhancement: " .. tostring(ns.PlanKey())) end
+  if ns.talents[60] ~= "Trial by Fire 2/2" or ns.talents[10] ~= "Thundering Strikes 1/5" then
+    table.insert(errors, "drakeosvrs plan: fel talanger: " .. tostring(ns.talents[10]) .. " / " .. tostring(ns.talents[60]))
+  end
+  if not ns.PlanName():find("drakeosvr", 1, true) then table.insert(errors, "drakeosvrs plan har fel namn: " .. ns.PlanName()) end
+  ns.db.plan = "enhancement"; ns.ApplyPlan()
+end
 now = now + 1; runTimers(now)
 
 -- Tooltip

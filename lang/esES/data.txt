@@ -1,6 +1,7 @@
 [data]
+e40ff40b = Necesitas unos 225 rollos de lana hasta 140, así que haz más luego
+e4c2d30f = Apréndelo con el instructor de sastrería a 110
 af048e0f = Guarda los rollos para el Cinturón de lino
-8284bedc = Necesitas 153 rollos de lana hasta 140, así que haz más después
 4fd84ed4 = Necesitas 184 rollos de seda hasta 190
 d7aac36c = Necesitas 180 rollos de tejido de mago hasta 225
 1f005492 = Con el instructor artesano. Los rollos ya no dan puntos aquí, así que haz los 244 de una vez

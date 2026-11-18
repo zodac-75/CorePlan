@@ -1,6 +1,7 @@
 [data]
+e40ff40b = Você precisa de cerca de 225 rolos de lã até 140, então faça mais depois
+e4c2d30f = Aprenda com o instrutor de alfaiataria em 110
 af048e0f = Guarde os rolos para o Cinto de Linho
-8284bedc = Você precisa de 153 rolos de lã até 140, então faça mais depois
 4fd84ed4 = Você precisa de 184 rolos de seda até 190
 d7aac36c = Você precisa de 180 rolos de tecido de mago até 225
 1f005492 = Com o instrutor artesão. Os rolos não dão mais pontos aqui, então faça os 244 de uma vez

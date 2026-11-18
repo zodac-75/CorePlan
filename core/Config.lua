@@ -56,6 +56,7 @@ local FEATURES = {
   { group = "CAT_MARKS", key = "MM_MARKS", on = function() return not ns.db.marksOff end, cmd = "marks" },
   { group = "CAT_LEVEL", key = "MM_XP", on = function() return not ns.db.xpOff end, cmd = "xp" },
   { group = "CAT_LEVEL", key = "MM_ZONE", on = function() return not ns.db.zoneTipsOff end, cmd = "zonetips" },
+  { group = "CAT_LEVEL", key = "MM_LZ", on = function() return not ns.db.levelZonesOff end, cmd = "levelzones" },
   { group = "CAT_LEVEL", key = "CFG_DGAUTO", on = function() return ns.db.dungeonAutoOpen end, cmd = "dungeonauto" },
   { group = "CAT_LOOK", key = "MM_CAMPFIRE", on = function() return not ns.db.campfireOff end,
     toggle = function() ns.RunCommand("campfire", "toggle") end },

@@ -153,6 +153,23 @@ ns.COMBAT_CMD = "combat"
 ns.THEME_BG = { 0.05, 0.08, 0.04, 0.92 }
 ns.THEME_BORDER = { 0.67, 0.83, 0.45, 0.9 }
 
+-- Class setting: how much ammo to carry (the ammo line and the vendor advice aim for it).
+-- First choice "quiver" = what your quiver or ammo pouch holds.
+ns.EXTRA_SELECTORS = {
+  { key = "CFG_AMMOTARGET",
+    value = function()
+      if not ns.db.ammoTarget then return ns.T("AMMO_TARGET_QUIVER", ns.AmmoQuiverSize and ns.AmmoQuiverSize() or 1000) end
+      return tostring(ns.db.ammoTarget)
+    end,
+    step = function(dir)
+      local list, cur, i = ns.AMMO_TARGETS or { 0 }, ns.db.ammoTarget or 0, 1
+      for n, v in ipairs(list) do if v == cur then i = n end end
+      i = math.max(1, math.min(#list, i + dir))
+      ns.db.ammoTarget = list[i] ~= 0 and list[i] or nil
+      ns.RefreshMain()
+    end },
+}
+
 -- Class tick box: the ammo alert (Items group).
 ns.EXTRA_FEATURES = {
   { group = "CAT_ITEMS", key = "MM_AMMO", on = function() return not ns.db.ammoOff end, cmd = "ammo" },

@@ -807,6 +807,51 @@ do
   ns.RunCommand("ammo", "")
   ns.Print = oldPrint
   print("  " .. table.concat(printed, " | "))
+  -- Only ammo that fits the weapon: bullets don't count with a bow.
+  items[2516] = { "Light Shot", 1, 5, "INVTYPE_AMMO", 0, 6, nil, 0, 3 }
+  items[2515] = { "Sharp Arrow", 1, 15, "INVTYPE_AMMO", 0, 6, nil, 0, 2, 10 }
+  bag[6] = 2516
+  if ns.AmmoCount() ~= 1 then table.insert(errors, "ammo: kulor räknades med en båge (" .. ns.AmmoCount() .. ")") end
+  -- The supplies line: what you shoot, then the next kind you carry, and better ammo to buy.
+  bag[7] = 2515
+  local oldLevel = playerLevel
+  playerLevel = 26
+  local line
+  for _, p in ipairs(ns.statusProviders) do
+    local ok, r = pcall(p.fn)
+    if ok and type(r) == "table" and r.text and r.text:find(ns.T("AMMO_LINE"), 1, true) then line = r.text end
+  end
+  print("  rad: " .. tostring(line))
+  if not line then table.insert(errors, "ammo: raden saknas i planfönstret")
+  else
+    if not line:find("Sharp Arrow", 1, true) or not line:find("Rough Arrow", 1, true) then table.insert(errors, "ammo: raden visar inte bästa och nästa ammo") end
+    if line:find("Sharp Arrow", 1, true) > line:find("Rough Arrow", 1, true) then table.insert(errors, "ammo: sämre ammo visas först") end
+    if not line:find("Razor Arrow", 1, true) then table.insert(errors, "ammo: säger inte att Razor Arrow (nivå 25) är bättre") end
+    if line:find("Light Shot", 1, true) then table.insert(errors, "ammo: kulor visas med en båge") end
+  end
+  -- At a vendor: the best ammo for your level and the stacks to reach the goal.
+  items[3030] = { "Razor Arrow", 1, 30, "INVTYPE_AMMO", 0, 6, nil, 0, 2, 25 }
+  items[11285] = { "Jagged Arrow", 1, 45, "INVTYPE_AMMO", 0, 6, nil, 0, 2, 40 }
+  local sells = { 2512, 2515, 3030, 11285, 2516 }
+  GetMerchantNumItems = function() return #sells end
+  GetMerchantItemLink = function(i) return "|Hitem:" .. sells[i] .. "|h[x]|h" end
+  ns.db.ammoTarget = 1000
+  local advice = ns.AmmoVendorAdvice()
+  print("  handlare: " .. tostring(advice))
+  if not advice or not advice:find("Razor Arrow", 1, true) or not advice:find("5", 1, true) then
+    table.insert(errors, "ammo: fel råd hos handlaren: " .. tostring(advice))
+  end
+  -- The setting: quiver by default, then fixed amounts.
+  local sel = ns.EXTRA_SELECTORS and ns.EXTRA_SELECTORS[1]
+  ns.db.ammoTarget = nil
+  if not sel or not sel.value():find("1000", 1, true) then table.insert(errors, "ammo: inställningen visar inte kogret som standard") end
+  sel.step(1)
+  if ns.db.ammoTarget ~= 400 then table.insert(errors, "ammo: inställningen stegar inte (" .. tostring(ns.db.ammoTarget) .. ")") end
+  sel.step(-1)
+  if ns.db.ammoTarget ~= nil then table.insert(errors, "ammo: kommer inte tillbaka till kogret") end
+  GetMerchantNumItems, GetMerchantItemLink = nil, nil
+  playerLevel = oldLevel
+  bag[6], bag[7] = nil, nil
   ns.db.ammoMin = nil
   bag[5] = nil
   GetInventoryItemLink = oldInv

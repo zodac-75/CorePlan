@@ -161,8 +161,23 @@ ns.CLASS_TIPS = {
     text = { "Merchant's Favor vendors are here: Mivin Shadowweave (Tailoring patterns) and Alynsia (Enchanting).", "Här finns Merchant's Favor-försäljarna: Mivin Shadowweave (Tailoring-mönster) och Alynsia (Enchanting)." } },
 }
 
-ns.PLAN_ORDER = { "enhancement", "elemental", "resto" }
+ns.PLAN_ORDER = { "enhancement", "drakeosvr", "elemental", "resto" }
+-- Plans that play like another one (stat weights, combat call-outs, plan texts).
+ns.PLAN_LIKE = { drakeosvr = "enhancement" }
 ns.PLAN_STEPS = {
+  -- Enhancement as the player drakeosvr builds it (17/26/8 at 60, from his screenshot on
+  -- CurseForge, 2026-11-18): no Rage of the Farseer, Flurry 2/5 and Maelstrom 1/5, Tidal Focus
+  -- and Mindfulness for hit and mana, the rest in Elemental with Convection. The order is ours.
+  drakeosvr = {
+    { "Thundering Strikes", 5 }, { "Mental Dexterity", 3 }, { "Ancestral Knowledge", 5, 2 },
+    { "Shamanistic Focus", 1 }, { "Elemental Weapons", 3 }, { "Anticipation", 3, 1 },
+    { "Stormstrike", 1 }, { "Flurry", 5, 2 }, { "Improved Ghost Wolf", 2 },
+    { "Improved Stormstrike", 2 }, { "Mental Quickness", 2 }, { "Spirit Weapons", 1 },
+    { "Maelstrom Weapon", 5, 1 },
+    { "Tidal Focus", 5 }, { "Mindfulness", 3 },
+    { "Convection", 5 }, { "Elemental Devastation", 3 }, { "Reverberation", 5, 3 },
+    { "Call of Flame", 3 }, { "Elemental Focus", 1 }, { "Trial by Fire", 2 }, -- (Improved Fire Totems in Classic)
+  },
   -- Elemental, caster: 31/20/0. Lightning Overload at 32, Lightning Mastery at 40.
   elemental = {
     { "Concussion", 5 },

@@ -95,6 +95,8 @@ Copy the closest class folder (PriestPlan is the newest pattern). Data sources:
   `QDB=QuestieDB texlua tools/gennames.lua AreaTable.csv` (core/NameData.lua: NPC and quest names in
   de/fr/es/pt/ru from QuestieDB's l10n, Italian has none there; plus the NPC, item, place and spell
   names inside data texts, which `ns.TxL` swaps for the client's names). Show data texts with `ns.TxL`.
+  Leveling zone suggestions (core/ZoneData.lua) come from the same QuestieDB data:
+  `QDB=QuestieDB texlua tools/genzones.lua AreaTable.csv`. Planned features: docs/ROADMAP.md.
 - Tests: copy `tests/priest.lua` to `tests/<class>.lua`, adjust names/spells, and run all four
   modes: `texlua tests/<class>.lua <out>/<Addon> classic|modern enUS|svSE` must end with
   `--- FEL (0) ---`. Run every class's tests after a core change.

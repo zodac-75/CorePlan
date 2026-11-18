@@ -1,6 +1,7 @@
 [data]
+e40ff40b = Ti servono circa 225 rotoli di lana fino a 140, quindi fanne altri più tardi
+e4c2d30f = Imparala dall'istruttore di sartoria a 110
 af048e0f = Tieni i rotoli per il Linen Belt
-8284bedc = Ti servono 153 rotoli di lana fino a 140, quindi falli più tardi
 4fd84ed4 = Ti servono 184 rotoli di seta fino a 190
 d7aac36c = Ti servono 180 rotoli di mageweave fino a 225
 1f005492 = Dal maestro Artisan. I rotoli qui non danno più punti, quindi falli tutti e 244 insieme

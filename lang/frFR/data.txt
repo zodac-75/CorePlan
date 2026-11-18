@@ -1,6 +1,7 @@
 [data]
+e40ff40b = Il te faut environ 225 rouleaux de laine jusqu'à 140, alors fais-en plus plus tard
+e4c2d30f = Apprends-le auprès du maître tailleur à 110
 af048e0f = Gardez les rouleaux pour la Ceinture de lin
-8284bedc = Il vous faut 153 rouleaux de laine jusqu'à 140, donc faites-en plus tard
 4fd84ed4 = Il vous faut 184 rouleaux de soie jusqu'à 190
 d7aac36c = Il vous faut 180 rouleaux de tisse-mage jusqu'à 225
 1f005492 = Chez le maître artisan. Les rouleaux ne donnent plus de points ici, faites donc les 244 d'un coup

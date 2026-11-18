@@ -21,7 +21,8 @@ end
 ns.PLANS = {}
 for i, key in ipairs(ns.PLAN_ORDER) do
   local steps = ns.PLAN_STEPS and ns.PLAN_STEPS[key]
-  ns.PLANS[key] = { talents = steps and ns.BuildPlan(10, steps) or (i == 1 and ns.talents) or {} }
+  ns.PLANS[key] = { talents = steps and ns.BuildPlan(10, steps) or (i == 1 and ns.talents) or {},
+    like = ns.PLAN_LIKE and ns.PLAN_LIKE[key] }
 end
 
 -- The plan you picked (one of ours, or "import" for a talent link you imported).

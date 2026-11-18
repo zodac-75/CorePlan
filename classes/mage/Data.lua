@@ -17,9 +17,10 @@ ns.talents = {
   [21] = "Frost Channeling 1/3", [22] = "Frost Channeling 2/3",
   [23] = "Frost Channeling 3/3",
   [24] = "Improved Blizzard 1/3",
-  -- Improved Frost Nova before Shatter, in case Shatter still requires it (as in Classic).
-  [25] = "Improved Frost Nova 1/2", [26] = "Improved Frost Nova 2/2",
-  [27] = "Shatter 1/3", [28] = "Shatter 2/3", [29] = "Shatter 3/3",
+  -- Shatter as soon as 15 points open its row: it needs no Improved Frost Nova here (checked in
+  -- game 2026-11-17), and Frost Nova + Shatter is the frost mage's big crit window.
+  [25] = "Shatter 1/3", [26] = "Shatter 2/3", [27] = "Shatter 3/3",
+  [28] = "Improved Frost Nova 1/2", [29] = "Improved Frost Nova 2/2",
   [30] = "Fingers of Frost 1/2",
   [31] = "Ice Block 1/1",
   [32] = "Fingers of Frost 2/2",

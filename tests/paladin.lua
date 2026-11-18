@@ -908,7 +908,7 @@ do
   local first = ns.NextTalent()
   -- Right-click on the plan window's "Next talent" row skips it.
   local row
-  for _, f in ipairs(allFrames) do if f.item and f.item.rclick and f.item.click and not f.item.spells and tostring(f.item.text):find("|cffffd100", 1, true) == 1 and f:IsShown() then row = f end end
+  for _, f in ipairs(allFrames) do if f.item and f.item.rclick and f.item.click and not f.item.spells and tostring(f.item.text):find("|cffffd100", 1, true) == 1 and tostring(f.item.text):find(ns.T("NEXT_TALENT"), 1, true) and f:IsShown() then row = f end end
   if row then row.__scripts.OnClick(row, "RightButton") else ns.SkipTalent() end
   local second = ns.NextTalent()
   print("  " .. tostring(first) .. " -> " .. tostring(second) .. (row and " (högerklick)" or " (kommando)"))

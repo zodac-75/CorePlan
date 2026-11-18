@@ -766,6 +766,47 @@ do
   UIErrorsFrame.AddMessage, GetZoneText, C_Map.GetAreaInfo = oldAdd, oldZone, oldMap
 end
 
+-- Where to level: zone suggestions from WoW Forever's quests, per faction, in the plan window,
+-- and a click points the arrow at the zone's quest hub.
+do
+  local now, nxt = ns.LevelZones(25, "A")
+  local names = {}
+  for _, z in ipairs(now) do names[#names + 1] = z[7] end
+  local s25 = table.concat(names, ", ")
+  if not (s25:find("Duskwood", 1, true) or s25:find("Wetlands", 1, true) or s25:find("Ashenvale", 1, true)) then
+    table.insert(errors, "levelzoner: nivå 25 (Alliance) föreslog " .. s25)
+  end
+  local h = ns.LevelZones(25, "H")
+  for _, z in ipairs(h) do
+    if z[7] == "Duskwood" or z[7] == "Wetlands" then table.insert(errors, "levelzoner: Horde fick Alliance-zonen " .. z[7]) end
+  end
+  local w15 = ns.LevelZones(15, "A")
+  local ok15 = false
+  for _, z in ipairs(w15) do if z[7] == "Westfall" or z[7] == "Redridge Mountains" or z[7] == "Darkshore" or z[7] == "Loch Modan" then ok15 = true end end
+  if not ok15 then table.insert(errors, "levelzoner: nivå 15 gav inga rimliga zoner") end
+  if #ns.LevelZones(60, "A") > 0 then table.insert(errors, "levelzoner: förslag på nivå 60") end
+  print("  levelzoner 25 A: " .. s25 .. (nxt and (" (sedan " .. nxt[7] .. ")") or ""))
+  -- The line in the plan window, and its click.
+  ns.RefreshMain()
+  local txt = ns.mainFrame.text and ns.mainFrame.text.__text or ""
+  if not txt:find(ns.T("LZ_LINE"), 1, true) then table.insert(errors, "levelzoner: raden saknas i planfönstret") end
+  local way
+  local oldWay = ns.SetWaypoint
+  ns.SetWaypoint = function(map, x, y, title) way = { map, x, y, title } end
+  local m = ns.LevelZones(UnitLevel("player"), "A")
+  for _, p in ipairs(ns.statusProviders) do
+    local okp, r = pcall(p.fn)
+    if okp and type(r) == "table" and r.text and r.text:find(ns.T("LZ_LINE"), 1, true) then r.click() end
+  end
+  ns.SetWaypoint = oldWay
+  if not way or not m[1] or way[1] ~= m[1][4] then table.insert(errors, "levelzoner: klick satte ingen pil till zonens questnav") end
+  ns.RunCommand("levelzones", "")
+  ns.RefreshMain()
+  txt = ns.mainFrame.text and ns.mainFrame.text.__text or ""
+  if txt:find(ns.T("LZ_LINE"), 1, true) then table.insert(errors, "levelzoner: raden syns fast den är avslagen") end
+  ns.RunCommand("levelzones", "")
+end
+
 -- Profiles
 do
   local function chk(cond, msg) if not cond then table.insert(errors, "profil: " .. msg) end end

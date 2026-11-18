@@ -1,6 +1,7 @@
 [data]
+e40ff40b = Du brauchst etwa 225 Wollballen bis 140, stelle also später mehr her
+e4c2d30f = Lerne es beim Schneiderlehrer bei 110
 af048e0f = Spare die Ballen für den Leinengürtel
-8284bedc = Du brauchst 153 Wollballen bis 140, stelle also später mehr her
 4fd84ed4 = Du brauchst 184 Seidenballen bis 190
 d7aac36c = Du brauchst 180 Magiestoffballen bis 225
 1f005492 = Vom Großmeister-Lehrer. Ballen geben hier keine Punkte mehr, stelle also alle 244 auf einmal her

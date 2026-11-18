@@ -51,12 +51,16 @@ ns.ROUTES.Tailoring = {
     note = { "Save the bolts for Linen Belt", "Spara bolts till Linen Belt" } },
   { from = 30, to = 55, crafts = 28, craft = "Linen Belt", mats = { {2996, 1, "Bolt of Linen Cloth"}, {2320, 1, "Coarse Thread"} } },
   { from = 55, to = 80, crafts = 45, craft = "Bolt of Woolen Cloth", mats = { {2592, 3, "Wool Cloth"} },
-    note = { "You need 153 woolen bolts up to 140, so make more later", "Du behöver 153 woolen bolts fram till 140, så gör fler senare" } },
+    note = { "You need about 225 woolen bolts up to 140, so make more later", "Du behöver runt 225 woolen bolts fram till 140, så gör fler senare" } },
+  -- Skill colours from WoW Forever's recipe list (seemeta.com, game 1.60.1): Woolen Cape goes green
+  -- at 98, Woolen Boots stays yellow to 113, Double-stitched Woolen Shoulders is taught at 110 and
+  -- Bolt of Silk Cloth is grey from 120, so the bolts come from the silk you gather on the way.
   { from = 80, to = 95, crafts = 22, craft = "Woolen Cape", mats = { {2997, 1, "Bolt of Woolen Cloth"}, {2321, 1, "Fine Thread"} } },
-  { from = 95, to = 100, crafts = 5, craft = "Double-stitched Woolen Shoulders", mats = { {2997, 3, "Bolt of Woolen Cloth"}, {2321, 2, "Fine Thread"} } },
-  { from = 100, to = 120, crafts = 54, craft = "Bolt of Silk Cloth", mats = { {4306, 4, "Silk Cloth"} },
+  { from = 95, to = 110, crafts = 18, craft = "Woolen Boots", mats = { {2997, 4, "Bolt of Woolen Cloth"}, {2321, 2, "Fine Thread"}, {2318, 2, "Light Leather"} } },
+  { from = 110, to = 125, crafts = 17, craft = "Double-stitched Woolen Shoulders", mats = { {2997, 3, "Bolt of Woolen Cloth"}, {2321, 2, "Fine Thread"} },
+    note = { "Learn it from the tailoring trainer at 110", "Lär dig den hos skräddartränaren vid 110" } },
+  { from = 125, to = 140, crafts = 20, craft = "Gloves of Meditation", mats = { {2997, 4, "Bolt of Woolen Cloth"}, {2321, 3, "Fine Thread"}, {3383, 1, "Elixir of Wisdom"} },
     note = { "You need 184 silk bolts up to 190", "Du behöver 184 silk bolts fram till 190" } },
-  { from = 120, to = 140, crafts = 29, craft = "Gloves of Meditation", mats = { {2997, 4, "Bolt of Woolen Cloth"}, {2321, 3, "Fine Thread"}, {3383, 1, "Elixir of Wisdom"} } },
   { from = 140, to = 150, crafts = 23, craft = "Bolt of Mageweave", mats = { {4338, 5, "Mageweave Cloth"} },
     note = { "You need 180 mageweave bolts up to 225", "Du behöver 180 mageweave bolts fram till 225" } },
   { from = 150, to = 170, crafts = 20, craft = "Crimson Silk Vest", mats = { {4305, 4, "Bolt of Silk Cloth"}, {2604, 2, "Red Dye"}, {2321, 2, "Fine Thread"} } },
