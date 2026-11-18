@@ -2,6 +2,7 @@
 -- that is no upgrade and grey junk.
 -- Advice shows in item tooltips, and /@SLASH@ de opens a window that lists your bags.
 -- With a vendor open you sell from the window; with Enchanting you disenchant from it.
+-- Mages read undeciphered scrolls from it with Comprehend Scroll.
 -- AH prices come from Auctionator (do a full scan at the AH first).
 -- Disenchant results are Classic tables and can differ in Forever.
 local _, ns = ...
@@ -97,7 +98,7 @@ function ns.Evaluate(link, isBound)
   return r
 end
 
-local COLORS = { de = "|cffb070ff", ah = "|cff60ff60", vendor = "|cffffd100", junk = "|cff9d9d9d" }
+local COLORS = { scroll = "|cff69ccf0", de = "|cffb070ff", ah = "|cff60ff60", vendor = "|cffffd100", junk = "|cff9d9d9d" }
 
 local function AdviceLine(r)
   local parts = {}
@@ -158,7 +159,40 @@ local function Keep()
   return ns.db.bagKeep
 end
 
-local GROUPS = { "junk", "vendor", "de", "ah" }
+local GROUPS = { "scroll", "junk", "vendor", "de", "ah" }
+
+-- Mage: undeciphered scrolls (item ID = Comprehension skill needed), read with Comprehend Scroll.
+local COMPREHEND = 1296017
+local SCROLLS = {
+  [211780] = 1, [211785] = 1, [211786] = 1, [211787] = 1,        -- KWYJIBO, CWAL, CHAP BALK WELLES, LOWER PING WHOMEVER
+  [211784] = 15, [211853] = 15, [211854] = 15, [211855] = 15,    -- WUBBA WUBBA, VOCE WELL, OMIT KESA, STHENIC LUNATE
+  [213543] = 50, [213544] = 50, [213545] = 50, [213546] = 50, [213547] = 50, -- UPDOG, TOPAZ YORAK, PEATCHY ATTAX, SHOOBEEDOOP, THAW WORDS
+  [281015] = 175, [281016] = 175, [281017] = 175, [281018] = 175, -- DOST OREM, FORGOT HOOF THUD, KEEP CLEF FOCI, RARE SERVICHI RADAR
+}
+ns.SCROLLS = SCROLLS
+
+local function KnowsComprehend()
+  if IsPlayerSpell then
+    local ok, known = pcall(IsPlayerSpell, COMPREHEND)
+    if ok and known then return true end
+  end
+  if IsSpellKnown then
+    local ok, known = pcall(IsSpellKnown, COMPREHEND)
+    if ok and known then return true end
+  end
+  return false
+end
+
+-- The Comprehension skill, or nil when we can't tell (the skill list is only read by its
+-- English name, so other clients just try the scroll).
+local function ComprehensionSkill()
+  if not (GetNumSkillLines and GetSkillLineInfo) then return nil end
+  for i = 1, GetNumSkillLines() do
+    local name, header, _, rank = GetSkillLineInfo(i)
+    if not header and name == "Comprehension" then return rank end
+  end
+  return nil
+end
 
 -- Profession tools are white weapons too: never offer to sell them.
 local TOOLS = {
@@ -196,17 +230,22 @@ end
 -- Everything worth a decision: green/blue gear (DE, AH or vendor), white gear that
 -- isn't an upgrade (vendor) and grey junk.
 function ns.BagScan()
-  local list = { de = {}, ah = {}, vendor = {}, junk = {}, kept = {} }
-  local totals = { de = 0, ah = 0, vendor = 0, junk = 0 }
+  local list = { scroll = {}, de = {}, ah = {}, vendor = {}, junk = {}, kept = {} }
+  local totals = { scroll = 0, de = 0, ah = 0, vendor = 0, junk = 0 }
   local keep = Keep()
+  local reader = KnowsComprehend()
+  local skill = reader and ComprehensionSkill()
   for bag = 0, 4 do
     for slot = 1, NumSlots(bag) do
       local link = SlotLink(bag, slot)
       if link then
         local count, icon, bound = SlotInfo(bag, slot)
         local e
-        local r = ns.Evaluate(link, bound)
-        if r then
+        local need = reader and SCROLLS[tonumber(link:match("item:(%d+)")) or 0]
+        local r = not need and ns.Evaluate(link, bound)
+        if need then
+          e = { key = "scroll", need = need, low = skill and skill < need or nil, skill = skill }
+        elseif r then
           e = { key = r.best.key, value = r.best.value, reason = r.best.reason, r = r }
         else
           local ok, name, _, quality, _, _, _, _, _, _, tex, sell = pcall(ns.ItemInfo, link)
@@ -264,11 +303,17 @@ local function SellMacro(e) return "/use " .. e.bag .. " " .. e.slot end
 
 local function DEMacro(e) return "/cast " .. DisenchantName() .. "\n" .. SellMacro(e) end
 
+local function ReadMacro(e) return "/cast " .. (ns.SpellInfo(COMPREHEND) or "Comprehend Scroll") .. "\n" .. SellMacro(e) end
+
 -- What a left-click, shift-left-click and alt-left-click on a row do, and the label.
 -- Alt-click disenchants a sell or AH item when you can disenchant it (enchanters keep
 -- the best-price advice but can still DE anything).
 local function RowAction(e)
   if e.kept then return nil, nil, "|cff888888" .. ns.T("BAG_ACT_KEPT") .. "|r" end
+  if e.key == "scroll" then
+    if e.low then return nil, nil, "|cff888888" .. ns.T("BAG_ACT_SCROLL_LOW", e.need) .. "|r" end
+    return ReadMacro(e), nil, COLORS.scroll .. ns.T("BAG_ACT_SCROLL") .. "|r"
+  end
   local shift = merchantOpen and SellMacro(e) or nil
   if e.key == "de" and e.r and e.r.canDE then
     return DEMacro(e), shift, COLORS.de .. ns.T("BAG_ACT_DE") .. "|r"
@@ -309,7 +354,13 @@ local function LineTooltip(self)
   if e.kept then
     GameTooltip:AddLine(ns.T("BAG_TT_UNKEEP"), 0.7, 0.7, 0.7)
   else
-    if main and (e.key == "de" or (e.r and e.r.canDE and not merchantOpen and e.key ~= "ah")) then
+    if e.key == "scroll" then
+      if e.low then
+        GameTooltip:AddLine(ns.T("BAG_TT_SCROLL_LOW", e.need, e.skill or 0), 1, 0.4, 0.4)
+      else
+        GameTooltip:AddLine(ns.T("BAG_TT_SCROLL", ns.SpellInfo(COMPREHEND) or "Comprehend Scroll"), 0.4, 0.8, 1)
+      end
+    elseif main and (e.key == "de" or (e.r and e.r.canDE and not merchantOpen and e.key ~= "ah")) then
       GameTooltip:AddLine(ns.T("BAG_TT_DE"), 0.7, 0.45, 1)
     elseif main then
       GameTooltip:AddLine(ns.T("BAG_TT_SELL"), 0.4, 1, 0.4)
@@ -420,8 +471,13 @@ Refresh = function()
     local items = list[k]
     if #items > 0 then
       if n > 0 then y = y - 4 end
-      Add(ShowHeader, COLORS[k] .. ns.T("DE_GROUP", ns.T("DE_" .. k), #items, ns.Money(totals[k])) .. "|r")
-      table.sort(items, function(a, b) return (a.value or 0) > (b.value or 0) end)
+      if k == "scroll" then
+        Add(ShowHeader, COLORS[k] .. ns.T("DE_GROUP_N", ns.T("DE_scroll"), #items) .. "|r")
+        table.sort(items, function(a, b) return (a.need or 0) < (b.need or 0) end)
+      else
+        Add(ShowHeader, COLORS[k] .. ns.T("DE_GROUP", ns.T("DE_" .. k), #items, ns.Money(totals[k])) .. "|r")
+        table.sort(items, function(a, b) return (a.value or 0) > (b.value or 0) end)
+      end
       for _, e in ipairs(items) do
         Add(ShowEntry, e)
         if k == "junk" or k == "vendor" then table.insert(sellList, e) end

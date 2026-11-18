@@ -2083,6 +2083,41 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
 end
+-- Comprehend Scroll: undeciphered scrolls get their own group with a read macro.
+do
+  items[211780] = { "Scroll: KWYJIBO", 1, 10, "", 1, 0, 0, 15 }
+  items[213543] = { "Scroll: UPDOG", 1, 30, "", 1, 0, 0, 15 }
+  bag[5], bag[6] = 211780, 213543
+  local oldIPS = rawget(_G, "IsPlayerSpell")
+  local ok, err = pcall(function()
+    local list = ns.BagScan()
+    if #list.scroll ~= 0 then table.insert(errors, "tyda: rullar listas utan Comprehend Scroll") end
+    IsPlayerSpell = function(id) return id == 1296017 end
+    GetNumSkillLines = function() return 1 end
+    GetSkillLineInfo = function() return "Comprehension", false, false, 20, 0, 0, 300 end
+    list = ns.BagScan()
+    if #list.scroll ~= 2 then table.insert(errors, "tyda: väntade 2 rullar, fick " .. #list.scroll) return end
+    for _, e in ipairs(list.scroll) do
+      if e.id == 211780 and e.low then table.insert(errors, "tyda: KWYJIBO borde gå att läsa på 20") end
+      if e.id == 213543 and not e.low then table.insert(errors, "tyda: UPDOG kräver 50") end
+    end
+    for _, k in ipairs({ "junk", "vendor" }) do
+      for _, e in ipairs(list[k]) do if ns.SCROLLS[e.id] then table.insert(errors, "tyda: rulle hamnade i " .. k) end end
+    end
+    slash("de"); slash("de")
+    local found
+    for i = 1, 40 do
+      local b = rawget(_G, "MagePlanBagLine" .. i)
+      local m = b and b.__shown and b.entry and b.entry.id == 211780 and b:GetAttribute("macrotext1")
+      if m then found = m end
+    end
+    if not (found and found:find("/use 0 5", 1, true)) then table.insert(errors, "tyda: radens makro saknas: " .. tostring(found)) end
+  end)
+  if not ok then table.insert(errors, "tyda: " .. tostring(err)) end
+  GetNumSkillLines, GetSkillLineInfo = nil, nil
+  IsPlayerSpell = oldIPS
+  bag[5], bag[6] = nil, nil
+end
 do
   if not ns.HasGlide() then table.insert(errors, "Skyborne borde ha Walk on Air") end
   local oldRace = UnitRace
