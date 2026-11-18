@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.27
+
+- **Mage: read your scrolls from the bag check.** If you know Comprehend Scroll, the bag check (`/acp de`) lists your undeciphered scrolls in their own group, lowest skill first. Click a row to decipher it. Scrolls you need more Comprehension skill for show the skill needed (English clients).
+- **Gold goal in the settings:** a tick box turns the gold goal line on or off (it starts at 100 g if you had none; hiding it keeps the amount), and you type the amount in gold in a box under it. An empty box removes the goal. `/acp goal 100 mount` still works and keeps its label.
+
 # AllClassPlan 0.1.26
 
 - **Where to level:** a new line in the plan window suggests the one or two zones that fit your level best and the next one coming up, per faction (worked out from WoW Forever's quests, including Forever's own zones). Click it for an arrow to the zone's quest hub, right-click for the second zone. Turn it off in the settings or with `/acp levelzones`.
