@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.28
+
+- **Mage: range icon.** While you have an enemy target, an icon with Frostbolt (Fireball with the Fire plan) shows whether you can reach it: red out of range, full colour in range. Talents like Arctic Reach count. Move it with "Unlock UI"; turn it off in the settings or with `/acp range`.
+
 # AllClassPlan 0.1.27
 
 - **Mage: read your scrolls from the bag check.** If you know Comprehend Scroll, the bag check (`/acp de`) lists your undeciphered scrolls in their own group, lowest skill first. Click a row to decipher it. Scrolls you need more Comprehension skill for show the skill needed (English clients).
