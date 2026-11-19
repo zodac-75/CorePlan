@@ -7,7 +7,8 @@
   "modules": [
     "Shatter.lua",
     "Polymorph.lua",
-    "Supplies.lua"
+    "Supplies.lua",
+    "Range.lua"
   ],
   "notes": "Mage leveling companion with Frost, Fire and Arcane plans: talent plan, upgrade check, rank check, shatter and polymorph alerts, dungeon guide, profession assistant, XP tracker.",
   "optionalDeps": "Auctionator"

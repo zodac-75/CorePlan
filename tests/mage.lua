@@ -2083,6 +2083,28 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
 end
+-- Range icon: shown with an enemy target, coloured by the game's range answer.
+do
+  local function ticks() for _, w in ipairs(allFrames) do if w.__scripts.OnUpdate then pcall(w.__scripts.OnUpdate, w, 0.2) end end end
+  local oldCS, oldUnlock = C_Spell, ns.db.shatterUnlocked
+  local inRange = false
+  C_Spell = setmetatable({ IsSpellInRange = function(id, u) return inRange end }, { __index = oldCS })
+  ns.db.shatterUnlocked = nil; ns.db.rangeOff = nil
+  local ok, err = pcall(function()
+    local rf = rawget(_G, "MagePlanRangeFrame")
+    if not rf then table.insert(errors, "räckvidd: ikonen skapades inte") return end
+    ticks()
+    if not rf.__shown then table.insert(errors, "räckvidd: ikonen syns inte med fientligt mål") end
+    if ns.RangeCheck(ns.RangeSpell()) ~= false then table.insert(errors, "räckvidd: utom räckhåll blev inte false") end
+    inRange = true
+    if ns.RangeCheck(ns.RangeSpell()) ~= true then table.insert(errors, "räckvidd: inom räckhåll blev inte true") end
+    slash("range"); ticks()
+    if rf.__shown then table.insert(errors, "räckvidd: /acp range döljer inte ikonen") end
+    slash("range"); slash("rangedebug")
+  end)
+  if not ok then table.insert(errors, "räckvidd: " .. tostring(err)) end
+  C_Spell, ns.db.shatterUnlocked = oldCS, oldUnlock
+end
 -- Comprehend Scroll: undeciphered scrolls get their own group with a read macro.
 do
   items[211780] = { "Scroll: KWYJIBO", 1, 10, "", 1, 0, 0, 15 }

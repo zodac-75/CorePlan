@@ -230,6 +230,7 @@ ns.COMBAT_CMD = "shatter"
 ns.EXTRA_FEATURES = {
   { key = "MM_POLY", on = function() return not ns.db.polyOff end, cmd = "poly" },
   { key = "MM_NOVA", on = function() return not ns.db.novaGuessOff end, cmd = "novaguess" },
+  { key = "MM_RANGE", on = function() return not ns.db.rangeOff end, cmd = "range" },
   { key = "MM_GROUPBAR", group = "CAT_MARKS", on = function() return not ns.db.groupBarOff end, cmd = "groupbar" },
   { key = "MM_GROUPAUTO", group = "CAT_MARKS", on = function() return not ns.db.groupBarManual end, cmd = "groupbarauto", indent = 16 },
 }
