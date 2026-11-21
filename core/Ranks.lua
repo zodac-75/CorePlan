@@ -110,6 +110,10 @@ end
 -- own button sets: they can keep an old rank you can't see, so they only count when a
 -- controller is in use: off unless "I use a controller" is ticked ("/@SLASH@ ranks controller on|off").
 local NORMAL_BAR_SLOTS = 180
+-- 121-132 is the vehicle/possess bar and 133-144 the game's totem sets (Call of the
+-- Elements/Ancestors/Spirits). The game fills these itself and most players never see
+-- them, so an old rank there isn't something you can fix: leave them out.
+local function GameSlot(slot) return slot >= 121 and slot <= 144 end
 
 local function ControllerBars()
   return ns.db.rankController == true
@@ -141,7 +145,8 @@ local function SpellsOnBars()
   end
   -- 1-180: the normal bars and the extra pages bar addons use; up to 360 the controller's sets.
   for slot = firstSlot, lastSlot do
-    local ok, kind, id = pcall(GetActionInfo, slot)
+    local ok, kind, id = false, nil, nil
+    if not GameSlot(slot) then ok, kind, id = pcall(GetActionInfo, slot) end
     if ok and kind == "spell" and id then
       local name = ns.SpellInfo(id)
       if name then Add(name, { slot = slot, id = id }) end
@@ -174,7 +179,7 @@ local function SpellsOnBars()
         local ok, slots = pcall(AB.FindSpellActionButtons, id)
         if ok and type(slots) == "table" and slots[1] then
           for _, slot in ipairs(slots) do
-            if type(slot) == "number" and not (issecretvalue and issecretvalue(slot)) and slot <= lastSlot then
+            if type(slot) == "number" and not (issecretvalue and issecretvalue(slot)) and slot <= lastSlot and not GameSlot(slot) then
               Add(name, { slot = slot, id = id })
             end
           end

@@ -1,6 +1,7 @@
 # AllClassPlan 0.1.28
 
 - **Mage: range icon.** While you have an enemy target, an icon with Frostbolt (Fireball with the Fire plan) shows whether you can reach it: red out of range, full colour in range. Talents like Arctic Reach count. Move it with "Unlock UI"; turn it off in the settings or with `/acp range`.
+- **Shaman: no more false "old rank" warnings for totems.** The rank check counted the game's hidden totem sets (and the vehicle bar), action slots you never see, and asked you to update a totem that wasn't on any of your bars. Those slots are skipped now.
 
 # AllClassPlan 0.1.27
 

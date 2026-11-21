@@ -1954,6 +1954,11 @@ do
   ns.db.rankController = nil
   if ns.RankControllerOn() then table.insert(errors, "controller är på utan att vara ikryssad") end
   if Scan():find("Frostbolt rank", 1, true) then table.insert(errors, "knapp 200 kollades utan controller") end
+  -- 121-144 are the game's own slots (vehicle bar, shaman totem sets): never reported.
+  actions[200] = nil; actions[138] = 116
+  local s138 = Scan()
+  if s138:find("Frostbolt rank", 1, true) or s138:find("138", 1, true) then table.insert(errors, "knapp 138 (spelets totemset) rapporterades") end
+  actions[138] = nil; actions[200] = 116
   ns.db.rankController = true
   local all = Scan()
   print("  " .. all:sub(1, 160))
