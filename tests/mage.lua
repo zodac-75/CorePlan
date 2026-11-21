@@ -1495,6 +1495,26 @@ do
   if tostring(msg):find("Frost Armor") then table.insert(errors, "rebuff reminder shown while off") end
   C_UnitAuras = oldC
 end
+-- Scroll of Intellect II (+8) blocks Arcane Intellect rank 2 (+7): no icon. Scroll I (+4) doesn't.
+do
+  local oldC = C_UnitAuras
+  local t0 = GetTime()
+  local scroll = 8097
+  C_UnitAuras = { GetAuraDataByIndex = function(_, i)
+    if i == 1 then return { name = "Intellect", spellId = scroll, expirationTime = t0 + 1700, duration = 1800 } end
+    if i == 2 then return { name = "Frost Armor", expirationTime = t0 + 1700, duration = 1800 } end
+  end }
+  ns.db.buffsOff = false; ns.db.shatterUnlocked = false; ns.db.rebuffMin = 0
+  local function AIShown()
+    ns.RefreshBuffWatch()
+    for i = 1, 8 do local b = rawget(_G, "MagePlanBuff" .. i); if b and b.__shown and rawget(b, "spell") == "Arcane Intellect" then return true end end
+    return false
+  end
+  if AIShown() then table.insert(errors, "skriftrulle: AI efterfrågas fast Scroll of Intellect II (+8) är på") end
+  scroll = 8096
+  if not AIShown() then table.insert(errors, "skriftrulle: AI efterfrågas inte fast rullen bara ger +4") end
+  C_UnitAuras = oldC
+end
 print("--- Välj buffar ---")
 do
   local t = ns.BuffWatchToggles()

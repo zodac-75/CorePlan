@@ -97,9 +97,59 @@ end
 
 -- Your buffs: name -> seconds left (0 = no end), name -> full duration;
 -- unsure when the game hides names.
+-- Scrolls of Intellect, Stamina and Spirit (aura spell ID -> stat, amount when the game
+-- doesn't say). They don't stack with Arcane Intellect, Fortitude or Divine Spirit: a
+-- stronger scroll blocks your cast until it runs out, a weaker one your cast replaces.
+local SCROLLS = {
+  [8096] = { "int", 4 }, [8097] = { "int", 8 }, [8098] = { "int", 12 }, [12176] = { "int", 16 },
+  [8099] = { "sta", 4 }, [8100] = { "sta", 8 }, [8101] = { "sta", 12 }, [12178] = { "sta", 16 },
+  [8112] = { "spi", 3 }, [8113] = { "spi", 7 }, [8114] = { "spi", 11 }, [12177] = { "spi", 15 },
+}
+local SCROLL_STAT = {
+  ["Arcane Intellect"] = "int", ["Arcane Brilliance"] = "int",
+  ["Power Word: Fortitude"] = "sta", ["Prayer of Fortitude"] = "sta",
+  ["Divine Spirit"] = "spi", ["Prayer of Spirit"] = "spi",
+}
+-- What your best rank gives, when the game's description can't be read.
+local RANK_AMOUNT = {
+  [1459] = 2, [1460] = 7, [1461] = 15, [10156] = 22, [10157] = 31, [23028] = 31,
+  [1243] = 3, [1244] = 8, [1245] = 20, [2791] = 32, [10937] = 43, [10938] = 54, [21562] = 54, [21564] = 54,
+  [14752] = 23, [14818] = 33, [14819] = 40, [27841] = 40, [27681] = 40,
+}
+ns.BUFF_SCROLLS = SCROLLS
+
+local function MyAmount(spell)
+  local _, id = ns.SpellInfo(spell)
+  if not id then return nil end
+  local fn = (C_Spell and C_Spell.GetSpellDescription) or rawget(_G, "GetSpellDescription")
+  if fn then
+    local ok, d = pcall(fn, id)
+    if ok and type(d) == "string" and not (issecretvalue and issecretvalue(d)) then
+      local n = tonumber(d:match("(%d+)"))
+      if n and n > 0 then return n end
+    end
+  end
+  return RANK_AMOUNT[id]
+end
+
+-- A scroll that blocks this spell: its seconds left, or nil.
+local function ScrollBlocks(spell, scrolls)
+  local stat = SCROLL_STAT[spell]
+  if not (stat and scrolls) then return nil end
+  local mine
+  for _, sc in pairs(scrolls) do
+    if sc.stat == stat then
+      mine = mine or MyAmount(spell) or 0
+      if sc.amount >= mine then return sc.left == 0 and 1e9 or sc.left end
+    end
+  end
+  return nil
+end
+ns.ScrollBlocks = ScrollBlocks
+
 local function PlayerBuffs(unit)
   unit = unit or "player"
-  local out, unsure, durs, ids = {}, false, {}, {}
+  local out, unsure, durs, ids, scrolls = {}, false, {}, {}, {}
   local now = GetTime()
   for i = 1, 40 do
     local name, expires, dur, id
@@ -108,11 +158,21 @@ local function PlayerBuffs(unit)
       if not ok then unsure = true break end
       if not a then break end
       name, expires, dur, id = a.name, a.expirationTime, a.duration, a.spellId
+      local sc = ns.Readable(id) and SCROLLS[id]
+      if sc then
+        local pts = a.points and a.points[1]
+        local left = (ns.Readable(expires) and type(expires) == "number" and expires > 0) and (expires - now) or 0
+        scrolls[id] = { stat = sc[1], amount = (ns.Readable(pts) and type(pts) == "number" and pts > 0) and pts or sc[2], left = left }
+      end
     elseif UnitAura then
       local ok, n, _, _, d, _, exp, _, _, _, sid = pcall(UnitAura, unit, i, "HELPFUL")
       if not ok then unsure = true break end
       if not n then break end
       name, expires, dur, id = n, exp, d, sid
+      local sc = ns.Readable(sid) and SCROLLS[sid]
+      if sc then
+        scrolls[sid] = { stat = sc[1], amount = sc[2], left = (type(exp) == "number" and exp > 0) and (exp - now) or 0 }
+      end
     else
       unsure = true
       break
@@ -128,7 +188,7 @@ local function PlayerBuffs(unit)
       if ns.Readable(id) and type(id) == "number" then ids[name] = id end
     end
   end
-  return out, unsure, durs, ids
+  return out, unsure, durs, ids, scrolls
 end
 
 -- A higher rank of your buff, cast by someone else (a higher-level druid's Mark of the
@@ -235,7 +295,7 @@ end
 local InRange -- below: can your buff reach them?
 
 local function Needed()
-  local buffs, unsure, durs, ids = PlayerBuffs()
+  local buffs, unsure, durs, ids, scrolls = PlayerBuffs()
   local out = {}
   local combat = InCombatLockdown and InCombatLockdown()
   for idx, e in ipairs(ns.BUFF_WATCH or {}) do
@@ -260,6 +320,8 @@ local function Needed()
         if best then left = best elseif not unsure then left = 0
         elseif not e.match then left = LookupByName("player", e.buffs) end
         if best and Outranked(e.buffs, ids, spell) then left = nil end
+        local sl = ScrollBlocks(spell, scrolls)
+        if sl and (left == nil or left == 0 or left < sl) then left = sl end
         if IsBounced(nil, spell) then left = nil end
       end
       local warn = e.warn or WARN
@@ -284,7 +346,7 @@ local function Needed()
       if okV and issecretvalue and issecretvalue(visible) then visible = true end
       if not okV then visible = true end
       if UnitExists(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) and visible then
-        local theirs, unsureP, _, theirIds = PlayerBuffs(unit)
+        local theirs, unsureP, _, theirIds, theirScrolls = PlayerBuffs(unit)
         local isMana
         local okP, pt = pcall(UnitPowerType, unit)
         if okP and not (issecretvalue and issecretvalue(pt)) then isMana = (pt == 0) end
@@ -304,6 +366,8 @@ local function Needed()
             local left = best or (not unsureP and 0 or nil)
             if left == nil and not e.match then left = LookupByName(unit, e.buffs) end
             if best and Outranked(e.buffs, theirIds, spell) then left = nil end
+            local sl = ScrollBlocks(spell, theirScrolls)
+            if sl and (left == nil or left == 0 or left < sl) then left = sl end
             if IsBounced(unit, spell) then left = nil end
             local warn = combat and (e.warn or WARN) or math.max(e.warn or WARN, math.min(RebuffSec(), 600))
             -- Out of buff range: no icon until they come closer (checked every second).

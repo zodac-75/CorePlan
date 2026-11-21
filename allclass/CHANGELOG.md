@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.29
+
+- **Buff watcher and scrolls:** a Scroll of Intellect, Stamina or Spirit that is stronger than your Arcane Intellect, Power Word: Fortitude or Divine Spirit now counts as that buff until it runs out (the game won't let your weaker rank replace it). A weaker scroll still gets the reminder, since your cast replaces it.
+
 # AllClassPlan 0.1.28
 
 - **Mage: range icon.** While you have an enemy target, an icon with Frostbolt (Fireball with the Fire plan) shows whether you can reach it: red out of range, full colour in range. Talents like Arctic Reach count. Move it with "Unlock UI"; turn it off in the settings or with `/acp range`.
