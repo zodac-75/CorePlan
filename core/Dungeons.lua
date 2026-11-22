@@ -521,14 +521,28 @@ local function ShowDetail()
   -- on other clients). Without that, list everything your class can wear and say why.
   local english = ns.IsEnglishClient() or (C_Item and C_Item.GetItemStats or GetItemStats) ~= nil -- can compare
   if not english then y = SmallText(y, ns.T("DG_LOOT_EN")) end
+  -- Ranked: the biggest upgrade first (ties and other clients: lowest required level first).
+  local picks = {}
   for _, l in ipairs(d.loot) do
     local id, boss, req = l[1], l[2], l[3]
-    local name, link, quality, _, _, _, _, _, _, icon, _, classID, subclassID = ns.ItemInfo(id)
+    local name, link, quality, _, _, _, _, _, _, icon = ns.ItemInfo(id)
     if not name then
       waiting = true
       if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
     elseif (quality or 0) >= 2 and (english and ns.ItemScore(link) > 0 and (ns.CompareToEquipped(link) or 0) > 0 -- only upgrades
         or not english and ns.CanWear(link)) then
+      picks[#picks + 1] = { id = id, boss = boss, req = req, link = link, icon = icon,
+        diff = ns.CompareToEquipped(link) or 0, n = #picks }
+    end
+  end
+  table.sort(picks, function(a, b)
+    if a.diff ~= b.diff then return a.diff > b.diff end
+    if a.req ~= b.req then return a.req < b.req end
+    return a.n < b.n
+  end)
+  for _, p in ipairs(picks) do
+    local id, boss, req, link, icon = p.id, p.boss, p.req, p.link, p.icon
+    do
       local r = GetRow()
       r:SetHeight(ROW_H())
       r:SetPoint("TOPLEFT", 4, y)

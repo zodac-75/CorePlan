@@ -602,6 +602,36 @@ do
     if not nDe then table.insert(errors, "tysk klient: loot-listan säger inte varför jämförelsen saknas") end
     if noneDe then table.insert(errors, "tysk klient: loot-listan säger 'inget är bättre'") end
     if rDe ~= 2 then table.insert(errors, "tysk klient: väntade 2 loot-rader (tyget, inte plåten), fick " .. rDe) end
+    -- Ranked: the biggest upgrade first, whatever order the data lists the items in.
+    do
+      local oldCmp, oldScore = ns.CompareToEquipped, ns.ItemScore
+      local calls, ids, bonus = {}, {}, {}
+      ns.ItemScore = function() return 10 end
+      ns.CompareToEquipped = function(link)
+        local id = tonumber(tostring(link):match("item:(%d+)")) or 0
+        if not bonus[id] then ids[#ids + 1] = id; bonus[id] = #ids * 5 end -- later in the data = bigger
+        calls[#calls + 1] = id
+        return bonus[id]
+      end
+      local oldLoc = rawget(_G, "GetLocale")
+      GetLocale = function() return "enUS" end
+      for _, b in ipairs(listed) do if b.dungeon.name == "The Deadmines" then b.__scripts.OnClick(b) end end
+      GetLocale = oldLoc
+      ns.CompareToEquipped, ns.ItemScore = oldCmp, oldScore
+      local n = #ids
+      if n < 2 then
+        table.insert(errors, "rangordning: färre än 2 loot-rader i Deadmines (" .. n .. ")")
+      else
+        local order = {}
+        for i = #calls - n + 1, #calls do order[#order + 1] = calls[i] end
+        for i = 2, #order do
+          if bonus[order[i]] > bonus[order[i - 1]] then
+            table.insert(errors, "rangordning: störst uppgradering kommer inte först: " .. table.concat(order, ","))
+            break
+          end
+        end
+      end
+    end
     -- NPC, quest and dungeon names in the client language (QuestieDB translations + the game's
     -- area names): a German client sees "Rote Seidenkopftücher", not "Red Silk Bandanas".
     do

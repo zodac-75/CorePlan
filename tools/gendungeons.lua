@@ -196,6 +196,9 @@ for _, d in ipairs(LIST) do
   for iid, it in pairs(I) do
     local drops = it[2]
     local cls, sub = it[12], it[13]
+    -- New Forever items leave out a zero subclass: armor 0 is necks, rings, cloaks,
+    -- off-hands and trinkets.
+    if cls == 4 and sub == nil then sub = 0 end
     if drops and #drops <= 2 and cls and MAGE_GEAR[cls] and MAGE_GEAR[cls][sub] and (it[9] or 0) >= lo - 5 then
       local ok, boss = true, nil
       for _, npc in ipairs(drops) do

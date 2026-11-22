@@ -1,5 +1,7 @@
 # AllClassPlan 0.1.29
 
+- **Dungeon guide: loot from the new dungeons.** City of Dalaran, Excavation Site, Ruins of Lordaeron and Hall of Thanes now list their boss loot (Dalaran had none before), and every dungeon's loot is refreshed from the latest WoW Forever data. Necks, rings, cloaks, off-hands and trinkets from the new dungeons are no longer left out.
+- **Loot is ranked:** the biggest upgrade for you is at the top.
 - **Buff watcher and scrolls:** a Scroll of Intellect, Stamina or Spirit that is stronger than your Arcane Intellect, Power Word: Fortitude or Divine Spirit now counts as that buff until it runs out (the game won't let your weaker rank replace it). A weaker scroll still gets the reminder, since your cast replaces it.
 
 # AllClassPlan 0.1.28
