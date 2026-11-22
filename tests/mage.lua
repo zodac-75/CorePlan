@@ -2324,6 +2324,23 @@ do
     UnitFactionGroup = old
   end
 end
+-- AH prices from Auctioneer or TSM when Auctionator isn't there.
+do
+  items[9993] = { "Green Gloves", 2, 10, "INVTYPE_HAND", 50000, 4, nil, 0, 2 }
+  local link = "|Hitem:9993|h[Green Gloves]|h"
+  local oldAuc, oldTSM, oldA = rawget(_G, "AucAdvanced"), rawget(_G, "TSM_API"), rawget(_G, "Auctionator")
+  Auctionator = nil
+  if ns.HasAHPrices() then table.insert(errors, "AH-priser: säger att ett AH-addon finns utan något") end
+  AucAdvanced = { API = { GetMarketValue = function(l) if tostring(l):find("item:9993", 1, true) then return 70000, 12 end end } }
+  local r = ns.Evaluate(link, false)
+  if not (r and r.ah == 70000) then table.insert(errors, "AH-priser: Auctioneer-priset användes inte: " .. tostring(r and r.ah)) end
+  AucAdvanced = nil
+  TSM_API = { GetCustomPriceValue = function(src, item) if src == "dbmarket" and item == "i:9993" then return 80000 end end }
+  r = ns.Evaluate(link, false)
+  if not (r and r.ah == 80000) then table.insert(errors, "AH-priser: TSM-priset användes inte: " .. tostring(r and r.ah)) end
+  if not ns.HasAHPrices() then table.insert(errors, "AH-priser: TSM räknas inte som AH-addon") end
+  AucAdvanced, TSM_API, Auctionator = oldAuc, oldTSM, oldA
+end
 print("--- Enchanter: DE som alternativ ---")
 do
   -- Gröna stövlar som säljer för mer än materialen: säljraden står kvar,

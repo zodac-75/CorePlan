@@ -3,27 +3,61 @@
 -- Advice shows in item tooltips, and /@SLASH@ de opens a window that lists your bags.
 -- With a vendor open you sell from the window; with Enchanting you disenchant from it.
 -- Mages read undeciphered scrolls from it with Comprehend Scroll.
--- AH prices come from Auctionator (do a full scan at the AH first).
+-- AH prices come from Auctionator, Auctioneer or TSM (do a scan at the AH first).
 -- Disenchant results are Classic tables and can differ in Forever.
 local _, ns = ...
 
-local function HasAuctionator()
+-- AH price sources, first one that knows the item wins: Auctionator, Auctioneer, TSM.
+local function AuctionatorAPI()
   return Auctionator and Auctionator.API and Auctionator.API.v1
-    and Auctionator.API.v1.GetAuctionPriceByItemID
+    and Auctionator.API.v1.GetAuctionPriceByItemID and Auctionator.API.v1
+end
+local function AuctioneerAPI()
+  local a = rawget(_G, "AucAdvanced")
+  return a and a.API and a.API.GetMarketValue and a.API
+end
+local function TSMAPI()
+  local t = rawget(_G, "TSM_API")
+  return t and t.GetCustomPriceValue and t
+end
+local function HasPrices() return (AuctionatorAPI() or AuctioneerAPI() or TSMAPI()) and true or false end
+ns.HasAHPrices = HasPrices
+
+local function Good(ok, p) return ok and type(p) == "number" and p > 0 and p or nil end
+
+local function FromOthers(id, link)
+  local auc = AuctioneerAPI()
+  if auc and link then
+    local p = Good(pcall(auc.GetMarketValue, link))
+    if p then return p end
+  end
+  local tsm = TSMAPI()
+  if tsm and id then
+    local p = Good(pcall(tsm.GetCustomPriceValue, "dbmarket", "i:" .. id))
+    if p then return p end
+  end
+  return nil
 end
 
 local function Price(id)
-  if not HasAuctionator() then return nil end
-  local ok, p = pcall(Auctionator.API.v1.GetAuctionPriceByItemID, "@ADDON@", id)
-  if ok and type(p) == "number" and p > 0 then return p end
-  return nil
+  local a = AuctionatorAPI()
+  if a then
+    local p = Good(pcall(a.GetAuctionPriceByItemID, "@ADDON@", id))
+    if p then return p end
+  end
+  if not (AuctioneerAPI() or TSMAPI()) then return nil end
+  local _, link = ns.ItemInfo(id)
+  return FromOthers(id, link)
 end
 
 local function PriceLink(link)
-  if not (HasAuctionator() and Auctionator.API.v1.GetAuctionPriceByItemLink) then return nil end
-  local ok, p = pcall(Auctionator.API.v1.GetAuctionPriceByItemLink, "@ADDON@", link)
-  if ok and type(p) == "number" and p > 0 then return p end
-  return nil
+  local a = AuctionatorAPI()
+  if a and a.GetAuctionPriceByItemLink then
+    local p = Good(pcall(a.GetAuctionPriceByItemLink, "@ADDON@", link))
+    if p then return p end
+  end
+  if not (AuctioneerAPI() or TSMAPI()) then return nil end
+  return FromOthers(tonumber(tostring(link):match("item:(%d+)")), link)
 end
 
 local function Bracket(ilvl)
@@ -499,7 +533,7 @@ Refresh = function()
   end
   if hidden > 0 then
     foot:SetText("|cffaaaaaa" .. ns.T("BAG_MORE", hidden) .. "|r")
-  elseif not HasAuctionator() and (#list.de + #list.ah + #list.vendor) > 0 then
+  elseif not HasPrices() and (#list.de + #list.ah + #list.vendor) > 0 then
     foot:SetText("|cffaaaaaa" .. ns.T("DE_NO_AUC") .. "|r")
   else
     foot:SetText("")

@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.30
+
+- **Bag check: AH prices from Auctioneer and TSM too.** If you don't use Auctionator, the bag check and the item tooltips now take AH prices from Auctioneer or TradeSkillMaster instead (Auctionator first, then Auctioneer, then TSM's market value).
+
 # AllClassPlan 0.1.29
 
 - A few more surprises for gatherers in your group.
