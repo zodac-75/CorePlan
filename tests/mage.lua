@@ -2500,8 +2500,8 @@ do
   a:Hide(); b:Hide(); c:Hide()
 end
 
--- Easter egg: Faithlezz plockar blomma. Bara hennes egen addon slår tärningen (standard 10 %) och
--- säger till gruppen (L:FLOWER); de andra visar bara när meddelandet kommer, så alla ser det samtidigt.
+-- Easter egg: någon plockar blomma (alla, inte bara Faithlezz). Bara den egna addonen slår tärningen
+-- (standard 10 %) och säger till gruppen (L:FLOWER); de andra visar bara när meddelandet kommer.
 do
   local oldUN, oldGroup, oldRaid, oldCSpell, oldGII = UnitName, IsInGroup, IsInRaid, C_Spell, GetItemInfoInstant
   local me = "Faithlezz" -- the character the test is "playing"
@@ -2520,10 +2520,11 @@ do
   local herb = "|cffffffff|Hitem:2449:0:0|h[Earthroot]|h|rx2"
   local function loot(text) step(); fire("CHAT_MSG_LOOT", text); return ns.lastEggLine end
   local function msg(text, sender, ch) step(); fire("CHAT_MSG_ADDON", "ZodacPlan", text, ch or "PARTY", sender); return ns.lastEggLine end
-  local function isFlower(l)
-    for i = 1, 3 do if l == ns.T("EM_FLOWER_" .. i, "Faithlezz") then return true end end
+  local function isEgg(key, l, who)
+    for i = 1, 3 do if l == ns.T(key .. "_" .. i, who or "Faithlezz") then return true end end
     return false
   end
+  local function isFlower(l, who) return isEgg("EM_FLOWER", l, who) end
   -- default chance is 10 %
   ns.db.flowerChance = nil
   math.randomseed(7)
@@ -2596,10 +2597,9 @@ do
   now = now + 3; runTimers(now)
   fire("CHAT_MSG_ADDON", "ZodacPlan", "L:FLOWER", "PARTY", "Faithlezz-Realm")
   if ns.lastEggLine then table.insert(errors, "L:FLOWER inom 10 s gav nytt egg") end
-  l = msg("L:FLOWER", "Bob-Realm")
-  if l then table.insert(errors, "L:FLOWER från Bob gav egg") end
-  l = msg("L:FLOWER", "Bob2-Realm")
-  if l then table.insert(errors, "L:FLOWER från Bob2 gav egg") end
+  -- anyone in the group, not only Faithlezz
+  l = msg("L:FLOWER", "Dora-Realm")
+  if not isFlower(l, "Dora") then table.insert(errors, "L:FLOWER från Dora gav inget egg: " .. tostring(l)) end
   l = msg("E:FLOWER", "Faithlezz-Realm", "WHISPER")
   if l then table.insert(errors, "E:FLOWER (som emote) gav egg") end
   ns.db.flowerChance = 100
@@ -2608,23 +2608,81 @@ do
   l = loot("Faithlezz Nightwhisper receives loot: " .. herb .. ".")
   if l then table.insert(errors, "andra klienter visade egg från loot-raden") end
   ns.db.flowerChance = nil
+  -- your own herb cast as anyone (Bob) rolls and tells the group too
+  ns.db.flowerChance = 100
+  sent = {}
+  l = cast("player", 2366)
+  if not isFlower(l, "Bob") or #sent ~= 1 then table.insert(errors, "Bobs egen blomma gav inget egg/meddelande: " .. tostring(l)) end
+  ns.db.flowerChance = nil
   -- it is you again, as Faithlezz: your own echo doesn't show twice
   me = "Faithlezz"
   l = msg("L:FLOWER", "Faithlezz-Realm")
   if l then table.insert(errors, "mitt eget L:FLOWER-eko gav egg") end
+  -- Mining (10 %) and skinning (2 %): the same, with their own message and text.
+  do
+    local oreSent = {}
+    local oldS = C_ChatInfo.SendAddonMessage
+    C_ChatInfo.SendAddonMessage = function(pfx, m, ch) if pfx == "ZodacPlan" then table.insert(oreSent, m) end end
+    math.randomseed(11)
+    for _, t in ipairs({ { "ORE", 2575, "oreChance", 10, "EM_ORE" }, { "SKIN", 8613, "skinChance", 2, "EM_SKIN" } }) do
+      local egg, spell, key, pct, text = t[1], t[2], t[3], t[4], t[5]
+      ns.db[key] = nil
+      -- the default chance, with the dice pinned: just under it hits, just over it misses
+      local oldRandom = math.random
+      local function roll(x) math.random = function() return x end; local r = cast("player", spell); math.random = oldRandom; return r end
+      if not roll((pct - 0.5) / 100) then table.insert(errors, egg .. ": slag under standardchansen (" .. pct .. "%) gav inget egg") end
+      if roll((pct + 0.5) / 100) then table.insert(errors, egg .. ": slag över standardchansen (" .. pct .. "%) gav ändå egg") end
+      print(string.format("  %s standard-chans: %d%%", egg, pct))
+      ns.db[key] = 100
+      oreSent = {}
+      l = cast("player", spell)
+      if not isEgg(text, l, me) or oreSent[1] ~= "L:" .. egg then table.insert(errors, egg .. ": egen cast gav inget egg/meddelande: " .. tostring(l) .. " " .. tostring(oreSent[1])) end
+      ns.db[key] = 0
+      if cast("player", spell) then table.insert(errors, egg .. ": 0% gav ändå egg") end
+      ns.db[key] = nil
+      l = msg("L:" .. egg, "Carl-Realm")
+      if not isEgg(text, l, "Carl") then table.insert(errors, egg .. ": L:" .. egg .. " från gruppen gav inget egg: " .. tostring(l)) end
+    end
+    -- ore from your own loot line counts, leather doesn't (it drops from normal loot too)
+    GetItemInfoInstant = function(id)
+      if id == 2770 then return id, "Trade Goods", "Metal & Stone", "", 1, 7, 7 end
+      if id == 2318 then return id, "Trade Goods", "Leather", "", 1, 7, 6 end
+      return id, "Trade Goods", "Cloth", "", 1, 7, 5
+    end
+    ns.db.oreChance, ns.db.skinChance = 100, 100
+    l = loot("You receive loot: |Hitem:2770:0|h[Copper Ore]|h.")
+    if not isEgg("EM_ORE", l, me) then table.insert(errors, "ORE: egen malm-loot gav inget egg: " .. tostring(l)) end
+    l = loot("You receive loot: |Hitem:2318:0|h[Light Leather]|h.")
+    if l then table.insert(errors, "SKIN: läder i loot-raden ska inte ge egg") end
+    ns.db.oreChance, ns.db.skinChance = nil, nil
+    -- the herb cast doesn't give an ore egg, and the other way round
+    ns.db.oreChance, ns.db.flowerChance = 100, 0
+    l = cast("player", 2366)
+    if l then table.insert(errors, "örtcast gav malm-egg: " .. tostring(l)) end
+    ns.db.oreChance, ns.db.flowerChance = nil, nil
+    C_ChatInfo.SendAddonMessage = oldS
+  end
   -- the command
   local slash = SlashCmdList and SlashCmdList[next(SlashCmdList)]
   if slash then
     slash("flowerchance 35"); if ns.db.flowerChance ~= 35 then table.insert(errors, "/flowerchance 35 satte " .. tostring(ns.db.flowerChance)) end
     slash("flowerchance 500"); if ns.db.flowerChance ~= 100 then table.insert(errors, "/flowerchance 500 klampades inte") end
-    ns.db.flowerChance = nil
+    slash("orechance 20"); if ns.db.oreChance ~= 20 then table.insert(errors, "/orechance 20 satte " .. tostring(ns.db.oreChance)) end
+    slash("skinchance 5"); if ns.db.skinChance ~= 5 then table.insert(errors, "/skinchance 5 satte " .. tostring(ns.db.skinChance)) end
+    ns.db.flowerChance, ns.db.oreChance, ns.db.skinChance = nil, nil, nil
   end
   -- the hidden preview always shows
   UnitName = oldUN
   C_ChatInfo.SendAddonMessage = oldSend
   ns.lastEggLine = nil
   pcall(SlashCmdList[next(SlashCmdList)], "egg flower")
-  if not isFlower(ns.lastEggLine) then table.insert(errors, "/mp egg flower visade inget: " .. tostring(ns.lastEggLine)) end
+  if not isFlower(ns.lastEggLine, UnitName("player")) then table.insert(errors, "/mp egg flower visade inget: " .. tostring(ns.lastEggLine)) end
+  for _, t in ipairs({ { "ore", "EM_ORE" }, { "malm", "EM_ORE" }, { "skin", "EM_SKIN" } }) do
+    ns.lastEggLine = nil
+    now = now + 5; runTimers(now)
+    pcall(SlashCmdList[next(SlashCmdList)], "egg " .. t[1])
+    if not isEgg(t[2], ns.lastEggLine, UnitName("player")) then table.insert(errors, "/mp egg " .. t[1] .. " visade inget: " .. tostring(ns.lastEggLine)) end
+  end
   GetItemInfoInstant = oldGII
   IsInGroup, IsInRaid = oldGroup, oldRaid
 end

@@ -895,24 +895,34 @@ EFFECTS.SIXSEVEN = function(from)
   Sound("UI_GARRISON_MISSION_COMPLETE_ENCOUNTER_CHANCE")
 end
 
--- One specific character picks a flower: an inside joke for the party. The whole screen
--- goes pink, flowers and petals rain down across it, a big flower pops up in the middle.
-local FLOWER_NAME = "Faithlezz"
+-- Gathering eggs: someone picks a flower, mines ore or skins a beast (a party joke that started
+-- with one herbalist). The screen gets a coloured wash, the loot rains down across it and a big
+-- one pops up in the middle.
 local FLOWER_ICONS = {
   "Interface\\Icons\\INV_Misc_Flower_01", "Interface\\Icons\\INV_Misc_Flower_02", "Interface\\Icons\\INV_Misc_Flower_03",
 }
-EFFECTS.FLOWER = function(from)
-  -- a pink wash over the whole screen
+local ORE_ICONS = {
+  "Interface\\Icons\\INV_Ore_Copper_01", "Interface\\Icons\\INV_Ore_Tin_01", "Interface\\Icons\\INV_Ore_Iron_01",
+  "Interface\\Icons\\INV_Ore_Mithril_02", "Interface\\Icons\\INV_Ore_TrueSilver_01", "Interface\\Icons\\INV_Ore_Thorium_02",
+  "Interface\\Icons\\INV_Ore_Gold_01",
+}
+local SKIN_ICONS = {
+  "Interface\\Icons\\INV_Misc_LeatherScrap_03", "Interface\\Icons\\INV_Misc_LeatherScrap_02",
+  "Interface\\Icons\\INV_Misc_Pelt_Wolf_01", "Interface\\Icons\\INV_Misc_Pelt_Bear_01",
+  "Interface\\Icons\\INV_Misc_LeatherScrap_07", "Interface\\Icons\\INV_Misc_Pelt_Boar_01",
+}
+local function GatherEffect(from, o)
+  -- a coloured wash over the whole screen
   local wash = Piece(WHITE, 4200, 2400)
   wash:SetPoint("CENTER", 0, 0)
-  wash.tex:SetVertexColor(1, 0.45, 0.75, 1)
+  wash.tex:SetVertexColor(o.wash[1], o.wash[2], o.wash[3], 1)
   wash:SetAlpha(0)
   Fade(wash, 0, 0.18, 1, 0.25)
   Fade(wash, 0.18, 0.08, 2, 0.6)
   Fade(wash, 0.08, 0, 3, 1.4, 1.6)
   Play(wash)
-  -- the big flower: pops in, wobbles, fades
-  local big = Piece(ns.MEDIA .. "Flower", 250, 250)
+  -- the big one: pops in, wobbles, fades
+  local big = Piece(o.big, o.bigSize or 250, o.bigSize or 250)
   big:SetPoint("CENTER", 0, 90)
   big:SetAlpha(0)
   Fade(big, 0, 1, 1, 0.25)
@@ -924,21 +934,45 @@ EFFECTS.FLOWER = function(from)
   Spin(big, 7, 6, 0.15)
   Fade(big, 1, 0, 7, 0.8, 1.2)
   Play(big)
-  -- rain: our own flower, the game's flower icons and pink petals (hearts), right across the screen
-  Rain(14, function(i)
-    local p
-    if i % 3 == 1 then p = Piece(ns.MEDIA .. "Flower", 80, 80)
-    elseif i % 3 == 2 then
-      p = Piece(FLOWER_ICONS[(i % #FLOWER_ICONS) + 1], 56, 56)
-    else
-      p = Piece(ns.MEDIA .. "Heart", 34, 34)
-      p.tex:SetVertexColor(1, 0.6, 0.85, 1)
-    end
-    return p
-  end, 900, 3.4)
-  BigText(ns.T("EM_FLOWER_BIG"), 60, 1, 0.55, 0.85, -130, 2)
-  Say(ns.T("EM_FLOWER_" .. math.random(3), Short(from)))
-  Sound("UI_EPICLOOT_TOAST")
+  Rain(14, o.rain, 900, 3.4)
+  BigText(ns.T(o.text .. "_BIG"), 60, o.textColor[1], o.textColor[2], o.textColor[3], -130, 2)
+  Say(ns.T(o.text .. "_" .. math.random(3), Short(from)))
+  Sound(o.sound)
+end
+EFFECTS.FLOWER = function(from)
+  GatherEffect(from, {
+    wash = { 1, 0.45, 0.75 }, big = ns.MEDIA .. "Flower", text = "EM_FLOWER", textColor = { 1, 0.55, 0.85 },
+    sound = "UI_EPICLOOT_TOAST",
+    -- our own flower, the game's flower icons and pink petals (hearts)
+    rain = function(i)
+      local p
+      if i % 3 == 1 then p = Piece(ns.MEDIA .. "Flower", 80, 80)
+      elseif i % 3 == 2 then p = Piece(FLOWER_ICONS[(i % #FLOWER_ICONS) + 1], 56, 56)
+      else
+        p = Piece(ns.MEDIA .. "Heart", 34, 34)
+        p.tex:SetVertexColor(1, 0.6, 0.85, 1)
+      end
+      return p
+    end,
+  })
+end
+EFFECTS.ORE = function(from)
+  GatherEffect(from, {
+    wash = { 1, 0.78, 0.25 }, big = "Interface\\Icons\\Trade_Mining", bigSize = 200, text = "EM_ORE",
+    textColor = { 1, 0.82, 0.2 }, sound = "UI_EPICLOOT_TOAST",
+    -- every kind of ore, with a few gold coins in between
+    rain = function(i)
+      if i % 4 == 0 then return Piece("Interface\\Icons\\INV_Misc_Coin_01", 40, 40) end
+      return Piece(ORE_ICONS[(i % #ORE_ICONS) + 1], 56, 56)
+    end,
+  })
+end
+EFFECTS.SKIN = function(from)
+  GatherEffect(from, {
+    wash = { 0.62, 0.4, 0.2 }, big = "Interface\\Icons\\INV_Misc_Pelt_Wolf_01", bigSize = 200, text = "EM_SKIN",
+    textColor = { 0.95, 0.7, 0.4 }, sound = "UI_EPICLOOT_TOAST",
+    rain = function(i) return Piece(SKIN_ICONS[(i % #SKIN_ICONS) + 1], 56, 56) end,
+  })
 end
 
 -- Somebody rolls NEED 100: the big one. Two dice, a rain of gold, a wall of fireworks.
@@ -1111,13 +1145,23 @@ local function OnOwnNeed()
   RollEgg("NEED", UnitName("player"), "click")
 end
 
--- That character picks a flower: their own addon sees them cast Herb Gathering and tells the party; the
--- others' addons also see the cast on her party frame (and they are in range). Whichever comes
--- first starts the egg; for FLOWER_COOLDOWN seconds the rest are ignored (one flower after another).
-local FLOWER_COOLDOWN = 10
-local lastFlower = -1000
-local HERB_IDS = { [2366] = true, [2368] = true, [3570] = true, [11993] = true, [28695] = true, [50300] = true, [74519] = true }
-local herbName
+-- Gathering eggs. Your own addon sees you cast Herb Gathering, Mining or Skinning (or your
+-- loot line shows an herb or ore), rolls the dice and, when it wins, tells the group
+-- ("L:FLOWER", "L:ORE", "L:SKIN") so the egg comes for everybody at the same moment. The others
+-- never roll: they show it when the message arrives ("certain"). One gather gives one roll
+-- however many signs of it there are, and an egg is not repeated within GATHER_COOLDOWN seconds.
+local GATHER_COOLDOWN = 10
+-- spell IDs of the gathering spell; loot = trade goods subclass that counts as the second sign
+-- (9 herbs, 7 metal and stone; leather also drops from normal loot, so skinning goes by the cast).
+local GATHER = {
+  FLOWER = { ids = { [2366] = true, [2368] = true, [3570] = true, [11993] = true, [28695] = true, [50300] = true, [74519] = true },
+             first = 2366, loot = 9, chance = "flowerChance", default = 10 },
+  ORE = { ids = { [2575] = true, [2576] = true, [3564] = true, [10248] = true, [29354] = true, [50310] = true, [74517] = true },
+          first = 2575, loot = 7, chance = "oreChance", default = 10 },
+  SKIN = { ids = { [8613] = true, [8617] = true, [8618] = true, [10768] = true, [32678] = true, [50305] = true, [74522] = true },
+           first = 8613, chance = "skinChance", default = 2 },
+}
+ns.GATHER_EGGS = GATHER
 local function SpellNameOf(id)
   if C_Spell and C_Spell.GetSpellName then
     local ok, n = pcall(C_Spell.GetSpellName, id)
@@ -1132,62 +1176,69 @@ local function SpellNameOf(id)
     if ok and type(n) == "string" then return n end
   end
 end
-local function IsHerbCast(spellID)
-  if type(spellID) ~= "number" or (issecretvalue and issecretvalue(spellID)) then return false end
-  if HERB_IDS[spellID] then return true end
-  herbName = herbName or SpellNameOf(2366) or false -- "Herb Gathering" in the game's language
-  return herbName and SpellNameOf(spellID) == herbName or false
-end
-local function IsFlowerName(name)
-  return type(name) == "string" and not (issecretvalue and issecretvalue(name)) and Short(name):lower() == FLOWER_NAME:lower()
-end
--- Only the herbalist's own addon rolls the dice (ns.db.flowerChance percent, default 10: she picks
--- all the time) and, when it wins, tells the group ("L:FLOWER"), so the egg comes for everybody at the
--- same moment. The others never roll: they show it when her message arrives ("certain"). One pick
--- gives one roll however many signs of it there are (the cast, the loot line), and an egg is not
--- repeated within FLOWER_COOLDOWN seconds. Returns true if the egg started.
-local lastFlowerShown = -1000
-local function FlowerChance()
-  local c = tonumber(ns.db.flowerChance)
-  if c == nil then c = 10 end
-  return math.max(0, math.min(100, c))
-end
-local function Flower(from, certain)
-  local t = GetTime()
-  if certain then
-    if t - lastFlowerShown < FLOWER_COOLDOWN then return false end
-  else
-    if t - lastFlower < FLOWER_COOLDOWN then return false end
-    lastFlower = t
-    if math.random() * 100 >= FlowerChance() then return false end
-  end
-  lastFlower, lastFlowerShown = t, t
-  lastShown.FLOWER = nil
-  ns.ShowEmoteEgg("FLOWER", from) -- (Show is defined further down)
-  return true
-end
-local function OnCast(unit, spellID)
-  if ns.db.eggsOff or type(unit) ~= "string" then return end
-  if unit ~= "player" then return end -- only your own cast: you are the herbalist, you roll
-  local ok, name = pcall(UnitName, unit)
-  if not ok or not IsFlowerName(name) or not IsHerbCast(spellID) then return end
-  if not Flower(name) then return end
-  if unit == "player" then -- it is you: tell the group, so they see it even from far away
-    local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
-    if send and IsInGroup and IsInGroup() then
-      pcall(send, PREFIX, "L:FLOWER", (IsInRaid and IsInRaid()) and "RAID" or "PARTY")
+-- Which gathering egg this cast is for, or nil.
+local function GatherOf(spellID)
+  if type(spellID) ~= "number" or (issecretvalue and issecretvalue(spellID)) then return nil end
+  for egg, g in pairs(GATHER) do if g.ids[spellID] then return egg end end
+  local name
+  for egg, g in pairs(GATHER) do
+    if not g.name then g.name = SpellNameOf(g.first) end -- the spell's name in the game's language (asked again until known)
+    if g.name then
+      name = name or SpellNameOf(spellID)
+      if name == g.name then return egg end
     end
   end
+  return nil
+end
+local function GatherChance(egg)
+  local g = GATHER[egg]
+  local c = tonumber(ns.db[g.chance])
+  if c == nil then c = g.default end
+  return math.max(0, math.min(100, c))
+end
+local lastRoll, lastGatherShown = {}, {}
+local function Gather(egg, from, certain)
+  local t = GetTime()
+  if certain then
+    if t - (lastGatherShown[egg] or -1000) < GATHER_COOLDOWN then return false end
+  else
+    if t - (lastRoll[egg] or -1000) < GATHER_COOLDOWN then return false end
+    lastRoll[egg] = t
+    if math.random() * 100 >= GatherChance(egg) then return false end
+  end
+  lastRoll[egg], lastGatherShown[egg] = t, t
+  lastShown[egg] = nil
+  ns.ShowEmoteEgg(egg, from) -- (Show is defined further down)
+  return true
+end
+local function TellGroup(egg)
+  local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+  if send and IsInGroup and IsInGroup() then
+    pcall(send, PREFIX, "L:" .. egg, (IsInRaid and IsInRaid()) and "RAID" or "PARTY")
+  end
+end
+local function MyName()
+  local ok, name = pcall(UnitName, "player")
+  if ok and type(name) == "string" and not (issecretvalue and issecretvalue(name)) then return name end
+end
+local function OnCast(unit, spellID)
+  if ns.db.eggsOff or unit ~= "player" then return end -- only your own cast: you gather, you roll
+  local egg = GatherOf(spellID)
+  local name = egg and MyName()
+  if not name or not Gather(egg, name) then return end
+  TellGroup(egg)
 end
 
--- Your own loot line is the second sign of a pick ("You receive loot: [Earthroot]x2."): when you are
--- the herbalist and the item is an herb, it counts like the cast.
-local function ItemIsHerb(id)
-  if not GetItemInfoInstant then return false end
+-- Your own loot line is the second sign ("You receive loot: [Earthroot]x2."): an herb or an ore
+-- counts like the cast.
+local function LootEgg(id)
+  if not GetItemInfoInstant then return nil end
   local ok, _, _, _, _, _, classID, subClassID = pcall(GetItemInfoInstant, id)
-  if not ok then return false end
+  if not ok then return nil end
   local cls = (Enum and Enum.ItemClass and Enum.ItemClass.Tradegoods) or 7
-  return classID == cls and subClassID == 9
+  if classID ~= cls then return nil end
+  for egg, g in pairs(GATHER) do if g.loot and g.loot == subClassID then return egg end end
+  return nil
 end
 local function IsOwnLootLine(msg)
   for _, g in ipairs({ LOOT_ITEM_SELF or "", LOOT_ITEM_PUSHED_SELF or "" }) do
@@ -1196,17 +1247,14 @@ local function IsOwnLootLine(msg)
   end
   return false
 end
-local function OnHerbLoot(msg)
+local function OnGatherLoot(msg)
   if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
   local pos, _, id = msg:find("|Hitem:(%d+)")
   if not pos or not IsOwnLootLine(msg) then return end
-  local ok, name = pcall(UnitName, "player")
-  if not ok or not IsFlowerName(name) or not ItemIsHerb(tonumber(id)) then return end
-  if not Flower(name) then return end
-  local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
-  if send and IsInGroup and IsInGroup() then
-    pcall(send, PREFIX, "L:FLOWER", (IsInRaid and IsInRaid()) and "RAID" or "PARTY")
-  end
+  local egg = LootEgg(tonumber(id))
+  local name = egg and MyName()
+  if not name or not Gather(egg, name) then return end
+  TellGroup(egg)
 end
 
 local lastBagsFull = -1000
@@ -1389,7 +1437,7 @@ end
 
 -- Emotes that trigger another effect. Forever has no /toast like later expansions,
 -- so the mugs come with /drink (and /cheers where the game has it).
-local ALIAS = { HERB = "FLOWER", BLOMMA = "FLOWER", ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", ["1"] = "ROLL1", ONE = "ROLL1", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
+local ALIAS = { HERB = "FLOWER", BLOMMA = "FLOWER", MINING = "ORE", MALM = "ORE", SKINNING = "SKIN", SKINN = "SKIN", LEATHER = "SKIN", ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", ["1"] = "ROLL1", ONE = "ROLL1", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
   SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
@@ -1400,7 +1448,7 @@ local COMBO = { DANCE = "PARTY", HUG = "GROUPHUG", KISS = "KISSKISS" }
 local COMBO_WINDOW = { KISS = 10 }
 
 -- Effects that aren't an emote to send to someone (they start in other ways).
-local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true, ROLL100 = true, NEED100 = true, SIXSEVEN = true, ROLL1 = true, FLOWER = true }
+local LOCAL_ONLY = { PARTY = true, GROUPHUG = true, KISSKISS = true, ROUND = true, WIPE = true, SIXTY = true, BAGSFULL = true, NEED = true, ROLL100 = true, NEED100 = true, SIXSEVEN = true, ROLL1 = true, FLOWER = true, ORE = true, SKIN = true }
 
 -- A round of drinks: who in the party drank lately (short name -> when).
 local drinkers = {}
@@ -1477,9 +1525,10 @@ local function OnMessage(msg, sender)
     if Short(sender) ~= UnitName("player") then Ding(sender, tonumber(lvl)) end
     return
   end
-  -- The flower character picked a flower (only that character may send this one).
-  if msg == "L:FLOWER" then
-    if not IsMe(sender) and IsFlowerName(sender) then Flower(sender, true) end
+  -- Someone in the group picked a flower, mined ore or skinned a beast (their addon rolled).
+  local ge = msg:match("^L:(%u+)$")
+  if ge and GATHER[ge] then
+    if not IsMe(sender) then Gather(ge, Short(sender), true) end
     return
   end
   -- A roll egg from the roller's addon.
@@ -1619,7 +1668,7 @@ ns.RegisterModule(function()
     if event == "CHAT_MSG_LOOT" then
       pcall(EggDebug, event, a1)
       pcall(OnLootMsg, a1)
-      pcall(OnHerbLoot, a1)
+      pcall(OnGatherLoot, a1)
       return
     end
     if event == "CHAT_MSG_SYSTEM" then
@@ -1666,7 +1715,7 @@ ns.RegisterCommand("egg", false, function(rest)
   lastShown[e] = nil
   local off = ns.db.eggsOff
   ns.db.eggsOff = nil
-  Show(e, e == "FLOWER" and FLOWER_NAME or UnitName("player"))
+  Show(e, UnitName("player"))
   ns.db.eggsOff = off
 end)
 ns.RegisterCommand("heart", false, function() lastShown.KISS = nil; Show("KISS", UnitName("player")) end)
@@ -1686,11 +1735,14 @@ ns.RegisterCommand("eggs", true, function()
   ns.Print(ns.db.eggsOff and ns.T("EM_OFF") or ns.T("EM_ON"))
 end)
 
-ns.RegisterCommand("flowerchance", false, function(arg)
-  local n = tonumber(arg)
-  if n then ns.db.flowerChance = math.max(0, math.min(100, math.floor(n))) end
-  ns.Print("flower egg chance: " .. FlowerChance() .. "% per flower picked (/@SLASH@ flowerchance 0-100).")
-end)
+-- Hidden: the chance per gather (0-100) for each gathering egg.
+for cmd, egg in pairs({ flowerchance = "FLOWER", orechance = "ORE", skinchance = "SKIN" }) do
+  ns.RegisterCommand(cmd, false, function(arg)
+    local n = tonumber(arg)
+    if n then ns.db[GATHER[egg].chance] = math.max(0, math.min(100, math.floor(n))) end
+    ns.Print(egg:lower() .. " egg chance: " .. GatherChance(egg) .. "% per gather (/@SLASH@ " .. cmd .. " 0-100).")
+  end)
+end
 
 ns.RegisterCommand("eggdebug", false, function()
   ns.eggDebug = not ns.eggDebug
