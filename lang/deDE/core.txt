@@ -269,7 +269,6 @@ GL_ON = Luftwandeln-Timer ist an.
 MM_EAT = Ess- und Trinkleiste
 EAT_EATING = Isst
 EAT_DRINKING = Trinkt
-EAT_BOTH = Isst & trinkt
 EAT_FULL = Voll! Auf geht's
 EAT_ON = Ess- und Trinkleiste ist an.
 EAT_OFF = Ess- und Trinkleiste ist aus.

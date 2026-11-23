@@ -1,26 +1,27 @@
--- @ADDON@: eating and drinking bar. While you eat or drink it shows how long is left with a
--- bar that runs down (like the Walk on Air timer), and your health and mana filling up under
--- it. It says "Full!" when both are full (when the game lets us read them), so you can stand
--- up and go. Moves with the combat helper ("Move" switch), Ctrl + mouse wheel for size.
+-- @ADDON@: eating and drinking bars. Food and drink each get their own timer (they can
+-- run out at different times): a bar that runs down like the Walk on Air timer, with your
+-- health filling up under the food bar and your mana under the drink bar. A row says
+-- "Full!" when that one is full (when the game lets us read it), so you can stop. Moves with the combat helper ("Move" switch), Ctrl + mouse wheel for size.
 local _, ns = ...
 
-local KINDS = { ["Food"] = "eat", ["Drink"] = "drink", ["Food & Drink"] = "both", ["Refreshment"] = "both" }
-local ICON = {
-  eat = "Interface\\Icons\\INV_Misc_Food_15",
-  drink = "Interface\\Icons\\INV_Drink_07",
-  both = "Interface\\Icons\\INV_Misc_Food_73CinnamonRoll",
-}
+-- Buff name -> which timers it counts for. "Food & Drink" (and Refreshment) fill both.
+local KINDS = { ["Food"] = { eat = true }, ["Drink"] = { drink = true },
+  ["Food & Drink"] = { eat = true, drink = true }, ["Refreshment"] = { eat = true, drink = true } }
+local ICON = { eat = "Interface\\Icons\\INV_Misc_Food_15", drink = "Interface\\Icons\\INV_Drink_07" }
+local WORD = { eat = "EAT_EATING", drink = "EAT_DRINKING" }
 local DEFAULT = 30 -- seconds, when the game doesn't say how long the buff lasts
 local W = 240
+local ROW = 46
 
-local f, bar, txt, icon, hp, mp
+local f
+local rows = {}   -- eat / drink: { frame, icon, txt, bar, res }
 local started = {} -- kind -> when we first saw it (for buffs without an end time)
 
 local function Secret(v) return issecretvalue and issecretvalue(v) or false end
 
--- What you're doing ("eat", "drink", "both" or nil), seconds left and the buff's full length.
+-- Each timer on now: { eat = { left, total }, drink = { left, total } } (missing = not on).
 local function Eating()
-  local kinds, left, total = {}, nil, nil
+  local out = {}
   local now = GetTime()
   for i = 1, 40 do
     local name, expires, dur
@@ -36,27 +37,29 @@ local function Eating()
       break
     end
     if not Secret(name) then
-      local k = KINDS[ns.Eng and ns.Eng(name) or name] or KINDS[name]
-      if k then
-        kinds[k] = true
+      local kinds = KINDS[ns.Eng and ns.Eng(name) or name] or KINDS[name]
+      for k in pairs(kinds or {}) do
+        local left, total
         if not Secret(expires) and type(expires) == "number" and expires > 0 then
-          local l = expires - now
-          if not left or l > left then
-            left = l
-            total = (not Secret(dur) and type(dur) == "number" and dur > 0) and dur or DEFAULT
-          end
+          left = expires - now
+          total = (not Secret(dur) and type(dur) == "number" and dur > 0) and dur or DEFAULT
         end
+        local cur = out[k]
+        if not cur or (left and (not cur[1] or left > cur[1])) then out[k] = { left, total } end
       end
     end
   end
-  local kind = (kinds.both or (kinds.eat and kinds.drink)) and "both" or kinds.eat and "eat" or kinds.drink and "drink" or nil
   -- No end time from the game: count from when we first saw it.
-  for k in pairs(started) do if k ~= kind then started[k] = nil end end
-  if kind and not left then
-    started[kind] = started[kind] or now
-    left, total = math.max(0, DEFAULT - (now - started[kind])), DEFAULT
+  for _, k in ipairs({ "eat", "drink" }) do
+    local t = out[k]
+    if not t then
+      started[k] = nil
+    elseif not t[1] then
+      started[k] = started[k] or now
+      t[1], t[2] = math.max(0, DEFAULT - (now - started[k])), DEFAULT
+    end
   end
-  return kind, left, total
+  return out
 end
 ns.EatingNow = Eating
 
@@ -77,49 +80,49 @@ local function Fill(sb, cur, max)
   return ok
 end
 
--- True when health and mana are both full, nil when we can't tell.
-local function Full()
-  local h, hm = Health()
-  if h == nil or hm == nil or Secret(h) or Secret(hm) then return nil end
-  local full = h >= hm
-  if ns.HasMana and ns.HasMana() then
-    local m, mm = Mana()
-    if m == nil or mm == nil or Secret(m) or Secret(mm) then return nil end
-    full = full and m >= mm
-  end
-  return full
+-- True when the value is full, nil when we can't tell.
+local function IsFull(cur, max)
+  if cur == nil or max == nil or Secret(cur) or Secret(max) then return nil end
+  return cur >= max
 end
 
-local WORD = { eat = "EAT_EATING", drink = "EAT_DRINKING", both = "EAT_BOTH" }
-
-local function Show(kind, left, total, preview)
-  icon:SetTexture(ICON[kind])
-  bar:SetWidth(math.max(1, W * math.max(0, math.min(1, left / total))))
-  bar:SetColorTexture(0.35, 0.75, 1, 0.9)
-  Fill(hp, Health())
-  local mana = ns.HasMana and ns.HasMana()
-  if mana then Fill(mp, Mana()); mp:Show() else mp:Hide() end
-  local full = not preview and Full()
-  if full then
-    txt:SetText("|cff60ff60" .. ns.T("EAT_FULL") .. "|r")
+-- One row: what it counts, the time left, and under it the health (food) or mana (drink).
+local function ShowRow(k, t, y, preview)
+  local r = rows[k]
+  r.frame:ClearAllPoints()
+  r.frame:SetPoint("TOPLEFT", f, "TOPLEFT", 0, y)
+  r.bar:SetWidth(math.max(1, W * math.max(0, math.min(1, t[1] / t[2]))))
+  local cur, max
+  if k == "eat" then cur, max = Health() else cur, max = Mana() end
+  Fill(r.res, cur, max)
+  if not preview and IsFull(cur, max) then
+    r.txt:SetText("|cff60ff60" .. ns.T("EAT_FULL") .. "|r")
   else
-    txt:SetText(string.format("|cff66ccff%s %.0f|r", ns.T(WORD[kind]), math.max(0, left)))
+    r.txt:SetText(string.format("|cff66ccff%s %.0f|r", ns.T(WORD[k]), math.max(0, t[1])))
   end
-  f:SetAlpha(preview and 0.6 or 1)
-  f:Show()
+  r.frame:Show()
 end
 
 local function Update()
   if not f then return end
   if ns.db.eatBarOff then f:Hide(); return end
-  local kind, left, total = Eating()
-  if kind then
-    Show(kind, left, total, false)
-  elseif ns.db.shatterUnlocked then
-    Show("both", DEFAULT, DEFAULT, true) -- so you can find and move it
-  else
-    f:Hide()
+  local now = Eating()
+  local preview = false
+  if not (now.eat or now.drink) and ns.db.shatterUnlocked then
+    -- so you can find and move it
+    preview = true
+    now = { eat = { DEFAULT, DEFAULT }, drink = { DEFAULT * 0.6, DEFAULT } }
   end
+  -- Drinking only matters with mana (no drink row for warriors and rogues).
+  if now.drink and ns.HasMana and not ns.HasMana() then now.drink = nil end
+  local y = 0
+  for _, k in ipairs({ "eat", "drink" }) do
+    if now[k] then ShowRow(k, now[k], y, preview); y = y - ROW else rows[k].frame:Hide() end
+  end
+  if y == 0 then f:Hide(); return end
+  f:SetHeight(-y)
+  f:SetAlpha(preview and 0.6 or 1)
+  f:Show()
 end
 
 local function StatusBar(parent, r, g, b)
@@ -135,9 +138,35 @@ local function StatusBar(parent, r, g, b)
   return sb
 end
 
+local function MakeRow(k)
+  local r = {}
+  r.frame = CreateFrame("Frame", nil, f)
+  r.frame:SetSize(W + 20, ROW)
+  r.icon = r.frame:CreateTexture(nil, "ARTWORK")
+  r.icon:SetSize(28, 28)
+  r.icon:SetPoint("TOPLEFT", r.frame, "TOPLEFT", 0, 0)
+  r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  r.icon:SetTexture(ICON[k])
+  r.txt = r.frame:CreateFontString(nil, "OVERLAY")
+  r.txt:SetFont(STANDARD_TEXT_FONT, 18, "OUTLINE")
+  r.txt:SetPoint("LEFT", r.icon, "RIGHT", 8, 0)
+  local track = r.frame:CreateTexture(nil, "BACKGROUND")
+  track:SetColorTexture(0, 0, 0, 0.5)
+  track:SetSize(W, 7)
+  track:SetPoint("TOPLEFT", r.icon, "BOTTOMLEFT", 0, -3)
+  r.bar = r.frame:CreateTexture(nil, "ARTWORK")
+  r.bar:SetHeight(7)
+  r.bar:SetPoint("TOPLEFT", track, "TOPLEFT")
+  r.bar:SetColorTexture(k == "eat" and 1 or 0.35, k == "eat" and 0.7 or 0.75, k == "eat" and 0.3 or 1, 0.9)
+  if k == "eat" then r.res = StatusBar(r.frame, 0.2, 0.85, 0.2) else r.res = StatusBar(r.frame, 0.25, 0.45, 1) end
+  r.res:SetPoint("TOPLEFT", track, "BOTTOMLEFT", 0, -2)
+  r.frame:Hide()
+  rows[k] = r
+end
+
 ns.RegisterModule(function()
   f = CreateFrame("Frame", "@ADDON@EatFrame", UIParent)
-  f:SetSize(W + 20, 62)
+  f:SetSize(W + 20, ROW * 2)
   local p = ns.db.eatPos
   if p then f:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else f:SetPoint("CENTER", UIParent, "CENTER", 0, 100) end
   f:SetScale(ns.db.eatScale or 1)
@@ -158,25 +187,8 @@ ns.RegisterModule(function()
     self:SetScale(s)
     ns.db.eatScale = s
   end)
-
-  icon = f:CreateTexture(nil, "ARTWORK")
-  icon:SetSize(32, 32)
-  icon:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
-  icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-  txt = f:CreateFontString(nil, "OVERLAY")
-  txt:SetFont(STANDARD_TEXT_FONT, 22, "OUTLINE")
-  txt:SetPoint("TOPLEFT", icon, "TOPRIGHT", 8, 2)
-  local track = f:CreateTexture(nil, "BACKGROUND")
-  track:SetColorTexture(0, 0, 0, 0.5)
-  track:SetSize(W, 8)
-  track:SetPoint("TOPLEFT", icon, "BOTTOMLEFT", 0, -4)
-  bar = f:CreateTexture(nil, "ARTWORK")
-  bar:SetHeight(8)
-  bar:SetPoint("TOPLEFT", track, "TOPLEFT")
-  hp = StatusBar(f, 0.2, 0.85, 0.2)
-  hp:SetPoint("TOPLEFT", track, "BOTTOMLEFT", 0, -3)
-  mp = StatusBar(f, 0.25, 0.45, 1)
-  mp:SetPoint("TOPLEFT", hp, "BOTTOMLEFT", 0, -2)
+  MakeRow("eat")
+  MakeRow("drink")
   f:Hide()
 
   local ev = CreateFrame("Frame")

@@ -273,7 +273,6 @@ GL_ON = il timer di Walk on Air è attivato.
 MM_EAT = Barra di cibo e bevande
 EAT_EATING = Mangia
 EAT_DRINKING = Beve
-EAT_BOTH = Mangia e beve
 EAT_FULL = Pieno! Si parte
 EAT_ON = la barra di cibo e bevande è attiva.
 EAT_OFF = la barra di cibo e bevande è disattivata.

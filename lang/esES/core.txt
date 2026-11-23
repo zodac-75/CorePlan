@@ -269,7 +269,6 @@ GL_ON = el temporizador de Caminar por el aire está activado.
 MM_EAT = Barra de comer y beber
 EAT_EATING = Comiendo
 EAT_DRINKING = Bebiendo
-EAT_BOTH = Comiendo y bebiendo
 EAT_FULL = ¡Lleno! A por ello
 EAT_ON = la barra de comer y beber está activada.
 EAT_OFF = la barra de comer y beber está desactivada.

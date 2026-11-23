@@ -269,7 +269,6 @@ GL_ON = le minuteur Marche dans les airs est activé.
 MM_EAT = Barre de repas et de boisson
 EAT_EATING = Mange
 EAT_DRINKING = Boit
-EAT_BOTH = Mange et boit
 EAT_FULL = Plein ! En route
 EAT_ON = la barre de repas est activée.
 EAT_OFF = la barre de repas est désactivée.

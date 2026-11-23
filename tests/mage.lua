@@ -2152,11 +2152,20 @@ do
     if ef.__shown then table.insert(errors, "ätbar: syns fast du varken äter eller dricker") end
     buffs = { { name = "Drink", expirationTime = t0 + 18, duration = 30 } }
     ticks()
-    local kind, left = ns.EatingNow()
-    if not ef.__shown or kind ~= "drink" or not (left and left > 15 and left <= 18) then table.insert(errors, "ätbar: Drink visas inte rätt: " .. tostring(kind) .. " " .. tostring(left)) end
-    buffs = { { name = "Food", expirationTime = t0 + 20, duration = 30 }, { name = "Drink", expirationTime = t0 + 25, duration = 30 } }
-    kind = ns.EatingNow()
-    if kind ~= "both" then table.insert(errors, "ätbar: mat + dryck blev " .. tostring(kind)) end
+    local now = ns.EatingNow()
+    if not ef.__shown or now.eat or not (now.drink and now.drink[1] > 15 and now.drink[1] <= 18) then
+      table.insert(errors, "ätbar: bara Drink visas inte rätt: " .. tostring(now.eat) .. " " .. tostring(now.drink and now.drink[1]))
+    end
+    -- food and drink are two timers that run out at different times
+    buffs = { { name = "Food", expirationTime = t0 + 10, duration = 30 }, { name = "Drink", expirationTime = t0 + 25, duration = 30 } }
+    now = ns.EatingNow()
+    if not (now.eat and now.drink and math.abs(now.eat[1] - 10) < 1 and math.abs(now.drink[1] - 25) < 1) then
+      table.insert(errors, "ätbar: mat och dryck har inte egna timers: " .. tostring(now.eat and now.eat[1]) .. " / " .. tostring(now.drink and now.drink[1]))
+    end
+    -- "Food & Drink" counts for both
+    buffs = { { name = "Food & Drink", expirationTime = t0 + 20, duration = 30 } }
+    now = ns.EatingNow()
+    if not (now.eat and now.drink) then table.insert(errors, "ätbar: Food & Drink räknas inte för båda") end
     slash("eatbar"); ticks()
     if ef.__shown or not ns.db.eatBarOff then table.insert(errors, "ätbar: /acp eatbar stänger inte av") end
     slash("eatbar")
