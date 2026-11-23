@@ -805,6 +805,7 @@ ns.SPELL_IDS = {
   ["Water Shield"] = 408510,
   ["Weapon Expertise"] = 30919,
   ["Weaponmaster"] = 12281,
+  ["Well Fed"] = 19705,
   ["Whirlwind"] = 1680,
   ["Wild Growth"] = 408120,
   ["Windfury Totem"] = 8512,

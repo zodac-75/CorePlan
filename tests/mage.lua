@@ -2009,6 +2009,19 @@ do
   local s138 = Scan()
   if s138:find("Frostbolt rank", 1, true) or s138:find("138", 1, true) then table.insert(errors, "knapp 138 (spelets totemset) rapporterades") end
   actions[138] = nil; actions[200] = 116
+  -- A low rank next to the best rank is on purpose (cheap Arcane Explosion): not reported.
+  actions[200] = nil; actions[1] = 116; actions[2] = 7322
+  local both = Scan()
+  if (both:find("Frostbolt rank", 1, true) or both:find("Frostbolt on button", 1, true) or both:find("Frostbolt på knapp", 1, true)) then table.insert(errors, "rank 1 bredvid bästa ranken rapporterades: " .. both:sub(1, 120)) end
+  -- Only the old rank: reported, unless you keep it with /acp ranks keep.
+  actions[2] = nil
+  local function oldBolt(t) return t:find("Frostbolt rank", 1, true) or t:find("Frostbolt on button", 1, true) or t:find("Frostbolt på knapp", 1, true) end
+  if not oldBolt(Scan()) then table.insert(errors, "bara gammal Frostbolt rapporterades inte") end
+  ns.RunCommand("ranks", "keep Frostbolt")
+  if oldBolt(Scan()) then table.insert(errors, "/ranks keep Frostbolt hjälpte inte") end
+  ns.RunCommand("ranks", "keep Frostbolt")
+  if not oldBolt(Scan()) then table.insert(errors, "/ranks keep Frostbolt igen ångrade inte") end
+  actions[1] = nil; actions[200] = 116
   ns.db.rankController = true
   local all = Scan()
   print("  " .. all:sub(1, 160))
@@ -2181,6 +2194,26 @@ do
       if not hp then table.insert(errors, "ätbar: hälsa-% (75%) visas inte") end
       if not mp then table.insert(errors, "ätbar: mana-% från spelet (42%) visas inte") end
       UnitHealth, UnitHealthMax, UnitPower, UnitPowerPercent = oldH, oldHM, oldP, oldPP
+    end
+    -- Buff food: Well Fed lands while you eat -> one ping and gold text on the food row.
+    do
+      local pings = 0
+      local oldPS = rawget(_G, "PlaySound")
+      PlaySound = function() pings = pings + 1 end
+      buffs = { { name = "Food", expirationTime = t0 + 20, duration = 30 } }
+      ticks()
+      buffs = { { name = "Food", expirationTime = t0 + 19, duration = 30 }, { name = "Well Fed", expirationTime = t0 + 900, duration = 900 } }
+      ticks(); ticks()
+      if pings ~= 1 then table.insert(errors, "well fed: väntade 1 ping, fick " .. pings) end
+      local gold
+      for _, w in ipairs(allFrames) do
+        local t = rawget(w, "__text")
+        if type(t) == "string" and t:find(ns.T("EAT_WELLFED"), 1, true) then gold = true end
+      end
+      if not gold then table.insert(errors, "well fed: texten syns inte på matraden") end
+      buffs = {}
+      ticks()
+      PlaySound = oldPS
     end
     -- "Food & Drink" counts for both
     buffs = { { name = "Food & Drink", expirationTime = t0 + 20, duration = 30 } }

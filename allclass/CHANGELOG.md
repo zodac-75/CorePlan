@@ -1,3 +1,8 @@
+# AllClassPlan 0.1.34
+
+- **Rank check: low ranks on purpose.** A lower rank next to the best rank of the same spell (a cheap Arcane Explosion rank 1, a small heal) is no longer reported. To allow old ranks of a spell even on their own, use `/acp ranks keep <spell>` (again to undo, `/acp ranks keep` lists them).
+- **Buff food:** when Well Fed lands while you eat, the food bar turns gold, says "Well Fed!" and pings, so you know you can stop.
+
 # AllClassPlan 0.1.33
 
 - **Bandage bar:** a third row for bandages that works in combat too. It counts down the 8 seconds of bandaging with your health and %, then shows how long until you can bandage again (Recently Bandaged). Its own tick box in the settings (Buffs), or `/acp bandagebar`.

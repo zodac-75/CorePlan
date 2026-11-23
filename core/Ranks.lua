@@ -239,9 +239,16 @@ local function Scan(force)
           table.insert(newMissing, name)
           ns.db.missingSeen[name] = true
         end
-      else
+      elseif not (ns.db.rankKeep and ns.db.rankKeep[ns.Eng and ns.Eng(name) or name]) then
         local bestRank = RankNumber(bestId)
+        -- The best rank is on a button too (or bound to a key): a lower rank next to it is on
+        -- purpose (a cheap Arcane Explosion, a small heal), so it isn't reported.
+        local hasBest = false
         for _, s in ipairs(slots) do
+          if s.bound or (s.id and s.id == bestId) or (s.macro and not s.macroRank) then hasBest = true end
+        end
+        for _, s in ipairs(slots) do
+          if hasBest then break end
           if s.bound then
             -- Bound to a key: nothing to check, the game casts the best rank.
           elseif s.macro then
@@ -356,6 +363,31 @@ ns.RegisterCommand("ranks", true, function(arg)
     elseif val == "off" then ns.Print(ns.T("RANKS_KEEP_ONE")) return
     end
     ns.Print(ns.T(ControllerBars() and "RANKS_CTRL_ON" or "RANKS_CTRL_OFF", ""))
+    lastPrinted = ""
+    Scan(true)
+    return
+  end
+  -- "/@SLASH@ ranks keep <spell>": never report old ranks of that spell (again to undo).
+  local keep = arg:match("^keep%s+(.+)$")
+  if sub == "keep" then
+    keep = keep and keep:gsub("^%s+", ""):gsub("%s+$", "")
+    if not keep or keep == "" then
+      local list = {}
+      for n in pairs(ns.db.rankKeep or {}) do list[#list + 1] = ns.Loc and ns.Loc(n) or n end
+      table.sort(list)
+      ns.Print(ns.T("RANKS_KEEP_LIST", #list > 0 and table.concat(list, ", ") or "-"))
+      return
+    end
+    local name = ns.SpellInfo(keep) or keep
+    local eng = ns.Eng and ns.Eng(name) or name
+    ns.db.rankKeep = ns.db.rankKeep or {}
+    if ns.db.rankKeep[eng] then
+      ns.db.rankKeep[eng] = nil
+      ns.Print(ns.T("RANKS_KEEP_DEL", name))
+    else
+      ns.db.rankKeep[eng] = true
+      ns.Print(ns.T("RANKS_KEEP_ADD", name))
+    end
     lastPrinted = ""
     Scan(true)
     return

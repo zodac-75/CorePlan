@@ -3,6 +3,7 @@
 -- health filling up under the food bar and your mana under the drink bar, with the % at the
 -- end of each row. A row says
 -- "Full!" when that one is full (when the game lets us read it), so you can stop.
+-- Buff food: when Well Fed lands while you eat, the food row turns gold and pings.
 -- Bandages get a row too, in and out of combat: the 8 seconds of bandaging with your health,
 -- then the Recently Bandaged wait until you can use the next one. Moves with the combat helper ("Move" switch), Ctrl + mouse wheel for size.
 local _, ns = ...
@@ -22,6 +23,7 @@ local ROW = 46
 local f
 local rows = {}   -- eat / drink: { frame, icon, txt, bar, res }
 local started = {} -- kind -> when we first saw it (for buffs without an end time)
+local wasFed = nil -- Well Fed last time we looked (nil = not looked yet)
 
 local function Secret(v) return issecretvalue and issecretvalue(v) or false end
 
@@ -43,6 +45,7 @@ local function Eating()
       break
     end
     if not Secret(name) then
+      if (ns.Eng and ns.Eng(name) or name) == "Well Fed" then out.fed = true end
       local kinds = KINDS[ns.Eng and ns.Eng(name) or name] or KINDS[name]
       for k in pairs(kinds or {}) do
         local left, total
@@ -158,7 +161,15 @@ local function ShowRow(k, t, y, preview)
   if k == "drink" then cur, max = Mana() else cur, max = Health() end
   Fill(r.res, cur, max)
   SetPct(r.pct, k, cur, max)
-  if t.wait then
+  if k == "eat" and t.fed then
+    r.txt:SetText(string.format("|cffffd100%s|r |cffaaaaaa%.0f|r", ns.T("EAT_WELLFED"), math.max(0, t[1])))
+    r.bar:SetColorTexture(1, 0.82, 0, 0.95)
+  elseif k == "eat" then
+    r.bar:SetColorTexture(1, 0.7, 0.3, 0.9)
+  end
+  if k == "eat" and t.fed then
+    -- Well Fed: shown above, health and % still fill in under it
+  elseif t.wait then
     r.txt:SetText(string.format("|cffaaaaaa%s %.0f|r", ns.T("EAT_BANDAGE_WAIT"), math.max(0, t[1])))
   elseif not preview and k ~= "bandage" and IsFull(cur, max) then
     r.txt:SetText("|cff60ff60" .. ns.T("EAT_FULL") .. "|r")
@@ -171,6 +182,13 @@ end
 local function Update()
   if not f then return end
   local now = ns.db.eatBarOff and {} or Eating()
+  -- Buff food: a ping the moment Well Fed lands while you eat, and the food row turns gold.
+  local fed = now.fed and true or false
+  if now.eat then now.eat.fed = fed end
+  if fed and wasFed == false and now.eat then
+    pcall(PlaySound, SOUNDKIT and SOUNDKIT.MAP_PING or 3175)
+  end
+  wasFed = fed
   if not ns.db.bandageBarOff then now.bandage = Bandage() end
   local preview = false
   if not (now.eat or now.drink or now.bandage) and ns.db.shatterUnlocked then
