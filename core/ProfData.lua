@@ -68,14 +68,14 @@ ns.ROUTES.Tailoring = {
   { from = 190, to = 215, crafts = 38, craft = "Black Mageweave Gloves", mats = { {4339, 2, "Bolt of Mageweave"}, {8343, 2, "Heavy Silken Thread"} } },
   { from = 215, to = 225, crafts = 26, craft = "Mageweave Bag", mats = { {4339, 4, "Bolt of Mageweave"}, {4291, 2, "Silken Thread"} } },
   { from = 225, to = 240, crafts = 24, craft = "Runecloth Belt", mats = { {14048, 3, "Bolt of Runecloth"}, {14341, 1, "Rune Thread"} }, untested = true,
-    note = { "From the Artisan trainer. Bolts no longer give points here, so make all 244 at once", "Från Artisan-tränaren. Bolts ger inga poäng här längre, så gör alla 244 på en gång" } },
-  { from = 240, to = 265, crafts = 43, craft = "Runecloth Gloves", mats = { {14048, 4, "Bolt of Runecloth"}, {8170, 4, "Rugged Leather"}, {14341, 1, "Rune Thread"} }, untested = true,
+    note = { "From the Artisan trainer. Bolts no longer give points here: you need about 720 bolts up to 300 (311 up to 280)", "Från Artisan-tränaren. Bolts ger inga poäng här längre: du behöver runt 720 bolts fram till 300 (311 fram till 280)" } },
+  { from = 240, to = 250, crafts = 11, craft = "Runecloth Gloves", mats = { {14048, 4, "Bolt of Runecloth"}, {8170, 4, "Rugged Leather"}, {14341, 1, "Rune Thread"} }, untested = true,
     note = { "Pattern: Qia, Everlook (Winterspring)", "Mönster: Qia, Everlook (Winterspring)" } },
-  { from = 265, to = 270, crafts = 6, craft = "Earthenweave Leggings", mats = { {14048, 6, "Bolt of Runecloth"}, {7076, 2, "Essence of Earth"}, {14341, 1, "Rune Thread"} }, untested = true,
-    note = { "The Forever guide stops at 265: from here it's the older route", "Forever-guiden slutar vid 265: härifrån är det den äldre vägen" } },
-  { from = 270, to = 285, crafts = 21, craft = "Earthenweave Cuffs", mats = { {14048, 5, "Bolt of Runecloth"}, {7076, 1, "Essence of Earth"}, {14341, 1, "Rune Thread"} }, untested = true },
-  { from = 285, to = 296, crafts = 24, craft = "Earthenweave Crown", mats = { {14048, 6, "Bolt of Runecloth"}, {7076, 3, "Essence of Earth"}, {14341, 1, "Rune Thread"} }, untested = true },
-  { from = 296, to = 300, crafts = 6, craft = "Mooncloth Boots", mats = { {14048, 6, "Bolt of Runecloth"}, {14342, 4, "Mooncloth"}, {7971, 2, "Black Pearl"}, {14341, 1, "Rune Thread"} }, untested = true },
+  { from = 250, to = 280, crafts = 39, craft = "Runecloth Cuffs", mats = { {14048, 5, "Bolt of Runecloth"}, {14227, 1, "Ironweb Spider Silk"}, {14341, 1, "Rune Thread"} }, untested = true,
+    note = { A = { "Pattern (BoP): Pexmit, Mount Hyjal. No pattern? Runecloth Gloves to 260, then Runecloth Shoulders", "Mönster (BoP): Pexmit, Mount Hyjal. Inget mönster? Runecloth Gloves till 260, sedan Runecloth Shoulders" },
+             H = { "Pattern (BoP): Pexmit, Mount Hyjal, or the quest Threading a Solution from Kal'tinzan (Mount Hyjal, level 54). No pattern? Runecloth Gloves to 260, then Runecloth Shoulders", "Mönster (BoP): Pexmit, Mount Hyjal, eller uppdraget Threading a Solution från Kal'tinzan (Mount Hyjal, level 54). Inget mönster? Runecloth Gloves till 260, sedan Runecloth Shoulders" } } },
+  { from = 280, to = 300, crafts = 58, craft = "Runecloth Shoulders", mats = { {14048, 7, "Bolt of Runecloth"}, {14227, 2, "Ironweb Spider Silk"}, {8170, 4, "Rugged Leather"}, {14341, 1, "Rune Thread"} }, untested = true,
+    note = { "Pattern: world drop, look on the AH. Or Wizardweave Turban (Dream Dust, Star Ruby) if you find that pattern", "Mönster: world drop, kolla på AH. Eller Wizardweave Turban (Dream Dust, Star Ruby) om du hittar det mönstret" } },
 }
 
 ns.ROUTES.Enchanting = {

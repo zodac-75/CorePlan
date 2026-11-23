@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.31
+
+- **Tailoring 250-300 follows WoW Forever now:** Runecloth Cuffs from 250 (pattern from Pexmit in Mount Hyjal, or the Horde quest Threading a Solution), then Runecloth Shoulders to 300, instead of the old Earthenweave route.
+
 # AllClassPlan 0.1.30
 
 - **Bag check: AH prices from Auctioneer and TSM too.** If you don't use Auctionator, the bag check and the item tooltips now take AH prices from Auctioneer or TradeSkillMaster instead (Auctionator first, then Auctioneer, then TSM's market value).
