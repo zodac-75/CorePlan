@@ -2162,6 +2162,26 @@ do
     if not (now.eat and now.drink and math.abs(now.eat[1] - 10) < 1 and math.abs(now.drink[1] - 25) < 1) then
       table.insert(errors, "ätbar: mat och dryck har inte egna timers: " .. tostring(now.eat and now.eat[1]) .. " / " .. tostring(now.drink and now.drink[1]))
     end
+    -- the % at the end of the rows: readable health counted here, hidden mana written by the game
+    do
+      local oldH, oldHM, oldP, oldPP = rawget(_G, "UnitHealth"), rawget(_G, "UnitHealthMax"), rawget(_G, "UnitPower"), rawget(_G, "UnitPowerPercent")
+      UnitHealth, UnitHealthMax = function() return 150 end, function() return 200 end
+      UnitPower = function() return nil end
+      UnitPowerPercent = function() return 42 end
+      methods.SetFormattedText = methods.SetFormattedText or function(self, f, ...) self.__text = string.format(f, ...) end
+      ticks()
+      local hp, mp
+      for _, w in ipairs(allFrames) do
+        local t = rawget(w, "__text")
+        if type(t) == "string" then
+          if t == "75%" then hp = true end
+          if t == "42%" then mp = true end
+        end
+      end
+      if not hp then table.insert(errors, "ätbar: hälsa-% (75%) visas inte") end
+      if not mp then table.insert(errors, "ätbar: mana-% från spelet (42%) visas inte") end
+      UnitHealth, UnitHealthMax, UnitPower, UnitPowerPercent = oldH, oldHM, oldP, oldPP
+    end
     -- "Food & Drink" counts for both
     buffs = { { name = "Food & Drink", expirationTime = t0 + 20, duration = 30 } }
     now = ns.EatingNow()

@@ -1,6 +1,7 @@
 -- @ADDON@: eating and drinking bars. Food and drink each get their own timer (they can
 -- run out at different times): a bar that runs down like the Walk on Air timer, with your
--- health filling up under the food bar and your mana under the drink bar. A row says
+-- health filling up under the food bar and your mana under the drink bar, with the % at the
+-- end of each row. A row says
 -- "Full!" when that one is full (when the game lets us read it), so you can stop. Moves with the combat helper ("Move" switch), Ctrl + mouse wheel for size.
 local _, ns = ...
 
@@ -86,6 +87,23 @@ local function IsFull(cur, max)
   return cur >= max
 end
 
+-- The percentage at the end of a row. Readable values are counted here; when the game hides
+-- them (mana in WoW Forever) the game writes the number into the text itself.
+local function SetPct(fs, k, cur, max)
+  if cur ~= nil and max ~= nil and not Secret(cur) and not Secret(max) and max > 0 then
+    fs:SetText(math.floor(cur / max * 100 + 0.5) .. "%")
+    return
+  end
+  local fn = rawget(_G, k == "eat" and "UnitHealthPercent" or "UnitPowerPercent")
+  if type(fn) == "function" then
+    local scale = CurveConstants and CurveConstants.ScaleTo100
+    local ok, v
+    if k == "eat" then ok, v = pcall(fn, "player", false, scale) else ok, v = pcall(fn, "player", 0, false, scale) end
+    if ok and v ~= nil and pcall(fs.SetFormattedText, fs, "%.0f%%", v) then return end
+  end
+  fs:SetText("")
+end
+
 -- One row: what it counts, the time left, and under it the health (food) or mana (drink).
 local function ShowRow(k, t, y, preview)
   local r = rows[k]
@@ -95,6 +113,7 @@ local function ShowRow(k, t, y, preview)
   local cur, max
   if k == "eat" then cur, max = Health() else cur, max = Mana() end
   Fill(r.res, cur, max)
+  SetPct(r.pct, k, cur, max)
   if not preview and IsFull(cur, max) then
     r.txt:SetText("|cff60ff60" .. ns.T("EAT_FULL") .. "|r")
   else
@@ -150,6 +169,11 @@ local function MakeRow(k)
   r.txt = r.frame:CreateFontString(nil, "OVERLAY")
   r.txt:SetFont(STANDARD_TEXT_FONT, 18, "OUTLINE")
   r.txt:SetPoint("LEFT", r.icon, "RIGHT", 8, 0)
+  r.pct = r.frame:CreateFontString(nil, "OVERLAY")
+  r.pct:SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+  r.pct:SetPoint("RIGHT", r.frame, "TOPLEFT", W, -14)
+  r.pct:SetJustifyH("RIGHT")
+  if k == "eat" then r.pct:SetTextColor(0.4, 1, 0.4) else r.pct:SetTextColor(0.5, 0.7, 1) end
   local track = r.frame:CreateTexture(nil, "BACKGROUND")
   track:SetColorTexture(0, 0, 0, 0.5)
   track:SetSize(W, 7)

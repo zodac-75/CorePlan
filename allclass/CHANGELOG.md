@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.32
+
+- **Eating and drinking bars show %:** your health % at the end of the food bar and your mana % at the end of the drink bar (the game fills in the mana number itself, since WoW Forever hides it from addons).
+
 # AllClassPlan 0.1.31
 
 - **Eating and drinking bars:** food and drink each get their own timer that counts down, with your health filling up under the food bar and your mana under the drink bar. A bar says "Full!" when that one is full. Turn it on or off in the settings (Buffs) or with `/acp eatbar`; move it with "Unlock UI".
