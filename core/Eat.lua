@@ -2,14 +2,19 @@
 -- run out at different times): a bar that runs down like the Walk on Air timer, with your
 -- health filling up under the food bar and your mana under the drink bar, with the % at the
 -- end of each row. A row says
--- "Full!" when that one is full (when the game lets us read it), so you can stop. Moves with the combat helper ("Move" switch), Ctrl + mouse wheel for size.
+-- "Full!" when that one is full (when the game lets us read it), so you can stop.
+-- Bandages get a row too, in and out of combat: the 8 seconds of bandaging with your health,
+-- then the Recently Bandaged wait until you can use the next one. Moves with the combat helper ("Move" switch), Ctrl + mouse wheel for size.
 local _, ns = ...
 
 -- Buff name -> which timers it counts for. "Food & Drink" (and Refreshment) fill both.
 local KINDS = { ["Food"] = { eat = true }, ["Drink"] = { drink = true },
   ["Food & Drink"] = { eat = true, drink = true }, ["Refreshment"] = { eat = true, drink = true } }
-local ICON = { eat = "Interface\\Icons\\INV_Misc_Food_15", drink = "Interface\\Icons\\INV_Drink_07" }
-local WORD = { eat = "EAT_EATING", drink = "EAT_DRINKING" }
+local ICON = { eat = "Interface\\Icons\\INV_Misc_Food_15", drink = "Interface\\Icons\\INV_Drink_07",
+  bandage = "Interface\\Icons\\INV_Misc_Bandage_15" }
+local WORD = { eat = "EAT_EATING", drink = "EAT_DRINKING", bandage = "EAT_BANDAGING" }
+local ORDER = { "eat", "drink", "bandage" }
+local BANDAGE_CD = 60 -- Recently Bandaged
 local DEFAULT = 30 -- seconds, when the game doesn't say how long the buff lasts
 local W = 240
 local ROW = 46
@@ -64,6 +69,45 @@ local function Eating()
 end
 ns.EatingNow = Eating
 
+-- Bandaging: { left, total, wait = true when it's the Recently Bandaged wait } or nil.
+-- Works in combat too: the channel bar first, then the auras when they can be read.
+local function Bandage()
+  local now = GetTime()
+  if UnitChannelInfo then
+    local ok, name, _, _, startMs, endMs = pcall(UnitChannelInfo, "player")
+    if ok and name and not Secret(name) and (ns.Eng and ns.Eng(name) or name) == "First Aid"
+        and not Secret(startMs) and not Secret(endMs) and type(endMs) == "number" then
+      return { math.max(0, endMs / 1000 - now), math.max(1, (endMs - startMs) / 1000) }
+    end
+  end
+  local wait
+  for pass = 1, 2 do
+    local filter = pass == 1 and "HELPFUL" or "HARMFUL"
+    for i = 1, 40 do
+      local name, expires, dur
+      if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+        local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, "player", i, filter)
+        if not ok or not a then break end
+        name, expires, dur = a.name, a.expirationTime, a.duration
+      elseif UnitAura then
+        local ok, n, _, _, _, d, e = pcall(UnitAura, "player", i, filter)
+        if not ok or not n then break end
+        name, expires, dur = n, e, d
+      else
+        break
+      end
+      if not Secret(name) and not Secret(expires) and type(expires) == "number" and expires > 0 then
+        local eng = ns.Eng and ns.Eng(name) or name
+        local d = (not Secret(dur) and type(dur) == "number" and dur > 0) and dur
+        if filter == "HELPFUL" and eng == "First Aid" then return { expires - now, d or 8 } end
+        if filter == "HARMFUL" and eng == "Recently Bandaged" then wait = { expires - now, d or BANDAGE_CD, wait = true } end
+      end
+    end
+  end
+  return wait
+end
+ns.BandageNow = Bandage
+
 -- A unit value, or nil when the game won't answer.
 local function Get(fn, ...)
   if type(fn) ~= "function" then return nil end
@@ -94,11 +138,11 @@ local function SetPct(fs, k, cur, max)
     fs:SetText(math.floor(cur / max * 100 + 0.5) .. "%")
     return
   end
-  local fn = rawget(_G, k == "eat" and "UnitHealthPercent" or "UnitPowerPercent")
+  local fn = rawget(_G, k == "drink" and "UnitPowerPercent" or "UnitHealthPercent")
   if type(fn) == "function" then
     local scale = CurveConstants and CurveConstants.ScaleTo100
     local ok, v
-    if k == "eat" then ok, v = pcall(fn, "player", false, scale) else ok, v = pcall(fn, "player", 0, false, scale) end
+    if k == "drink" then ok, v = pcall(fn, "player", 0, false, scale) else ok, v = pcall(fn, "player", false, scale) end
     if ok and v ~= nil and pcall(fs.SetFormattedText, fs, "%.0f%%", v) then return end
   end
   fs:SetText("")
@@ -111,10 +155,12 @@ local function ShowRow(k, t, y, preview)
   r.frame:SetPoint("TOPLEFT", f, "TOPLEFT", 0, y)
   r.bar:SetWidth(math.max(1, W * math.max(0, math.min(1, t[1] / t[2]))))
   local cur, max
-  if k == "eat" then cur, max = Health() else cur, max = Mana() end
+  if k == "drink" then cur, max = Mana() else cur, max = Health() end
   Fill(r.res, cur, max)
   SetPct(r.pct, k, cur, max)
-  if not preview and IsFull(cur, max) then
+  if t.wait then
+    r.txt:SetText(string.format("|cffaaaaaa%s %.0f|r", ns.T("EAT_BANDAGE_WAIT"), math.max(0, t[1])))
+  elseif not preview and k ~= "bandage" and IsFull(cur, max) then
     r.txt:SetText("|cff60ff60" .. ns.T("EAT_FULL") .. "|r")
   else
     r.txt:SetText(string.format("|cff66ccff%s %.0f|r", ns.T(WORD[k]), math.max(0, t[1])))
@@ -124,18 +170,20 @@ end
 
 local function Update()
   if not f then return end
-  if ns.db.eatBarOff then f:Hide(); return end
-  local now = Eating()
+  local now = ns.db.eatBarOff and {} or Eating()
+  if not ns.db.bandageBarOff then now.bandage = Bandage() end
   local preview = false
-  if not (now.eat or now.drink) and ns.db.shatterUnlocked then
+  if not (now.eat or now.drink or now.bandage) and ns.db.shatterUnlocked then
     -- so you can find and move it
     preview = true
-    now = { eat = { DEFAULT, DEFAULT }, drink = { DEFAULT * 0.6, DEFAULT } }
+    now = {}
+    if not ns.db.eatBarOff then now.eat, now.drink = { DEFAULT, DEFAULT }, { DEFAULT * 0.6, DEFAULT } end
+    if not ns.db.bandageBarOff then now.bandage = { 5, 8 } end
   end
   -- Drinking only matters with mana (no drink row for warriors and rogues).
   if now.drink and ns.HasMana and not ns.HasMana() then now.drink = nil end
   local y = 0
-  for _, k in ipairs({ "eat", "drink" }) do
+  for _, k in ipairs(ORDER) do
     if now[k] then ShowRow(k, now[k], y, preview); y = y - ROW else rows[k].frame:Hide() end
   end
   if y == 0 then f:Hide(); return end
@@ -173,7 +221,7 @@ local function MakeRow(k)
   r.pct:SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
   r.pct:SetPoint("RIGHT", r.frame, "TOPLEFT", W, -14)
   r.pct:SetJustifyH("RIGHT")
-  if k == "eat" then r.pct:SetTextColor(0.4, 1, 0.4) else r.pct:SetTextColor(0.5, 0.7, 1) end
+  if k == "drink" then r.pct:SetTextColor(0.5, 0.7, 1) else r.pct:SetTextColor(0.4, 1, 0.4) end
   local track = r.frame:CreateTexture(nil, "BACKGROUND")
   track:SetColorTexture(0, 0, 0, 0.5)
   track:SetSize(W, 7)
@@ -181,8 +229,9 @@ local function MakeRow(k)
   r.bar = r.frame:CreateTexture(nil, "ARTWORK")
   r.bar:SetHeight(7)
   r.bar:SetPoint("TOPLEFT", track, "TOPLEFT")
-  r.bar:SetColorTexture(k == "eat" and 1 or 0.35, k == "eat" and 0.7 or 0.75, k == "eat" and 0.3 or 1, 0.9)
-  if k == "eat" then r.res = StatusBar(r.frame, 0.2, 0.85, 0.2) else r.res = StatusBar(r.frame, 0.25, 0.45, 1) end
+  local c = ({ eat = { 1, 0.7, 0.3 }, drink = { 0.35, 0.75, 1 }, bandage = { 1, 0.35, 0.35 } })[k]
+  r.bar:SetColorTexture(c[1], c[2], c[3], 0.9)
+  if k == "drink" then r.res = StatusBar(r.frame, 0.25, 0.45, 1) else r.res = StatusBar(r.frame, 0.2, 0.85, 0.2) end
   r.res:SetPoint("TOPLEFT", track, "BOTTOMLEFT", 0, -2)
   r.frame:Hide()
   rows[k] = r
@@ -190,7 +239,7 @@ end
 
 ns.RegisterModule(function()
   f = CreateFrame("Frame", "@ADDON@EatFrame", UIParent)
-  f:SetSize(W + 20, ROW * 2)
+  f:SetSize(W + 20, ROW * 3)
   local p = ns.db.eatPos
   if p then f:SetPoint(p[1], UIParent, p[2], p[3], p[4]) else f:SetPoint("CENTER", UIParent, "CENTER", 0, 100) end
   f:SetScale(ns.db.eatScale or 1)
@@ -213,6 +262,7 @@ ns.RegisterModule(function()
   end)
   MakeRow("eat")
   MakeRow("drink")
+  MakeRow("bandage")
   f:Hide()
 
   local ev = CreateFrame("Frame")
@@ -228,6 +278,12 @@ ns.RegisterModule(function()
       ns.Print("eat bar: " .. tostring(err))
     end
   end)
+end)
+
+ns.RegisterCommand("bandagebar", true, function()
+  ns.db.bandageBarOff = not ns.db.bandageBarOff
+  ns.Print(ns.db.bandageBarOff and ns.T("BANDAGE_OFF") or ns.T("BANDAGE_ON"))
+  pcall(Update)
 end)
 
 ns.RegisterCommand("eatbar", true, function()

@@ -607,6 +607,7 @@ ns.SPELL_IDS = {
   ["Raptor Strike"] = 2973,
   ["Ravage"] = 3242,
   ["Rebirth"] = 20484,
+  ["Recently Bandaged"] = 11196,
   ["Reckless Swings"] = 1329554,
   ["Recklessness"] = 1719,
   ["Reckoning"] = 20177,

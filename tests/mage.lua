@@ -2186,6 +2186,30 @@ do
     buffs = { { name = "Food & Drink", expirationTime = t0 + 20, duration = 30 } }
     now = ns.EatingNow()
     if not (now.eat and now.drink) then table.insert(errors, "ätbar: Food & Drink räknas inte för båda") end
+    -- Bandage: the channel first (works in combat), then the Recently Bandaged wait; own tick box.
+    do
+      local oldCh = rawget(_G, "UnitChannelInfo")
+      local chan
+      UnitChannelInfo = function() if chan then return "First Aid", "", "", (t0 - 2) * 1000, (t0 + 6) * 1000 end end
+      buffs = {}
+      chan = true
+      local b = ns.BandageNow()
+      if not (b and not b.wait and math.abs(b[1] - 6) < 0.5 and math.abs(b[2] - 8) < 0.5) then table.insert(errors, "bandage: kanalen läses inte: " .. tostring(b and b[1])) end
+      ticks()
+      if not ef.__shown then table.insert(errors, "bandage: raden syns inte när du bandagerar") end
+      chan = nil
+      local oldGet = C_UnitAuras.GetAuraDataByIndex
+      C_UnitAuras.GetAuraDataByIndex = function(_, i, filter)
+        if filter == "HARMFUL" and i == 1 then return { name = "Recently Bandaged", expirationTime = t0 + 45, duration = 60 } end
+      end
+      b = ns.BandageNow()
+      if not (b and b.wait and math.abs(b[1] - 45) < 0.5) then table.insert(errors, "bandage: Recently Bandaged-väntan läses inte: " .. tostring(b and b[1])) end
+      slash("bandagebar"); ticks()
+      if ef.__shown or not ns.db.bandageBarOff then table.insert(errors, "bandage: /acp bandagebar stänger inte av") end
+      slash("bandagebar")
+      C_UnitAuras.GetAuraDataByIndex = oldGet
+      UnitChannelInfo = oldCh
+    end
     slash("eatbar"); ticks()
     if ef.__shown or not ns.db.eatBarOff then table.insert(errors, "ätbar: /acp eatbar stänger inte av") end
     slash("eatbar")

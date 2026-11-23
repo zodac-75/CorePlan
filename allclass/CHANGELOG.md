@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.33
+
+- **Bandage bar:** a third row for bandages that works in combat too. It counts down the 8 seconds of bandaging with your health and %, then shows how long until you can bandage again (Recently Bandaged). Its own tick box in the settings (Buffs), or `/acp bandagebar`.
+
 # AllClassPlan 0.1.32
 
 - **Eating and drinking bars show %:** your health % at the end of the food bar and your mana % at the end of the drink bar (the game fills in the mana number itself, since WoW Forever hides it from addons).
