@@ -44,6 +44,7 @@ local FEATURES = {
   { group = "CAT_BUFFS", key = "MM_BUFFS", on = function() return not ns.db.buffsOff end, cmd = "buffs" },
   { group = "CAT_BUFFS", key = "MM_PARTYBUFF", on = function() return not ns.db.partyBuffsOff end, cmd = "partybuffs", party = true },
   { group = "CAT_BUFFS", key = "MM_DRINK", on = function() return not ns.db.drinkOff end, cmd = "drink" },
+  { group = "CAT_BUFFS", key = "MM_EAT", on = function() return not ns.db.eatBarOff end, cmd = "eatbar" },
   { group = "CAT_COMBAT", key = "MM_GLIDE", on = function() return not ns.db.glideOff end, cmd = "glide" },
   { group = "CAT_ITEMS", key = "MM_UPGRADE", on = function() return not ns.db.upgradeOff end, cmd = "upgrade" },
   { group = "CAT_ITEMS", key = "MM_QUEST", on = function() return not ns.db.questOff end, cmd = "quest" },
@@ -126,6 +127,7 @@ do
   push(byKey.MM_PARTYBUFF)
   if byKey.MM_PARTYBUFF then for _, t in ipairs(party) do push(t) end end
   push(byKey.MM_DRINK)
+  push(byKey.MM_EAT)
 end
 
 local function Group(list, group)

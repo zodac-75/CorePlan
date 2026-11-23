@@ -286,6 +286,7 @@ ns.SPELL_IDS = {
   ["Flawless Execution"] = 1310711,
   ["Flurry"] = 12319,
   ["Focused Fire"] = 1223755,
+  ["Food"] = 433,
   ["Focused Rage"] = 29787,
   ["Freeze"] = 2132,
   ["Freezing Trap"] = 1499,

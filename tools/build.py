@@ -33,7 +33,7 @@ ORDER = [
     "AllClass.lua", "Core.lua", "Rows.lua", "Plans.lua", "Import.lua", "Ranks.lua", "Talents.lua", "Trainer.lua", "Helper.lua",
     "CLASS_MODULES",
     "Craft.lua", "Upgrades.lua", "ZoneTips.lua", "Goals.lua", "XP.lua", "ZoneData.lua", "LevelZones.lua", "QuestReward.lua", "Bags.lua",
-    "Drink.lua", "Buffs.lua", "Marks.lua", "GroupBar.lua", "Glide.lua", "Minimap.lua", "DungeonData.lua", "NameData.lua", "Arrow.lua", "Dungeons.lua",
+    "Drink.lua", "Buffs.lua", "Marks.lua", "GroupBar.lua", "Glide.lua", "Eat.lua", "Minimap.lua", "DungeonData.lua", "NameData.lua", "Arrow.lua", "Dungeons.lua",
     "Config.lua", "Profiles.lua", "Emotes.lua", "CampfireLines.lua", "Campfire.lua",
 ]
 

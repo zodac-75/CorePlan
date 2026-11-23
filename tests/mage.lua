@@ -2138,6 +2138,35 @@ do
   if not ok then table.insert(errors, "väskgenomgång: " .. tostring(err)) end
   bag[4] = nil
 end
+-- Eating and drinking bar: shows while a Food/Drink buff is on, says which, hides with the tick box off.
+do
+  local function ticks() for _, w in ipairs(allFrames) do if w.__scripts.OnUpdate then pcall(w.__scripts.OnUpdate, w, 0.2) end end end
+  local oldC, oldUnlock = C_UnitAuras, ns.db.shatterUnlocked
+  local t0, buffs = GetTime(), {}
+  C_UnitAuras = setmetatable({ GetAuraDataByIndex = function(_, i) return buffs[i] end }, { __index = oldC })
+  ns.db.shatterUnlocked, ns.db.eatBarOff = nil, nil
+  local ok, err = pcall(function()
+    local ef = rawget(_G, "MagePlanEatFrame")
+    if not ef then table.insert(errors, "ätbar: ramen skapades inte") return end
+    ticks()
+    if ef.__shown then table.insert(errors, "ätbar: syns fast du varken äter eller dricker") end
+    buffs = { { name = "Drink", expirationTime = t0 + 18, duration = 30 } }
+    ticks()
+    local kind, left = ns.EatingNow()
+    if not ef.__shown or kind ~= "drink" or not (left and left > 15 and left <= 18) then table.insert(errors, "ätbar: Drink visas inte rätt: " .. tostring(kind) .. " " .. tostring(left)) end
+    buffs = { { name = "Food", expirationTime = t0 + 20, duration = 30 }, { name = "Drink", expirationTime = t0 + 25, duration = 30 } }
+    kind = ns.EatingNow()
+    if kind ~= "both" then table.insert(errors, "ätbar: mat + dryck blev " .. tostring(kind)) end
+    slash("eatbar"); ticks()
+    if ef.__shown or not ns.db.eatBarOff then table.insert(errors, "ätbar: /acp eatbar stänger inte av") end
+    slash("eatbar")
+    buffs = {}
+    ticks()
+    if ef.__shown then table.insert(errors, "ätbar: syns kvar när du slutat") end
+  end)
+  if not ok then table.insert(errors, "ätbar: " .. tostring(err)) end
+  C_UnitAuras, ns.db.shatterUnlocked = oldC, oldUnlock
+end
 -- Range icon: shown with an enemy target, coloured by the game's range answer.
 do
   local function ticks() for _, w in ipairs(allFrames) do if w.__scripts.OnUpdate then pcall(w.__scripts.OnUpdate, w, 0.2) end end end

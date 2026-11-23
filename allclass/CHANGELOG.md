@@ -1,5 +1,6 @@
 # AllClassPlan 0.1.31
 
+- **Eating and drinking bar:** while you eat or drink, a bar counts down the time left and shows your health and mana filling up, and says "Full!" when you can stand up and go. Turn it on or off in the settings (Buffs) or with `/acp eatbar`; move it with "Unlock UI".
 - **Tailoring 250-300 follows WoW Forever now:** Runecloth Cuffs from 250 (pattern from Pexmit in Mount Hyjal, or the Horde quest Threading a Solution), then Runecloth Shoulders to 300, instead of the old Earthenweave route.
 
 # AllClassPlan 0.1.30
