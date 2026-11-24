@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.35
+
+- **More campfire talk:** about 150 new lines, now 490 in total. 45 of them are for when you target another player (30 new greetings), plus new jokes, fire, food and weather talk and four new lines for every class.
+
 # AllClassPlan 0.1.34
 
 - **Rank check: low ranks on purpose.** A lower rank next to the best rank of the same spell (a cheap Arcane Explosion rank 1, a small heal) is no longer reported. To allow old ranks of a spell even on their own, use `/acp ranks keep <spell>` (again to undo, `/acp ranks keep` lists them).
