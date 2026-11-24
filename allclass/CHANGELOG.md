@@ -1,6 +1,7 @@
 # AllClassPlan 0.1.35
 
 - **More campfire talk:** about 150 new lines, now 490 in total. 45 of them are for when you target another player (30 new greetings), plus new jokes, fire, food and weather talk and four new lines for every class.
+- **Fix:** a Lua error when the game sent a hidden (secret) chat message about a profession skill-up or experience. Those messages are now skipped.
 
 # AllClassPlan 0.1.34
 

@@ -320,7 +320,11 @@ profEvents:SetScript("OnEvent", function(_, event, msg)
       local p = fmt:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1"):gsub("%%%%s", "(.+)"):gsub("%%%%d", "(%%d+)")
       return "^" .. p .. "$"
     end
-    msg = msg or ""
+    -- The game can hand us a secret (hidden) chat string; it can't be read, so skip it.
+    if type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then
+      ns.Debounce("main", 0.5, ns.RefreshMain)
+      return
+    end
     local name, rank
     local p1 = Pattern(rawget(_G, "SKILL_RANK_UP"))
     if p1 then name, rank = msg:match(p1) end

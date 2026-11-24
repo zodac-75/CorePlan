@@ -57,7 +57,7 @@ ns.RegisterModule(function()
   ev:SetScript("OnEvent", function(_, event, msg)
     if event == "PLAYER_XP_UPDATE" then
       OnXP()
-    elseif type(msg) == "string" and msg:find("dies") then
+    elseif type(msg) == "string" and not (issecretvalue and issecretvalue(msg)) and msg:find("dies") then
       local n = tonumber(msg:match("(%d+) experience"))
       if n then lastKill = n end
     end

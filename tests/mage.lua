@@ -1484,6 +1484,16 @@ for _, w in ipairs(allFrames) do
   end
 end
 print("  efter chatt: Tailoring", ns.GetProfSkill("Tailoring"), " Enchanting", ns.GetProfSkill("Enchanting"))
+do -- a secret (hidden) chat string must be skipped, not read
+  local SECRETMSG = "Your skill in Mining has increased to 99"
+  local oldIS = issecretvalue
+  issecretvalue = function(v) return v == SECRETMSG end
+  for _, w in ipairs(allFrames) do
+    if w.__events["CHAT_MSG_SKILL"] and w.__scripts.OnEvent then w.__scripts.OnEvent(w, "CHAT_MSG_SKILL", SECRETMSG) end
+  end
+  issecretvalue = oldIS
+  if ns.GetProfSkill("Mining") then table.insert(errors, "hemlig skill-chattrad lästes ändå") end
+end
 function GetProfessions() return 3, 7 end
 function GetProfessionInfo(i) if i == 3 then return "Tailoring", "icon", 61, 75 elseif i == 7 then return "Enchanting", "icon", 12, 75 end end
 print("  med GetProfessions: Tailoring", ns.GetProfSkill("Tailoring"), " Enchanting", ns.GetProfSkill("Enchanting"))
