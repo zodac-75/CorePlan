@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.36
+
+- **Profession guide, checked against the game's own skill colours:** Blacksmithing uses Rough Bronze Leggings at 95-100 and 112-125 (Patterned Bronze Bracers is only taught at 120), and Engineering stops Heavy Blasting Powder at 145, where it turns grey, and makes Whirring Bronze Gizmos to 150 (you need them for Explosive Sheep anyway).
+
 # AllClassPlan 0.1.35
 
 - **More campfire talk:** about 150 new lines, now 490 in total. 45 of them are for when you target another player (30 new greetings), plus new jokes, fire, food and weather talk and four new lines for every class.
