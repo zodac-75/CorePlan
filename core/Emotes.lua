@@ -1271,7 +1271,7 @@ local RARE_ITEMS = {
 ns.RARE_ITEMS = RARE_ITEMS
 local RARE_ICONS = {
   [13468] = "Interface\\Icons\\INV_Misc_Herb_BlackLotus",
-  [12363] = "Interface\\Icons\\INV_Misc_Gem_Crystal_01",
+  [12363] = "Interface\\Icons\\INV_Misc_Gem_Topaz_01",
 }
 ns.RARE_ICONS = RARE_ICONS
 local lastRare = -1000

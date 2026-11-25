@@ -2843,7 +2843,7 @@ do
     end
     if seen[1] == seen[2] then table.insert(errors, "RARE: /egg rare två gånger gav samma bild: " .. seen[1]) end
     if not seen[3]:find("BlackLotus", 1, true) then table.insert(errors, "RARE: egg lotus gav fel bild: " .. seen[3]) end
-    if not seen[4]:find("Crystal_01", 1, true) then table.insert(errors, "RARE: egg crystal gav fel bild: " .. seen[4]) end
+    if not seen[4]:find("Topaz_01", 1, true) then table.insert(errors, "RARE: egg crystal gav fel bild: " .. seen[4]) end
     C_ChatInfo.SendAddonMessage = oldS
   end
   -- the command
