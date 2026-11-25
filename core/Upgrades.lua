@@ -179,8 +179,38 @@ function ns.CanWear(link)
   return false
 end
 
--- Returns diff (or nil if not comparable) and the required level.
-function ns.CompareToEquipped(link)
+-- The class's main power, unweighted: spell power (or the plan's school), healing or attack
+-- power, whichever the chosen talent plan counts at full weight. nil when the plan has none
+-- (a tank counts many stats about evenly).
+local POWER_KEYS = { sp = true, dmgsp = true, heal = true, ap = true, school = true,
+  frost = true, fire = true, arcane = true, shadow = true, nature = true, holy = true }
+local function PowerKeys()
+  local w, keys = ns.STATS.weights, {}
+  for k in pairs(POWER_KEYS) do
+    local wk = w[k]
+    if k == "dmgsp" then wk = (not w.heal) and w.sp or nil end
+    if wk and wk >= 0.9 then keys[k] = true end
+  end
+  return next(keys) and keys or nil
+end
+function ns.PowerLabel()
+  local keys = PowerKeys()
+  if not keys then return nil end
+  if keys.heal then return "UP_LBL_HEAL" end
+  if keys.ap then return "UP_LBL_AP" end
+  return "UP_LBL_SP"
+end
+function ns.ItemPower(link)
+  if not link then return 0 end
+  local keys, total = PowerKeys(), 0
+  if not keys then return 0 end
+  for k, v in pairs(Stats(link)) do if keys[k] then total = total + v end end
+  return total
+end
+
+-- Returns diff (or nil if not comparable) and the required level. score defaults to the
+-- weighted ns.ItemScore; ns.ItemPower gives the plain main-stat change.
+function ns.CompareToEquipped(link, score)
   local ok, name, _, _, _, minLevel, _, _, _, equipLoc, _, _, classID, subclassID = pcall(ns.ItemInfo, link)
   if not ok or not name or not equipLoc then return nil end
   local slots = SLOTS[equipLoc]
@@ -192,10 +222,11 @@ function ns.CompareToEquipped(link)
   local wear = WearLevel(classID, subclassID)
   if wear and (minLevel or 0) < wear then minLevel = wear end
 
-  local newScore = ns.ItemScore(link)
+  local Score = score or ns.ItemScore
+  local newScore = Score(link)
   local oldScore
   if equipLoc == "INVTYPE_2HWEAPON" then
-    oldScore = ns.ItemScore(Equipped(16)) + ns.ItemScore(Equipped(17))
+    oldScore = Score(Equipped(16)) + Score(Equipped(17))
   elseif (equipLoc == "INVTYPE_HOLDABLE" or equipLoc == "INVTYPE_WEAPONOFFHAND" or equipLoc == "INVTYPE_SHIELD")
     and IsTwoHander(Equipped(16)) then
     return nil -- would need to swap out the two-hander as well
@@ -203,15 +234,15 @@ function ns.CompareToEquipped(link)
     -- Dual wielding: a one-hander can replace the weaker of the two weapons.
     local a, b = Equipped(16), Equipped(17)
     if link == a or link == b then return nil end
-    oldScore = math.min(ns.ItemScore(a), ns.ItemScore(b))
+    oldScore = math.min(Score(a), Score(b))
   elseif #slots == 2 then
     local a, b = Equipped(slots[1]), Equipped(slots[2])
     if link == a or link == b then return nil end
-    oldScore = math.min(ns.ItemScore(a), ns.ItemScore(b))
+    oldScore = math.min(Score(a), Score(b))
   else
     local cur = Equipped(slots[1])
     if link == cur then return nil end
-    oldScore = ns.ItemScore(cur)
+    oldScore = Score(cur)
   end
   return newScore - oldScore, minLevel
 end
@@ -264,19 +295,31 @@ local function OnTooltip(tt)
   if not ok or not link then return end
   local diff, minLevel = ns.CompareToEquipped(link)
   if not diff then return end
-  local line
-  if diff >= 0.5 then
-    line = "|cff60ff60" .. ns.T("UP_UP", math.floor(diff + 0.5)) .. "|r"
-  elseif diff <= -0.5 then
-    line = "|cffff6060" .. ns.T("UP_DOWN", math.floor(diff - 0.5)) .. "|r"
-  else
-    line = "|cffaaaaaa" .. ns.T("UP_SAME") .. "|r"
+  local show = ns.db.upgradeShow or "both"
+  local label = ns.PowerLabel()
+  if not label then show = "all" end -- nothing counts at full weight: only the overall score
+  local function Signed(v, fmt)
+    local t = string.format(fmt, v)
+    if v > 0 then t = "+" .. t end
+    return t
+  end
+  local lines = {}
+  if show ~= "all" then
+    local p = ns.CompareToEquipped(link, ns.ItemPower) or 0
+    p = (p >= 0) and math.floor(p + 0.5) or -math.floor(-p + 0.5)
+    local col = p > 0 and "|cff60ff60" or (p < 0 and "|cffff6060" or "|cffaaaaaa")
+    table.insert(lines, col .. ns.T("UP_POWER", ns.T(label), Signed(p, "%d")) .. "|r")
+  end
+  if show ~= "power" then
+    local col = diff >= 0.5 and "|cff60ff60" or (diff <= -0.5 and "|cffff6060" or "|cffaaaaaa")
+    local word = diff >= 0.5 and ns.T("UP_WORD_UP") or (diff <= -0.5 and ns.T("UP_WORD_DOWN") or ns.T("UP_WORD_SAME"))
+    table.insert(lines, col .. ns.T("UP_ALL", word, Signed(math.floor(diff * 10 + (diff >= 0 and 0.5 or -0.5)) / 10, "%.1f")) .. "|r")
   end
   local level = UnitLevel("player") or 1
   if minLevel and minLevel > level then
-    line = line .. " |cffaaaaaa" .. ns.T("UP_LEVEL", minLevel) .. "|r"
+    lines[#lines] = lines[#lines] .. " |cffaaaaaa" .. ns.T("UP_LEVEL", minLevel) .. "|r"
   end
-  tt:AddLine("|cff@COLOR@@ADDON@:|r " .. line)
+  for _, l in ipairs(lines) do tt:AddLine("|cff@COLOR@@ADDON@:|r " .. l) end
 end
 
 ns.RegisterModule(function()

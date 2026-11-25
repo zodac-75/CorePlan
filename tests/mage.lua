@@ -187,7 +187,9 @@ if MODE == "modern" then
     end,
   }
   BackdropTemplateMixin = {}
-  TooltipDataProcessor = { AddTooltipPostCall = function(_, fn) TooltipPostCall = fn end }
+  local postCalls = {}
+  TooltipPostCall = function(tt) for _, fn in ipairs(postCalls) do fn(tt) end end
+  TooltipDataProcessor = { AddTooltipPostCall = function(_, fn) table.insert(postCalls, fn) end }
   Enum = { TooltipDataType = { Item = 0 } }
 else
   function GetSpellInfo(s) local n, id = spellLookup(s); if n then return n, nil, 0, 0, 0, 0, id end end
@@ -247,6 +249,8 @@ local items = {
   [6001] = { "Old Robe", 1, 12, "INVTYPE_CHEST", 50, 4, 1, 0, 1, 10 },
   [6002] = { "Leather Vest", 2, 22, "INVTYPE_CHEST", 400, 4, 1, 2, 2, 20 },
   [6003] = { "Future Gloves", 2, 30, "INVTYPE_HAND", 400, 4, 1, 2, 1, 30 },
+  [6020] = { "Shilly Mitts", 2, 25, "INVTYPE_HAND", 400, 4, 1, 1, 1, 1 },
+  [6021] = { "Elder's Gloves of the Sorcerer", 2, 27, "INVTYPE_HAND", 400, 4, 1, 2, 1, 1 },
   -- Deadmines loot for the loot list: cloth a mage can wear, and plate it can't.
   [1929] = { "Silk-threaded Trousers", 2, 20, "INVTYPE_LEGS", 400, 4, 1, 1, 1, 13 },
   [5193] = { "Cape of the Brotherhood", 3, 24, "INVTYPE_CLOAK", 500, 4, 1, 1, 1, 19 },
@@ -272,6 +276,8 @@ TOOLTIP_TEXT = {
   [6003] = { "Future Gloves", "Equip: Increases spell power by 12." },
   [6004] = { "Healing And Damage Bracers", "Equip: Increases healing done by up to 9 and damage done by up to 3 for all magical spells and effects." },
   [6006] = { "Trinket", "Use: Increases damage and healing done by magical spells and effects by up to 30 for 15 sec.", "Equip: Increases damage done to Undead by magical spells and effects by up to 35.", "+4 Intellect" },
+  [6020] = { "Shilly Mitts", "28 Armor", "+6 Spirit", "+40 Armor", "Equip: Increases damage and healing done by magical spells and effects by up to 5." },
+  [6021] = { "Elder's Gloves of the Sorcerer", "28 Armor", "+4 Stamina", "+7 Intellect", "Equip: Increases damage and healing done by magical spells and effects by up to 3." },
   [6005] = { "Plain Bangles", "Equip: Increases damage and healing done by magical spells and effects by up to 1.", "Enchanted: Stamina +3" },
 }
 local function ttLines(link) local id = tonumber(tostring(link):match("item:(%d+)")); return TOOLTIP_TEXT[id] or { "x" } end
@@ -1349,6 +1355,33 @@ do -- "healing done by up to 9 and damage done by up to 3": a Frost mage counts 
   if math.abs(b - 1) > 0.001 then table.insert(errors, "uppgradering: 'damage and healing by up to 1' ger " .. tostring(b) .. ", väntade 1") end
 end
 tipFor(6003, "Future Gloves"); tipFor(6002, "Leather Vest"); tipFor(6001, "Old Robe")
+do -- main stat and overall score as two lines, and the setting picks which
+  local oldInv = GetInventoryItemLink
+  GetInventoryItemLink = function(u, slot) if slot == 10 then return "|Hitem:6020|h[Shilly Mitts]|h" end return oldInv(u, slot) end
+  local function lines(show)
+    ns.db.upgradeShow = show
+    GameTooltip.__lines = nil
+    GameTooltip.__itemName, GameTooltip.__itemLink = "Elder's Gloves of the Sorcerer", "|Hitem:6021|h[Elder's Gloves of the Sorcerer]|h"
+    if TooltipPostCall then pcall(TooltipPostCall, GameTooltip) else pcall(GameTooltip.__scripts.OnTooltipSetItem, GameTooltip) end
+    local out = {}
+    for _, l in ipairs(rawget(GameTooltip, "__lines") or {}) do
+      l = l:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+      if l:find(ns.T("UP_LBL_SP"), 1, true) or l:find("(", 1, true) then table.insert(out, l) end
+    end
+    return out
+  end
+  local both = lines(nil)
+  local wantP = ns.T("UP_POWER", ns.T("UP_LBL_SP"), "-2")
+  local wantA = ns.T("UP_ALL", ns.T("UP_WORD_UP"), "+0.6")
+  local has = function(t, w) for _, l in ipairs(t) do if l:find(w, 1, true) then return true end end return false end
+  if not (has(both, wantP) and has(both, wantA)) then table.insert(errors, "uppgradering: handskarna gav inte '-2 spell power' + '+0.6 totalt': " .. table.concat(both, " / ")) end
+  local p = lines("power")
+  if not has(p, wantP) or has(p, wantA) then table.insert(errors, "uppgradering: 'bara huvudstat' visade fel: " .. table.concat(p, " / ")) end
+  local a = lines("all")
+  if has(a, wantP) or not has(a, wantA) then table.insert(errors, "uppgradering: 'bara totalt' visade fel: " .. table.concat(a, " / ")) end
+  ns.db.upgradeShow = nil
+  GetInventoryItemLink = oldInv
+end
 GameTooltip.__lines = nil
 GameTooltip.__itemName, GameTooltip.__itemLink = "Silky Robe", "|Hitem:6000|h[Silky Robe]|h"
 if TooltipPostCall then pcall(TooltipPostCall, GameTooltip) elseif GameTooltip.__scripts.OnTooltipSetItem then pcall(GameTooltip.__scripts.OnTooltipSetItem, GameTooltip) end

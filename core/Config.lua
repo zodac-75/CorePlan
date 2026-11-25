@@ -187,6 +187,13 @@ local LEVEL_SELECTORS = {
     end,
     set = function(text) if ns.SetGoldGoal then ns.SetGoldGoal(text) end end },
 }
+-- What the tooltip upgrade check shows, right under its tick box.
+ns.UPGRADE_SHOWS = { "both", "power", "all" }
+local ITEM_SELECTORS = {
+  { key = "CFG_UPSHOW",
+    value = function() return ns.T("UPSHOW_" .. (ns.db.upgradeShow or "both")) end,
+    step = function(dir) ns.db.upgradeShow = Step(ns.UPGRADE_SHOWS, ns.db.upgradeShow or "both", dir) end },
+}
 local ALERT_SELECTORS = {
   { key = "CFG_HELPERSIZE",
     value = function() return math.floor((ns.db.shatterScale or 1) * 100 + 0.5) .. "%" end,
@@ -612,7 +619,14 @@ local function CreateConfig()
   })
   -- Right: gear, party marks and the addon's own look.
   Column(COL[3], {
-    { head = "CAT_ITEMS", rows = Group(FEATURES, "CAT_ITEMS") },
+    { head = "CAT_ITEMS", rows = (function()
+      local rows = {}
+      for _, r in ipairs(Group(FEATURES, "CAT_ITEMS")) do
+        table.insert(rows, r)
+        if r.key == "MM_UPGRADE" then for _, sel in ipairs(ITEM_SELECTORS) do table.insert(rows, sel) end end
+      end
+      return rows
+    end)() },
     -- Party marks: the button's on/off box, then the five marks with the player under each.
     { head = "CAT_MARKS", rows = Group(FEATURES, "CAT_MARKS"), after = function(x, y) return MarkRow(x, y - 2) end },
     { head = "CAT_LOOK", rows = Concat(LOOK_SELECTORS, Group(FEATURES, "CAT_LOOK")), after = function(x, y)
