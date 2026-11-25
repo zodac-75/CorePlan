@@ -34,7 +34,6 @@ f0b32fe8 = Ricetta per Merchant's Favor: Apothecary Durelle, accampamento fuori 
 0b6ed9f4 = Compra un Blacksmith Hammer dal venditore di Forgiatura vicino al maestro (serve da 67)
 f0f5ec4f = Tienine 26 per i Runed Copper Gauntlets
 7a56e0eb = Tieni le pietre per i Patterned Bronze Bracers
-78f688ed = Oppure Silver Rod (Silver Bar + 2 Rough Grinding Stone) per 75-80
 7325f0e1 = Tienili tutti e 20 per i Golden Scale Bracers a 180
 1e576eb7 = Oppure Patterned Bronze Bracers
 4f530b32 = Green Dye: Bombus Finespindle, Ironforge

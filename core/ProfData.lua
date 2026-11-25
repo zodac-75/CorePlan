@@ -84,8 +84,10 @@ ns.ROUTES.Enchanting = {
   { from = 2, to = 20, crafts = 18, craft = "Enchant Bracer - Inferior Stamina", mats = { {247786, 1, "Mote of Magic"} } },
   { from = 20, to = 70, crafts = 50, craft = "Enchant Chest - Inferior Stamina", mats = { {10940, 1, "Strange Dust"} },
     note = { "Or Enchant Bracer - Minor Deflect (Lesser Magic Essence)", "Eller Enchant Bracer - Minor Deflect (Lesser Magic Essence)" } },
-  { from = 70, to = 100, crafts = 30, craft = "Enchant Bracer - Minor Stamina", mats = { {10940, 2, "Strange Dust"} },
+  -- Enchant Bracer - Minor Stamina is not taught before 80, so the chest enchant goes on to 85.
+  { from = 70, to = 85, crafts = 21, craft = "Enchant Chest - Inferior Stamina", mats = { {10940, 1, "Strange Dust"} },
     note = { "Lots of essences instead? Enchant Chest - Minor Absorption to 109", "Mest essences? Enchant Chest - Minor Absorption till 109" } },
+  { from = 85, to = 100, crafts = 15, craft = "Enchant Bracer - Minor Stamina", mats = { {10940, 2, "Strange Dust"} } },
   { from = 100, to = 109, crafts = 9, craft = "Enchant Cloak - Minor Protection", mats = { {10940, 2, "Strange Dust"} } },
   { from = 109, to = 110, crafts = 1, craft = "Runed Silver Rod", mats = { {6338, 1, "Silver Rod"}, {10940, 3, "Strange Dust"}, {10938, 4, "Lesser Magic Essence"}, {1210, 1, "Shadowgem"} } },
   { from = 110, to = 130, crafts = 32, craft = "Enchant Cloak - Minor Protection", mats = { {10940, 2, "Strange Dust"} },
@@ -145,8 +147,9 @@ ns.ROUTES.Blacksmithing = {
   { from = 50, to = 67, crafts = 36, craft = "Coarse Grinding Stone", mats = { {2836, 2, "Coarse Stone"} },
     note = { "Keep the stones for Patterned Bronze Bracers", "Spara stenarna till Patterned Bronze Bracers" } },
   { from = 67, to = 75, crafts = 8, craft = "Runed Copper Gauntlets", mats = { {2840, 8, "Copper Bar"}, {3470, 2, "Rough Grinding Stone"} } },
-  { from = 75, to = 95, crafts = 23, craft = "Runed Copper Belt", mats = { {2840, 10, "Copper Bar"} },
-    note = { "Or Silver Rod (Silver Bar + 2 Rough Grinding Stone) for 75-80", "Eller Silver Rod (Silver Bar + 2 Rough Grinding Stone) för 75-80" } },
+  -- Runed Copper Belt is taught at 80 in Forever (game 1.60.1), so Silver Rod first.
+  { from = 75, to = 80, crafts = 5, craft = "Silver Rod", mats = { {2842, 1, "Silver Bar"}, {3470, 2, "Rough Grinding Stone"} } },
+  { from = 80, to = 95, crafts = 18, craft = "Runed Copper Belt", mats = { {2840, 10, "Copper Bar"} } },
   { from = 95, to = 100, crafts = 5, craft = "Patterned Bronze Bracers", mats = { {2841, 5, "Bronze Bar"}, {3478, 2, "Coarse Grinding Stone"} } },
   { from = 100, to = 112, crafts = 20, craft = "Heavy Grinding Stone", mats = { {2838, 3, "Heavy Stone"} },
     note = { "Keep all 20 for Golden Scale Bracers at 180", "Spara alla 20 till Golden Scale Bracers vid 180" } },

@@ -57,7 +57,7 @@ local function TooltipLines(link)
     local ok, data = pcall(C_TooltipInfo.GetHyperlink, link)
     if ok and type(data) == "table" and data.lines then
       for _, l in ipairs(data.lines) do
-        if type(l.leftText) == "string" then table.insert(out, l.leftText) end
+        if type(l.leftText) == "string" and not (issecretvalue and issecretvalue(l.leftText)) then table.insert(out, l.leftText) end
       end
       return out
     end
@@ -71,7 +71,7 @@ local function TooltipLines(link)
   for i = 1, (scanTip:NumLines() or 0) do
     local fs = _G["@ADDON@ScanTooltipTextLeft" .. i]
     local t = fs and fs:GetText()
-    if type(t) == "string" then table.insert(out, t) end
+    if type(t) == "string" and not (issecretvalue and issecretvalue(t)) then table.insert(out, t) end
   end
   scanTip:Hide()
   return out

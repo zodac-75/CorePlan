@@ -1474,6 +1474,15 @@ if MODE == "modern" then
   C_UnitAuras = oldC
 end
 print("--- Yrkestest (PROFTEST) ---")
+for prof, list in pairs(ns.ROUTES or {}) do -- every route runs 1-300 without gaps or overlaps
+  local at = 1
+  for _, st in ipairs(list) do
+    if st.from ~= at then table.insert(errors, prof .. ": rutten hoppar från " .. at .. " till " .. st.from .. " (" .. st.craft .. ")") end
+    if not (st.to > st.from and (st.crafts or 0) > 0) then table.insert(errors, prof .. ": tomt steg " .. st.craft) end
+    at = st.to
+  end
+  if at ~= 300 then table.insert(errors, prof .. ": rutten slutar vid " .. at) end
+end
 GetNumSkillLines, GetSkillLineInfo = nil, nil
 ns.db.profCache = nil
 print("  utan källor:", ns.GetProfSkill("Tailoring"))
@@ -2347,7 +2356,8 @@ do
   UnitFactionGroup = function() return "Horde", "Horde" end
   if ns.Tx(t) ~= "Josef Gregorian (Undercity)" then table.insert(errors, "Horde fick fel tränare: " .. tostring(ns.Tx(t))) end
   if ns.Tx(ns.HERB_ZONES[1].zones):find("Elwynn", 1, true) then table.insert(errors, "Horde fick Alliance-zoner") end
-  if ns.Tx(ns.ROUTES.Enchanting[7].note):find("Kithas", 1, true) == nil then table.insert(errors, "Horde fick fel formel-försäljare") end
+  local e110; for _, st in ipairs(ns.ROUTES.Enchanting) do if st.from == 110 then e110 = st end end
+  if not (e110 and e110.note) or ns.Tx(e110.note):find("Kithas", 1, true) == nil then table.insert(errors, "Horde fick fel formel-försäljare") end
   UnitFactionGroup = old
   for prof, r in pairs(ns.ROUTES) do
     for _, st in ipairs(r) do

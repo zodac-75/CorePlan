@@ -34,7 +34,6 @@ f0b32fe8 = Receita para o Favor do Mercador: Apothecary Durelle, acampamento for
 0b6ed9f4 = Compre um Martelo de Ferreiro do vendedor de Ferraria ao lado do instrutor (necessário a partir de 67)
 f0f5ec4f = Guarde 26 para as Manoplas de Cobre Rúnicas
 7a56e0eb = Guarde as pedras para as Braçadeiras de Bronze Estampadas
-78f688ed = Ou Haste de Prata (Barra de Prata + 2 Pedras de Amolar Ásperas) para 75-80
 7325f0e1 = Guarde todas as 20 para as Braçadeiras de Escamas Douradas em 180
 1e576eb7 = Ou Braçadeiras de Bronze Estampadas
 4f530b32 = Tintura Verde: Bombus Finespindle, Altaforja

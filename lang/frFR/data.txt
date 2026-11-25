@@ -34,7 +34,6 @@ f0b32fe8 = Recette pour la Faveur du marchand : Apothecary Durelle, camp devant 
 0b6ed9f4 = Achetez un Marteau de forgeron chez le marchand de forge près du maître (nécessaire à partir de 67)
 f0f5ec4f = Gardez-en 26 pour les Gantelets de cuivre runiques
 7a56e0eb = Gardez les pierres pour les Brassards de bronze à motifs
-78f688ed = Ou Tige d'argent (Barre d'argent + 2 Pierres à aiguiser brutes) pour 75-80
 7325f0e1 = Gardez les 20 pour les Brassards d'écailles dorées à 180
 1e576eb7 = Ou Brassards de bronze à motifs
 4f530b32 = Teinture verte : Bombus Finespindle, Forgefer

@@ -34,7 +34,6 @@ f0b32fe8 = Rezept für Gunst des Händlers: Apothekerin Durelle, Lager vor dem K
 0b6ed9f4 = Kaufe einen Schmiedehammer beim Schmiedekunst-Händler neben dem Lehrer (ab 67 nötig)
 f0f5ec4f = Behalte 26 für Runenbesetzte Kupferstulpen
 7a56e0eb = Behalte die Steine für Gemusterte Bronzearmschienen
-78f688ed = Oder Silberstab (Silberbarren + 2 Raue Schleifsteine) für 75-80
 7325f0e1 = Behalte alle 20 für Goldschuppenarmschienen bei 180
 1e576eb7 = Oder Gemusterte Bronzearmschienen
 4f530b32 = Grüner Farbstoff: Bombus Finespindle, Eisenschmiede

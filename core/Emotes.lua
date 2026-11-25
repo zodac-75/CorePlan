@@ -41,7 +41,8 @@ local COLORS = {
 
 -- "Name-Realm", and on WoW Forever also "Name Realm": just the name.
 local function Short(name)
-  return (name or ""):match("^([^%-%s]+)") or name or "?"
+  if type(name) ~= "string" or (issecretvalue and issecretvalue(name)) then return "?" end
+  return name:match("^([^%-%s]+)") or name or "?"
 end
 
 -- Is this sender you? Addon messages to the party come back to yourself, with the realm added.

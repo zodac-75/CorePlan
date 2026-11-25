@@ -34,7 +34,6 @@ f0b32fe8 = Receta para el Favor del mercader: Apothecary Durelle, campamento fue
 0b6ed9f4 = Compra un Martillo de herrero al vendedor de herrería junto al instructor (necesario desde 67)
 f0f5ec4f = Guarda 26 para los Guanteletes rúnicos de cobre
 7a56e0eb = Guarda las piedras para los Brazales de bronce estampados
-78f688ed = O Vara de plata (Barra de plata + 2 Piedras de afilar bastas) para 75-80
 7325f0e1 = Guarda las 20 para los Brazales de escamas doradas en 180
 1e576eb7 = O Brazales de bronce estampados
 4f530b32 = Tinte verde: Bombus Finespindle, Forjaz
