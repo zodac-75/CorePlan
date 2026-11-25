@@ -1269,6 +1269,11 @@ local RARE_ITEMS = {
   [13468] = "Black Lotus", [12363] = "Arcane Crystal", -- only the really rare ones: one per profession
 }
 ns.RARE_ITEMS = RARE_ITEMS
+local RARE_ICONS = {
+  [13468] = "Interface\\Icons\\INV_Misc_Herb_BlackLotus",
+  [12363] = "Interface\\Icons\\INV_Misc_Gem_Crystal_01",
+}
+ns.RARE_ICONS = RARE_ICONS
 local lastRare = -1000
 local function ShowRare(from, id)
   local name = RARE_ITEMS[id]
@@ -1276,8 +1281,13 @@ local function ShowRare(from, id)
   local t = GetTime()
   if t - lastRare < GATHER_COOLDOWN then return false end
   lastRare = t
-  local icon
-  if GetItemInfoInstant then
+  -- Our own picture per item first: the game does not always hand out the icon.
+  local icon = RARE_ICONS[id]
+  if not icon and C_Item and C_Item.GetItemIconByID then
+    local ok, ic = pcall(C_Item.GetItemIconByID, id)
+    if ok and ic then icon = ic end
+  end
+  if not icon and GetItemInfoInstant then
     local ok, _, _, _, _, ic = pcall(GetItemInfoInstant, id)
     if ok and ic then icon = ic end
   end
@@ -1287,6 +1297,7 @@ local function ShowRare(from, id)
     if ok and type(n) == "string" and not (issecretvalue and issecretvalue(n)) then shown = n end
   end
   rareNow = { icon = icon, name = shown }
+  ns.lastRareIcon = icon
   lastShown.RARE = nil
   ns.ShowEmoteEgg("RARE", from)
   return true
@@ -1767,14 +1778,21 @@ ns.RegisterModule(function()
   end)
 end)
 
+local previewRare
 -- Hidden preview: /@SLASH@ egg dance (or any other effect, party, ding, plan).
 ns.RegisterCommand("egg", false, function(rest)
-  local e = (rest or ""):upper():match("(%w+)") or "KISS"
-  e = ALIAS[e] or e
+  local word = (rest or ""):upper():match("(%w+)") or "KISS"
+  local e = ALIAS[word] or word
   if e == "DING" then Ding(UnitName("player"), UnitLevel("player") or 1, true) return end
   if e == "PLAN" then PlanDone() return end
   lastShown[e] = nil
-  if e == "RARE" then lastRare = -1000; rareNow = nil; ns.ShowRare(UnitName("player"), 13468) return end
+  if e == "RARE" then
+    -- lotus / crystal pick one; plain "rare" takes turns, so both pictures can be seen
+    local id
+    if word == "LOTUS" then id = 13468 elseif word == "CRYSTAL" then id = 12363
+    else previewRare = (previewRare == 13468) and 12363 or 13468; id = previewRare end
+    lastRare = -1000; rareNow = nil; ns.ShowRare(UnitName("player"), id) return
+  end
   local off = ns.db.eggsOff
   ns.db.eggsOff = nil
   Show(e, UnitName("player"))

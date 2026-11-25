@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.37
+
+- **Rare finds:** Black Lotus and Arcane Crystal now each show their own picture (the game did not always give out the icon, so it fell back to a crystal). `/acp egg rare` takes turns between them; `/acp egg lotus` and `/acp egg crystal` pick one.
+
 # AllClassPlan 0.1.36
 
 - **Profession guide, checked against the game's own skill colours:** Blacksmithing uses Rough Bronze Leggings at 95-100 and 112-125 (Patterned Bronze Bracers is only taught at 120), and Engineering stops Heavy Blasting Powder at 145, where it turns grey, and makes Whirring Bronze Gizmos to 150 (you need them for Explosive Sheep anyway).

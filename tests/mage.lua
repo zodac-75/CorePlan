@@ -2834,6 +2834,16 @@ do
     if l then table.insert(errors, "RARE: okänt föremål i G: gav egg") end
     l = msg("G:13468", "Faithlezz-Realm")
     if l then table.insert(errors, "RARE: mitt eget G:-eko gav egg") end
+    -- the preview takes turns, and each item shows its own picture
+    local seen = {}
+    for _, w in ipairs({ "egg rare", "egg rare", "egg lotus", "egg crystal" }) do
+      step(); ns.lastEggLine = nil
+      pcall(SlashCmdList.MAGEPLAN, w)
+      seen[#seen + 1] = tostring(ns.lastRareIcon)
+    end
+    if seen[1] == seen[2] then table.insert(errors, "RARE: /egg rare två gånger gav samma bild: " .. seen[1]) end
+    if not seen[3]:find("BlackLotus", 1, true) then table.insert(errors, "RARE: egg lotus gav fel bild: " .. seen[3]) end
+    if not seen[4]:find("Crystal_01", 1, true) then table.insert(errors, "RARE: egg crystal gav fel bild: " .. seen[4]) end
     C_ChatInfo.SendAddonMessage = oldS
   end
   -- the command
