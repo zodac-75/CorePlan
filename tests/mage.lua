@@ -2802,6 +2802,28 @@ do
     l = cast("player", 2366)
     if l then table.insert(errors, "örtcast gav malm-egg: " .. tostring(l)) end
     ns.db.oreChance, ns.db.flowerChance = nil, nil
+    -- rare finds: always, to the group ("G:<id>"), and from the group; unknown ids are ignored
+    local function isRare(l, who, item)
+      for i = 1, 3 do if l == ns.T("EM_RARE_" .. i, who, item) then return true end end
+      return false
+    end
+    ns.db.oreChance = 0
+    oreSent = {}
+    l = loot("You receive loot: |Hitem:13468:0|h[Black Lotus]|h.")
+    if not isRare(l, me, "Black Lotus") then table.insert(errors, "RARE: egen Black Lotus gav inget egg: " .. tostring(l)) end
+    if oreSent[1] ~= "G:13468" then table.insert(errors, "RARE: skickade fel meddelande: " .. tostring(oreSent[1])) end
+    l = loot("You receive loot: |Hitem:12363:0|h[Arcane Crystal]|h.")
+    if not isRare(l, me, "Arcane Crystal") then table.insert(errors, "RARE: egen Arcane Crystal gav inget egg: " .. tostring(l)) end
+    ns.db.oreChance = nil
+    fire("CHAT_MSG_LOOT", "You receive loot: |Hitem:12363:0|h[Arcane Crystal]|h.")
+    l = loot("Bob receives loot: |Hitem:13468:0|h[Black Lotus]|h.")
+    if l then table.insert(errors, "RARE: andras loot-rad ska inte ge egg") end
+    l = msg("G:13468", "Carl-Realm")
+    if not isRare(l, "Carl", "Black Lotus") then table.insert(errors, "RARE: G:13468 från gruppen gav inget egg: " .. tostring(l)) end
+    l = msg("G:2589", "Carl-Realm")
+    if l then table.insert(errors, "RARE: okänt föremål i G: gav egg") end
+    l = msg("G:13468", "Faithlezz-Realm")
+    if l then table.insert(errors, "RARE: mitt eget G:-eko gav egg") end
     C_ChatInfo.SendAddonMessage = oldS
   end
   -- the command

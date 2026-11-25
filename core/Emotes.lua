@@ -936,8 +936,23 @@ local function GatherEffect(from, o)
   Play(big)
   Rain(14, o.rain, 900, 3.4)
   BigText(ns.T(o.text .. "_BIG"), 60, o.textColor[1], o.textColor[2], o.textColor[3], -130, 2)
-  Say(ns.T(o.text .. "_" .. math.random(3), Short(from)))
+  Say(ns.T(o.text .. "_" .. math.random(3), Short(from), o.arg))
   Sound(o.sound)
+end
+-- Rare finds (Black Lotus, Arcane Crystal ...): ns.RareFind(itemID, name) sets which item it is.
+local rareNow
+EFFECTS.RARE = function(from)
+  local r = rareNow or {}
+  local icon = r.icon or "Interface\\Icons\\INV_Misc_Gem_Crystal_02"
+  GatherEffect(from, {
+    wash = { 0.7, 0.45, 1 }, big = icon, bigSize = 230, text = "EM_RARE", arg = r.name or "?",
+    textColor = { 0.85, 0.65, 1 }, sound = "UI_EPICLOOT_TOAST",
+    -- the item itself, with gold coins in between
+    rain = function(i)
+      if i % 3 == 0 then return Piece("Interface\\Icons\\INV_Misc_Coin_01", 40, 40) end
+      return Piece(icon, 56, 56)
+    end,
+  })
 end
 EFFECTS.FLOWER = function(from)
   GatherEffect(from, {
@@ -1247,10 +1262,49 @@ local function IsOwnLootLine(msg)
   end
   return false
 end
+-- Rare finds: when you loot one of these, everybody in your group with the addon gets a big
+-- "<Name> just got a bit richer" ("G:<itemID>"). Always, no dice. The id is checked on arrival.
+local RARE_ITEMS = {
+  [13468] = "Black Lotus", [12363] = "Arcane Crystal", [11370] = "Dark Iron Ore", [36908] = "Frost Lotus",
+}
+ns.RARE_ITEMS = RARE_ITEMS
+local lastRare = -1000
+local function ShowRare(from, id)
+  local name = RARE_ITEMS[id]
+  if not name then return false end
+  local t = GetTime()
+  if t - lastRare < GATHER_COOLDOWN then return false end
+  lastRare = t
+  local icon
+  if GetItemInfoInstant then
+    local ok, _, _, _, _, ic = pcall(GetItemInfoInstant, id)
+    if ok and ic then icon = ic end
+  end
+  local shown = name
+  if GetItemInfo then
+    local ok, n = pcall(GetItemInfo, id)
+    if ok and type(n) == "string" and not (issecretvalue and issecretvalue(n)) then shown = n end
+  end
+  rareNow = { icon = icon, name = shown }
+  lastShown.RARE = nil
+  ns.ShowEmoteEgg("RARE", from)
+  return true
+end
+ns.ShowRare = ShowRare
+local function OnRareLoot(id)
+  local name = MyName()
+  if not name or not ShowRare(name, id) then return false end
+  local send = (C_ChatInfo and C_ChatInfo.SendAddonMessage) or SendAddonMessage
+  if send and IsInGroup and IsInGroup() then
+    pcall(send, PREFIX, "G:" .. id, (IsInRaid and IsInRaid()) and "RAID" or "PARTY")
+  end
+  return true
+end
 local function OnGatherLoot(msg)
   if ns.db.eggsOff or type(msg) ~= "string" or (issecretvalue and issecretvalue(msg)) then return end
   local pos, _, id = msg:find("|Hitem:(%d+)")
   if not pos or not IsOwnLootLine(msg) then return end
+  if RARE_ITEMS[tonumber(id)] then OnRareLoot(tonumber(id)) return end
   local egg = LootEgg(tonumber(id))
   local name = egg and MyName()
   if not name or not Gather(egg, name) then return end
@@ -1437,7 +1491,7 @@ end
 
 -- Emotes that trigger another effect. Forever has no /toast like later expansions,
 -- so the mugs come with /drink (and /cheers where the game has it).
-local ALIAS = { HERB = "FLOWER", BLOMMA = "FLOWER", MINING = "ORE", MALM = "ORE", SKINNING = "SKIN", SKINN = "SKIN", LEATHER = "SKIN", ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", ["1"] = "ROLL1", ONE = "ROLL1", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
+local ALIAS = { HERB = "FLOWER", BLOMMA = "FLOWER", MINING = "ORE", MALM = "ORE", SKINNING = "SKIN", LOTUS = "RARE", CRYSTAL = "RARE", SKINN = "SKIN", LEATHER = "SKIN", ROLL = "NEED", ["67"] = "SIXSEVEN", SIX = "SIXSEVEN", ["100"] = "ROLL100", ["1"] = "ROLL1", ONE = "ROLL1", FULL = "BAGSFULL", BAGS = "BAGSFULL", DRINK = "TOAST", CHEERS = "TOAST", APPLAUD = "SALUTE", CLAP = "SALUTE",
   LOL = "LAUGH", ROFL = "LAUGH", CHUCKLE = "LAUGH", GIGGLE = "LAUGH", WEEP = "CRY", SOB = "CRY",
   CHOO = "TRAIN", STRONG = "FLEX", YAWN = "SLEEP", TIRED = "SLEEP",
   SURPRISED = "GASP", SHOCK = "GASP", HUNGRY = "EAT", FEAST = "EAT", CHEW = "EAT",
@@ -1529,6 +1583,12 @@ local function OnMessage(msg, sender)
   local ge = msg:match("^L:(%u+)$")
   if ge and GATHER[ge] then
     if not IsMe(sender) then Gather(ge, Short(sender), true) end
+    return
+  end
+  -- Somebody in the group looted a rare herb or ore.
+  local rid = msg:match("^G:(%d+)$")
+  if rid then
+    if not IsMe(sender) then ShowRare(Short(sender), tonumber(rid)) end
     return
   end
   -- A roll egg from the roller's addon.
@@ -1713,6 +1773,7 @@ ns.RegisterCommand("egg", false, function(rest)
   if e == "DING" then Ding(UnitName("player"), UnitLevel("player") or 1, true) return end
   if e == "PLAN" then PlanDone() return end
   lastShown[e] = nil
+  if e == "RARE" then lastRare = -1000; rareNow = nil; ns.ShowRare(UnitName("player"), 13468) return end
   local off = ns.db.eggsOff
   ns.db.eggsOff = nil
   Show(e, UnitName("player"))
