@@ -1,7 +1,7 @@
 # AllClassPlan 0.1.35
 
 - **More campfire talk:** about 150 new lines, now 490 in total. 45 of them are for when you target another player (30 new greetings), plus new jokes, fire, food and weather talk and four new lines for every class.
-- **Rare finds:** loot a Black Lotus, Arcane Crystal, Dark Iron Ore or Frost Lotus and everyone in your group who has the addon sees the item fall across their screen with "<Name> just got a bit richer". Always, no dice. It also shows for you. `/acp egg rare` previews it.
+- **Rare finds:** loot a Black Lotus or an Arcane Crystal and everyone in your group who has the addon sees the item fall across their screen with "<Name> just got a bit richer". Always, no dice. It also shows for you. `/acp egg rare` previews it.
 - **Fix:** a Lua error when the game sent a hidden (secret) chat message about a profession skill-up or experience. Those messages are now skipped.
 
 # AllClassPlan 0.1.34

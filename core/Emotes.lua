@@ -1265,7 +1265,7 @@ end
 -- Rare finds: when you loot one of these, everybody in your group with the addon gets a big
 -- "<Name> just got a bit richer" ("G:<itemID>"). Always, no dice. The id is checked on arrival.
 local RARE_ITEMS = {
-  [13468] = "Black Lotus", [12363] = "Arcane Crystal", [11370] = "Dark Iron Ore", [36908] = "Frost Lotus",
+  [13468] = "Black Lotus", [12363] = "Arcane Crystal", -- only the really rare ones: one per profession
 }
 ns.RARE_ITEMS = RARE_ITEMS
 local lastRare = -1000
