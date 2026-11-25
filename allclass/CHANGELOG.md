@@ -1,6 +1,8 @@
 # AllClassPlan 0.1.36
 
 - **Profession guide, checked against the game's own skill colours:** Blacksmithing uses Rough Bronze Leggings at 95-100 and 112-125 (Patterned Bronze Bracers is only taught at 120), and Engineering stops Heavy Blasting Powder at 145, where it turns grey, and makes Whirring Bronze Gizmos to 150 (you need them for Explosive Sheep anyway).
+- **Profession names:** Elixir of Firepower, Elixir of Detect Undead and Mithril Head Trout had the wrong names in the guide, so they showed in English on other client languages.
+- **Fresh quest and dungeon data** from QuestieDB (new translations, a few moved quest givers).
 
 # AllClassPlan 0.1.35
 

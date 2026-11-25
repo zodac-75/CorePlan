@@ -28,7 +28,7 @@ ns.LEVEL_ZONES = {
     { 45, 37, 40, 1417, 46.3, 47.4, "Arathi Highlands" }, -- 33 quests
     { 16591, 38, 43, 2548, 63.5, 81.7, "Riverglades" }, -- 102 quests
     { 3, 38, 42, 1418, 25.9, 44.7, "Badlands" }, -- 37 quests
-    { 16651, 41, 43, 2652, 43.6, 78.7, "Shen'dralas" }, -- 24 quests
+    { 16651, 41, 43, 2652, 43.6, 78.7, "Shen'dralas" }, -- 25 quests
     { 357, 44, 52, 1444, 31.2, 45.3, "Feralas" }, -- 67 quests
     { 440, 47, 60, 1446, 51.7, 27.5, "Tanaris" }, -- 88 quests
     { 47, 47, 52, 1425, 61.4, 34.4, "The Hinterlands" }, -- 35 quests
@@ -45,7 +45,7 @@ ns.LEVEL_ZONES = {
     { 1377, 60, 60, 1451, 50.1, 37.8, "Silithus" }, -- 96 quests
   },
   H = {
-    { 16593, 6, 12, 2521, 44.9, 45.1, "Zephras Isle" }, -- 89 quests
+    { 16593, 6, 12, 2521, 44.9, 45.1, "Zephras Isle" }, -- 90 quests
     { 85, 7, 12, 1420, 61.0, 51.9, "Tirisfal Glades" }, -- 58 quests
     { 14, 7, 12, 1411, 52.0, 43.1, "Durotar" }, -- 48 quests
     { 215, 8, 29, 1412, 46.9, 63.0, "Mulgore" }, -- 55 quests
@@ -63,7 +63,7 @@ ns.LEVEL_ZONES = {
     { 33, 37, 47, 1434, 27.5, 76.4, "Stranglethorn Vale" }, -- 103 quests
     { 3, 39, 43, 1418, 25.9, 44.7, "Badlands" }, -- 27 quests
     { 16591, 40, 43, 2548, 59.2, 45.1, "Riverglades" }, -- 90 quests
-    { 16651, 41, 43, 2652, 20.9, 22.7, "Shen'dralas" }, -- 32 quests
+    { 16651, 41, 43, 2652, 20.9, 22.7, "Shen'dralas" }, -- 33 quests
     { 357, 45, 52, 1444, 75.1, 43.2, "Feralas" }, -- 59 quests
     { 440, 46, 60, 1446, 51.7, 27.6, "Tanaris" }, -- 91 quests
     { 47, 48, 52, 1425, 61.4, 34.4, "The Hinterlands" }, -- 51 quests
@@ -76,7 +76,7 @@ ns.LEVEL_ZONES = {
     { 361, 55, 55, 1448, 51.2, 82.0, "Felwood" }, -- 59 quests
     { 618, 56, 60, 1452, 61.5, 38.2, "Winterspring" }, -- 47 quests
     { 139, 57, 60, 1423, 71.5, 49.6, "Eastern Plaguelands" }, -- 104 quests
-    { 616, 57, 59, 2482, 69.1, 50.3, "Mount Hyjal" }, -- 77 quests
+    { 616, 57, 59, 2482, 49.0, 85.5, "Mount Hyjal" }, -- 77 quests
     { 1377, 60, 60, 1451, 50.1, 37.8, "Silithus" }, -- 96 quests
   },
 }
