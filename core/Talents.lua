@@ -42,7 +42,7 @@ local function TraitName(configID, nodeInfo)
       local okT, t = pcall(GetSpellTexture, spellID); if okT then icon = t end
     end
   end
-  return name, icon
+  return name, icon, spellID
 end
 
 -- Splits sorted numbers into n groups at the n-1 biggest gaps; returns value -> group.
@@ -73,10 +73,10 @@ local function TraitMap()
       for _, nodeID in ipairs(nodes) do
         local ok, info = pcall(C_Traits.GetNodeInfo, configID, nodeID)
         if ok and info and info.isVisible ~= false and info.posX and (info.maxRanks or 0) > 0 then
-          local name, icon = TraitName(configID, info)
+          local name, icon, spellID = TraitName(configID, info)
           if name then
             table.insert(list, { nodeID = nodeID, name = name, icon = icon, x = info.posX, y = info.posY or 0,
-              rank = info.currentRank or info.ranksPurchased or 0, max = info.maxRanks,
+              rank = info.currentRank or info.ranksPurchased or 0, max = info.maxRanks, spellID = spellID,
               treeIndex = separate and treeIndex or nil })
             if not seenX[info.posX] then seenX[info.posX] = true; table.insert(xs, info.posX) end
           end
@@ -103,7 +103,7 @@ local function TraitMap()
   local map = {}
   for _, n in ipairs(list) do
     map[n.name] = { tab = n.tab, index = n.nodeID, nodeID = n.nodeID, tier = rowOf[n.tab][n.y], rank = n.rank,
-      max = n.max, icon = n.icon }
+      max = n.max, icon = n.icon, spellID = n.spellID, treeIndex = n.treeIndex, x = n.x, y = n.y }
   end
   return map
 end
@@ -731,6 +731,26 @@ local function DebugTalentUI()
   local name, t = ns.NextTalent()
   ns.Print("next talent: " .. tostring(name) .. (t and (" tab " .. t.tab .. " #" .. tostring(t.index) .. " icon " .. tostring(t.icon)) or ""))
   if t then ns.Print("  tier " .. tostring(t.tier) .. " column " .. tostring(t.column)) end
+  -- For bug reports: planned talents the game's tree doesn't list, and every talent the
+  -- addon found (tab, row, rank, spell, position), so a mismatch shows in one paste.
+  local map = TalentMap()
+  local planned, missing = {}, {}
+  for lvl = 10, 60 do
+    local entry = ns.talents and ns.talents[lvl]
+    local pn = entry and entry:match("^(.-)%s+%d+/%d+$")
+    if pn and not planned[pn] then planned[pn] = true; if not map[pn] then missing[#missing + 1] = pn end end
+  end
+  ns.Print("trees: " .. table.concat(TREES or {}, ", ") .. "  missing from the game: " ..
+    (#missing > 0 and table.concat(missing, ", ") or "none"))
+  local rows = {}
+  for n, v in pairs(map) do
+    if ns.Eng(n) == n then
+      table.insert(rows, string.format("%s t%s/r%s %s/%s s%s x%s y%s", n, tostring(v.tab), tostring(v.tier),
+        tostring(v.rank), tostring(v.max), tostring(v.spellID), tostring(v.x), tostring(v.y)))
+    end
+  end
+  table.sort(rows)
+  for _, r in ipairs(rows) do ns.Print("  " .. r) end
   local root = ShownRoot()
   ns.Print("open window: " .. tostring(root and (root:GetName() or "no name") or "none") ..
     "  PlayerSpellsFrame: " .. tostring(PlayerSpellsFrame ~= nil) ..
