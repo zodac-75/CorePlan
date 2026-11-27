@@ -154,6 +154,7 @@ PW_NOW = Diese Stufe
 PW_COMING = Demnächst
 PW_CLICK_TALENT = Öffne deine Talente (N), um das nächste markiert zu sehen. Rechtsklick überspringt dieses Talent (für Punkte, die du woanders ausgegeben hast).
 CMD_skip = das nächste Talent im Plan überspringen; /@SLASH@ skip reset holt übersprungene zurück
+TALENT_MISSING = %s ist das Nächste in deinem Plan, aber der Talentbaum des Spiels zeigt es nicht. Rechtsklicke auf das nächste Talent (oder /@SLASH@ skip), um es zu überspringen.
 TALENT_SKIPPED = %s übersprungen. Als Nächstes: %s. Tippe /@SLASH@ skip reset, um es zurückzuholen.
 TALENT_SKIP_RESET = übersprungene Talente sind wieder im Plan.
 TALENT_SKIP_NONE = es gibt kein nächstes Talent zum Überspringen.

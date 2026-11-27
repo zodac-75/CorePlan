@@ -154,6 +154,7 @@ PW_NOW = Ce niveau
 PW_COMING = À venir
 PW_CLICK_TALENT = Ouvrez vos talents (N) pour voir le prochain marqué. Clic droit pour ignorer ce talent (pour les points dépensés ailleurs).
 CMD_skip = ignorer le prochain talent du plan ; /@SLASH@ skip reset remet ceux ignorés
+TALENT_MISSING = %s est le suivant dans ton plan, mais l'arbre de talents du jeu ne l'affiche pas. Clic droit sur le talent suivant (ou /@SLASH@ skip) pour le passer.
 TALENT_SKIPPED = %s ignoré. Suivant : %s. Tapez /@SLASH@ skip reset pour le remettre.
 TALENT_SKIP_RESET = les talents ignorés sont de retour dans le plan.
 TALENT_SKIP_NONE = il n'y a pas de prochain talent à ignorer.

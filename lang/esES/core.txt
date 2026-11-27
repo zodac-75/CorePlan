@@ -154,6 +154,7 @@ PW_NOW = Este nivel
 PW_COMING = Próximamente
 PW_CLICK_TALENT = Abre tus talentos (N) para ver marcado el siguiente. Clic derecho para saltar este talento (para puntos que has puesto en otro sitio).
 CMD_skip = saltar el siguiente talento del plan; /@SLASH@ skip reset recupera los saltados
+TALENT_MISSING = %s es el siguiente en tu plan, pero el árbol de talentos del juego no lo muestra. Haz clic derecho en el siguiente talento (o /@SLASH@ skip) para saltarlo.
 TALENT_SKIPPED = %s saltado. Siguiente: %s. Escribe /@SLASH@ skip reset para recuperarlo.
 TALENT_SKIP_RESET = los talentos saltados vuelven a estar en el plan.
 TALENT_SKIP_NONE = no hay un siguiente talento que saltar.

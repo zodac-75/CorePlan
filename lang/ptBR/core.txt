@@ -154,6 +154,7 @@ PW_NOW = Este nível
 PW_COMING = Em breve
 PW_CLICK_TALENT = Abra os seus talentos (N) para ver o próximo marcado. Botão direito para pular este talento (para pontos que você pôs em outro lugar).
 CMD_skip = pular o próximo talento do plano; /@SLASH@ skip reset traz de volta os pulados
+TALENT_MISSING = %s é o próximo no seu plano, mas a árvore de talentos do jogo não o mostra. Clique com o botão direito no próximo talento (ou /@SLASH@ skip) para pular.
 TALENT_SKIPPED = %s pulado. Próximo: %s. Digite /@SLASH@ skip reset para trazê-lo de volta.
 TALENT_SKIP_RESET = os talentos pulados voltaram ao plano.
 TALENT_SKIP_NONE = não há próximo talento para pular.

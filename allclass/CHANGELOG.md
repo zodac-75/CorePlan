@@ -2,6 +2,7 @@
 
 - **Rare finds:** Black Lotus and Arcane Crystal now each show their own picture (the game did not always give out the icon, so it fell back to a crystal). `/acp egg rare` takes turns between them; `/acp egg lotus` and `/acp egg crystal` pick one.
 - **Upgrade check in tooltips:** now two lines. The first is the plain change in your main stat (spell power, healing or attack power), the second the overall score with all stats weighted (Intellect, Stamina and so on), e.g. "Spell power: -2" and "Better overall: +0.6". Settings > Items lets you show both, only the main stat or only the overall score.
+- **Talent plan:** if the next talent in your plan can't be found in the game's talent tree, the addon no longer jumps ahead to a talent further down (with its row still closed). It stays on that talent and says so in chat once; right-click it or use `/acp skip` to go past it.
 
 # AllClassPlan 0.1.36
 

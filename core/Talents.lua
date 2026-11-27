@@ -155,6 +155,19 @@ local function Skipped()
   return ns.db.talentSkip[key]
 end
 
+-- A planned talent the game's tree doesn't list (renamed, moved or not shown yet). It stays
+-- the next step instead of being passed over, which would point at a talent further down
+-- the tree with its row still closed; its tree and row come from our own talent list.
+local warnedMissing = {}
+local function Missing(name)
+  for _, d in pairs(ns.TALENT_IDS or {}) do
+    if d[1] == name then
+      return { tab = d[3], tier = d[4] + 1, max = d[2], rank = 0, missing = true }
+    end
+  end
+  return { tab = 1, tier = 0, rank = 0, missing = true }
+end
+
 -- Returns name, talent info, wanted rank; "done" when the plan is complete.
 function ns.NextTalent()
   local map = TalentMap()
@@ -165,9 +178,16 @@ function ns.NextTalent()
     if entry then
       local name, want = entry:match("^(.-)%s+(%d+)/%d+$")
       want = tonumber(want)
-      local t = name and map[name]
-      if t and want and t.rank < want and not skip[name] then
-        return name, t, want
+      if name and want and not skip[name] then
+        local t = map[name]
+        if not t then
+          if not warnedMissing[name] then
+            warnedMissing[name] = true
+            ns.Print(ns.T("TALENT_MISSING", name))
+          end
+          return name, Missing(name), want
+        end
+        if t.rank < want then return name, t, want end
       end
     end
   end
@@ -340,6 +360,7 @@ end
 
 -- Walks the window looking for the shown button that shows the talent's icon.
 local function FindButton(root, t)
+  if t.missing then return nil end -- not in the game's tree, so no button to light up
   local old = (root == PlayerTalentFrame) and _G["PlayerTalentFrameTalent" .. t.index]
   if old and old:IsShown() then return old end
   -- The modern window can give us the button for a node directly.
@@ -708,7 +729,7 @@ local function DebugTalentUI()
   end
   ns.Print("talent windows: " .. (#names > 0 and table.concat(names, ", ") or "none"))
   local name, t = ns.NextTalent()
-  ns.Print("next talent: " .. tostring(name) .. (t and (" tab " .. t.tab .. " #" .. t.index .. " icon " .. tostring(t.icon)) or ""))
+  ns.Print("next talent: " .. tostring(name) .. (t and (" tab " .. t.tab .. " #" .. tostring(t.index) .. " icon " .. tostring(t.icon)) or ""))
   if t then ns.Print("  tier " .. tostring(t.tier) .. " column " .. tostring(t.column)) end
   local root = ShownRoot()
   ns.Print("open window: " .. tostring(root and (root:GetName() or "no name") or "none") ..

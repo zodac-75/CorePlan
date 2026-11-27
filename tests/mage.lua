@@ -1302,6 +1302,17 @@ fire("TRADE_SKILL_SHOW"); now = now + 1; runTimers(now)
 slash("plan"); table.insert(chat, "[sim] talent 10 = " .. tostring(ns.talents[10]) .. ", 60 = " .. tostring(ns.talents[60]))
 slash("plan"); table.insert(chat, "[sim] talent 10 = " .. tostring(ns.talents[10]) .. ", 42 = " .. tostring(ns.talents[42]) .. ", 60 = " .. tostring(ns.talents[60]))
 slash("plan"); table.insert(chat, "[sim] talent 25 = " .. tostring(ns.talents[25]))
+do -- a planned talent the game's tree doesn't list stays next, instead of a later one down the tree
+  local saved = ns.talents
+  ns.talents = { [10] = "Lethal Nowhere 1/5", [11] = "Improved Frostbolt 5/5" }
+  now = now + 1
+  local name, t = ns.NextTalent()
+  if name ~= "Lethal Nowhere" or not (t and t.missing) then
+    table.insert(errors, "talang: saknad talang hoppades över, nästa blev " .. tostring(name))
+  end
+  ns.talents = saved
+  now = now + 1
+end
 now = now + 1; runTimers(now)
 
 -- Tooltip
