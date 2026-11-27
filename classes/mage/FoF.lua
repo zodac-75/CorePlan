@@ -11,17 +11,46 @@ local lastUnlocked
 
 local function Secret(v) return issecretvalue and issecretvalue(v) or false end
 
--- The proc as aura data, or nil. Looking it up by name works in combat too.
-local function Aura()
+-- The proc as aura data, or nil. Three ways, as the game hides more in combat:
+-- 1. by name (often refused in combat), 2. by spell ID (the ID the addon saw out of combat,
+-- or the known Fingers of Frost proc IDs), 3. the aura list (names hidden in combat).
+local KNOWN_IDS = { 44544, 74396, 400670, 400647, 83074 }
+local function ByName()
   if C_UnitAuras and C_UnitAuras.GetAuraDataBySpellName then
     local ok, a = pcall(C_UnitAuras.GetAuraDataBySpellName, "player", ns.Loc(FOF), "HELPFUL")
     if ok and a then return a end
   end
+end
+local function ByID()
+  local fn = C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID
+  if not fn then return nil end
+  local ids = {}
+  if ns.db.fofSpellId then ids[1] = ns.db.fofSpellId end
+  for _, id in ipairs(KNOWN_IDS) do if id ~= ns.db.fofSpellId then ids[#ids + 1] = id end end
+  for _, id in ipairs(ids) do
+    local ok, a = pcall(fn, id)
+    if ok and a then return a, id end
+  end
+end
+local function ByList()
   local found
-  ns.ForEachAura("player", "HELPFUL", function(n)
-    if n == FOF then found = {} return true end
+  ns.ForEachAura("player", "HELPFUL", function(n, id)
+    if n == FOF then
+      found = {}
+      if type(id) == "number" and not Secret(id) and id > 0 then ns.db.fofSpellId = id end
+      return true
+    end
   end)
   return found
+end
+local function Aura()
+  local a = ByName()
+  if a then
+    local id = a.spellId
+    if type(id) == "number" and not Secret(id) and id > 0 then ns.db.fofSpellId = id end
+    return a
+  end
+  return ByID() or ByList()
 end
 ns.FoFAura = Aura
 
@@ -132,4 +161,27 @@ end)
 ns.RegisterCommand("fofsound", false, function()
   ns.db.fofSoundOff = not ns.db.fofSoundOff
   ns.Print(ns.db.fofSoundOff and ns.T("FOF_SOUND_OFF") or ns.T("FOF_SOUND_ON"))
+end)
+
+-- What the game tells us, for working out why the icon doesn't show (run it with the proc up).
+ns.RegisterCommand("fofdebug", false, function()
+  local function Desc(a)
+    if not a then return "nil" end
+    local function v(x) if x == nil then return "nil" end if Secret(x) then return "secret" end return tostring(x) end
+    return "name " .. v(a.name) .. " id " .. v(a.spellId) .. " stacks " .. v(a.applications)
+  end
+  local inCombat = UnitAffectingCombat and UnitAffectingCombat("player")
+  local a2, id2 = ByID()
+  ns.Print("fofdebug: combat " .. tostring(inCombat) .. ", saved id " .. tostring(ns.db.fofSpellId))
+  ns.Print("  by name: " .. Desc(ByName()))
+  ns.Print("  by id: " .. Desc(a2) .. (id2 and (" (asked " .. id2 .. ")") or "") ..
+    ", function " .. tostring(C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID ~= nil))
+  local names = {}
+  for i = 1, 40 do
+    local ok, a = pcall(C_UnitAuras and C_UnitAuras.GetAuraDataByIndex or function() end, "player", i, "HELPFUL")
+    if not ok or not a then break end
+    local n = a.name
+    names[#names + 1] = (Secret(n) and "secret" or tostring(n)) .. ":" .. (Secret(a.spellId) and "secret" or tostring(a.spellId))
+  end
+  ns.Print("  list: " .. (#names > 0 and table.concat(names, ", ") or "empty"))
 end)

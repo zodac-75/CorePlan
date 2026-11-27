@@ -2345,6 +2345,20 @@ do
     if not shownCount then table.insert(errors, "FoF: visar inte 2 laddningar") end
     proc = nil; ticks()
     if ff.__shown then table.insert(errors, "FoF: ikonen ligger kvar när procen är borta") end
+    -- In combat the lookup by name is refused; the spell ID it saw before still finds it.
+    proc = { name = "Fingers of Frost", spellId = 44544, applications = 1 }
+    ticks()
+    if ns.db.fofSpellId ~= 44544 then table.insert(errors, "FoF: kom inte ihåg procens spell-ID: " .. tostring(ns.db.fofSpellId)) end
+    proc = nil; ticks()
+    local combatProc = true
+    C_UnitAuras.GetPlayerAuraBySpellID = function(id) if combatProc and id == 44544 then return { applications = 2 } end end
+    ticks()
+    if not ff.__shown then table.insert(errors, "FoF: syns inte i strid (bara spell-ID fungerar)") end
+    local okD, errD = pcall(slash, "fofdebug")
+    if not okD then table.insert(errors, "FoF: fofdebug: " .. tostring(errD)) end
+    combatProc = false; ticks()
+    if ff.__shown then table.insert(errors, "FoF: ligger kvar i strid när procen är borta") end
+    C_UnitAuras.GetPlayerAuraBySpellID = nil
     slash("fof"); proc = { name = "Fingers of Frost" }; ticks()
     if ff.__shown then table.insert(errors, "FoF: /acp fof stänger inte av ikonen") end
     slash("fof")
