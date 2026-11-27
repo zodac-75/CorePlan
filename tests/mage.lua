@@ -2316,6 +2316,43 @@ do
   if not ok then table.insert(errors, "ätbar: " .. tostring(err)) end
   C_UnitAuras, ns.db.shatterUnlocked = oldC, oldUnlock
 end
+-- Fingers of Frost icon: shows while the proc is up (with charges), pings once when it lands.
+do
+  local function ticks() for _, w in ipairs(allFrames) do if w.__scripts.OnUpdate then pcall(w.__scripts.OnUpdate, w, 0.2) end end end
+  local oldUA, oldPS, oldUnlock = C_UnitAuras, PlaySound, ns.db.shatterUnlocked
+  local proc, pings = nil, 0
+  C_UnitAuras = setmetatable({ GetAuraDataBySpellName = function(u, n, f)
+    if u == "player" and n == "Fingers of Frost" and f == "HELPFUL" then return proc end
+  end }, { __index = oldUA })
+  PlaySound = function() pings = pings + 1 end
+  local oldUAura = rawget(_G, "UnitAura")
+  UnitAura = function(u, i, f)
+    if u == "player" and f == "HELPFUL" then if proc and i == 1 then return "Fingers of Frost", 0, 2, nil, 15, now + 12 end return nil end
+    if oldUAura then return oldUAura(u, i, f) end
+  end
+  ns.db.shatterUnlocked = nil; ns.db.fofOff = nil; ns.db.fofSoundOff = nil
+  local ok, err = pcall(function()
+    local ff = rawget(_G, "MagePlanFoFFrame")
+    if not ff then table.insert(errors, "FoF: ikonen skapades inte") return end
+    ticks()
+    if ff.__shown then table.insert(errors, "FoF: ikonen syns utan proc") end
+    proc = { name = "Fingers of Frost", applications = 2, expirationTime = now + 12, icon = "fof-icon" }
+    ticks(); ticks()
+    if not ff.__shown then table.insert(errors, "FoF: ikonen syns inte när procen är uppe") end
+    if pings ~= 1 then table.insert(errors, "FoF: skulle plinga en gång, plingade " .. pings) end
+    local shownCount
+    for _, w in ipairs(allFrames) do if w.__text == "2" then shownCount = true end end
+    if not shownCount then table.insert(errors, "FoF: visar inte 2 laddningar") end
+    proc = nil; ticks()
+    if ff.__shown then table.insert(errors, "FoF: ikonen ligger kvar när procen är borta") end
+    slash("fof"); proc = { name = "Fingers of Frost" }; ticks()
+    if ff.__shown then table.insert(errors, "FoF: /acp fof stänger inte av ikonen") end
+    slash("fof")
+  end)
+  if not ok then table.insert(errors, "FoF: " .. tostring(err)) end
+  C_UnitAuras, PlaySound, ns.db.shatterUnlocked = oldUA, oldPS, oldUnlock
+  UnitAura = oldUAura
+end
 -- Range icon: shown with an enemy target, coloured by the game's range answer.
 do
   local function ticks() for _, w in ipairs(allFrames) do if w.__scripts.OnUpdate then pcall(w.__scripts.OnUpdate, w, 0.2) end end end

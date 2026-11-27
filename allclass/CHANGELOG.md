@@ -1,3 +1,7 @@
+# AllClassPlan 0.1.38
+
+- **Mage: Fingers of Frost icon.** While the proc is up, its icon sits on your screen with the charges and seconds left, flashes and pings once when it lands. Works without a target. Move it with Unlock UI, Ctrl+wheel to resize. Tick boxes in the settings (`/acp fof`, `/acp fofsound`).
+
 # AllClassPlan 0.1.37
 
 - **Rare finds:** Black Lotus and Arcane Crystal now each show their own picture (the game did not always give out the icon, so it fell back to a crystal). `/acp egg rare` takes turns between them; `/acp egg lotus` and `/acp egg crystal` pick one.
