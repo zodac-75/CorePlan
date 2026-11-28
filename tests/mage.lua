@@ -2359,6 +2359,14 @@ do
     combatProc = false; ticks()
     if ff.__shown then table.insert(errors, "FoF: ligger kvar i strid när procen är borta") end
     C_UnitAuras.GetPlayerAuraBySpellID = nil
+    -- When the buff is hidden completely, the Ice Lance proc glow shows it.
+    local glow = true
+    C_SpellActivationOverlay = { IsSpellOverlayed = function(id) return glow end }
+    ticks()
+    if not ff.__shown then table.insert(errors, "FoF: syns inte när Ice Lance glöder") end
+    glow = false; ticks()
+    if ff.__shown then table.insert(errors, "FoF: ligger kvar när Ice Lance slutat glöda") end
+    C_SpellActivationOverlay = nil
     slash("fof"); proc = { name = "Fingers of Frost" }; ticks()
     if ff.__shown then table.insert(errors, "FoF: /acp fof stänger inte av ikonen") end
     slash("fof")

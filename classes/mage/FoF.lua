@@ -43,6 +43,35 @@ local function ByList()
   end)
   return found
 end
+-- 4. In combat the game can hide the buff completely; then the proc glow on Ice Lance (the
+-- game lights it up for Fingers of Frost) is the sign: from the glow events, or by asking.
+local glowing -- true/false from the events, nil when we don't know
+local function LanceId()
+  local id
+  pcall(function()
+    local info = C_Spell and C_Spell.GetSpellInfo and C_Spell.GetSpellInfo(ns.Loc("Ice Lance"))
+    id = info and info.spellID
+    if not id and GetSpellInfo then id = select(7, GetSpellInfo(ns.Loc("Ice Lance"))) end
+  end)
+  if id and Secret(id) then return nil end
+  return id
+end
+local function LanceGlow()
+  local id = LanceId()
+  if not id then return nil end
+  local ov = rawget(_G, "C_SpellActivationOverlay")
+  local fn = (ov and ov.IsSpellOverlayed) or rawget(_G, "IsSpellOverlayed")
+  if fn then
+    local ok, r = pcall(fn, id)
+    if ok and r ~= nil then
+      if Secret(r) then return r, true end
+      return r and true or false
+    end
+  end
+  return glowing
+end
+ns.FoFGlow = LanceGlow
+
 local function Aura()
   local a = ByName()
   if a then
@@ -83,6 +112,20 @@ local function Update()
   end
   if ns.db.fofOff then f:Hide(); had = false; return end
   local a = Aura()
+  f:SetAlpha(1)
+  if not a then
+    local g, secret = LanceGlow()
+    if secret then
+      -- The game hides the answer; let it set the icon's alpha itself.
+      if f.SetAlphaFromBoolean then
+        Show(nil)
+        f:SetAlphaFromBoolean(g, 1, 0)
+        return
+      end
+    elseif g then
+      a = {}
+    end
+  end
   if a then
     if not had then Ping(); glow.t = 0 end
     had = true
@@ -135,6 +178,15 @@ local function Create()
   glow.t = 1
   f:Hide()
 
+  local ev = CreateFrame("Frame")
+  for _, e in ipairs({ "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" }) do
+    pcall(ev.RegisterEvent, ev, e)
+  end
+  ev:SetScript("OnEvent", function(_, event, spellID)
+    if Secret(spellID) then return end
+    if spellID and spellID == LanceId() then glowing = (event == "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW") end
+  end)
+
   local ticker = CreateFrame("Frame")
   ticker:SetScript("OnUpdate", function(_, elapsed)
     if glow.t < 0.6 then
@@ -183,5 +235,8 @@ ns.RegisterCommand("fofdebug", false, function()
     local n = a.name
     names[#names + 1] = (Secret(n) and "secret" or tostring(n)) .. ":" .. (Secret(a.spellId) and "secret" or tostring(a.spellId))
   end
+  local g, sec = LanceGlow()
+  ns.Print("  Ice Lance " .. tostring(LanceId()) .. " glows: " .. (sec and "secret" or tostring(g)) ..
+    ", glow events said " .. tostring(glowing) .. ", alpha by game " .. tostring(f and f.SetAlphaFromBoolean ~= nil))
   ns.Print("  list: " .. (#names > 0 and table.concat(names, ", ") or "empty"))
 end)
